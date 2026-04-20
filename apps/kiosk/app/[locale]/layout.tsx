@@ -5,6 +5,7 @@ import { locales, type Locale } from '@/i18n/request';
 import { Providers } from '../providers';
 import { KioskGuards } from '@/components/KioskGuards';
 import { IdleReset } from '@/components/IdleReset';
+import '../globals.css';
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
