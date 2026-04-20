@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/request';
 import { Providers } from '../providers';
+import { IdleReset } from '@/components/IdleReset';
 
 export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -24,7 +25,10 @@ export default async function LocaleLayout({
     <html lang={locale}>
       <body className="min-h-screen antialiased">
         <NextIntlClientProvider messages={messages}>
-          <Providers>{children}</Providers>
+          <Providers>
+            <IdleReset />
+            {children}
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>
