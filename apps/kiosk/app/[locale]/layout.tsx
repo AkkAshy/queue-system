@@ -3,6 +3,7 @@ import { getMessages } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { locales, type Locale } from '@/i18n/request';
 import { Providers } from '../providers';
+import { KioskGuards } from '@/components/KioskGuards';
 import { IdleReset } from '@/components/IdleReset';
 
 export function generateStaticParams() {
@@ -26,6 +27,7 @@ export default async function LocaleLayout({
       <body className="min-h-screen antialiased">
         <NextIntlClientProvider messages={messages}>
           <Providers>
+            <KioskGuards />
             <IdleReset />
             {children}
           </Providers>
