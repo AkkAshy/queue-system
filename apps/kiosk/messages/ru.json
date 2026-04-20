@@ -1,0 +1,30 @@
+{
+  "welcome": {
+    "title": "Добро пожаловать",
+    "subtitle": "Выберите категорию услуги"
+  },
+  "category": {
+    "back": "Назад",
+    "selectService": "Выберите услугу"
+  },
+  "confirm": {
+    "title": "Подтвердите",
+    "service": "Услуга",
+    "category": "Категория",
+    "getTicket": "Получить талон",
+    "cancel": "Отмена"
+  },
+  "ticket": {
+    "title": "Ваш номер",
+    "goTo": "Ждите вызова на табло",
+    "new": "Новый талон"
+  },
+  "error": {
+    "title": "Произошла ошибка",
+    "retry": "Повторить",
+    "contact": "Обратитесь к оператору"
+  },
+  "locale": {
+    "switch": "Qaraqalpaqsha"
+  }
+}

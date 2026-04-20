@@ -1,0 +1,30 @@
+{
+  "welcome": {
+    "title": "Xosh kelipsiz",
+    "subtitle": "Xızmettiń kategoriyasın tańlań"
+  },
+  "category": {
+    "back": "Artqa",
+    "selectService": "Xızmetti tańlań"
+  },
+  "confirm": {
+    "title": "Tastıyıqlań",
+    "service": "Xızmet",
+    "category": "Kategoriya",
+    "getTicket": "Talonnı alıw",
+    "cancel": "Biykar etiw"
+  },
+  "ticket": {
+    "title": "Siziń nomeriniz",
+    "goTo": "Kútiw zalında ekranǵa qarań",
+    "new": "Jańa talon"
+  },
+  "error": {
+    "title": "Qáte júz berdi",
+    "retry": "Qaytalań",
+    "contact": "Operatorǵa múrájat etiń"
+  },
+  "locale": {
+    "switch": "Русча"
+  }
+}
