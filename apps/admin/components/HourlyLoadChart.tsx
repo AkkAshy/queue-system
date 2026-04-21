@@ -1,0 +1,47 @@
+import type { HourlyLoadPoint } from '@queue/types';
+
+interface Props {
+  data: HourlyLoadPoint[];
+}
+
+export function HourlyLoadChart({ data }: Props) {
+  const max = Math.max(...data.map((d) => Math.max(d.issued, d.served)));
+
+  return (
+    <div className="rounded-2xl border border-ink-700 bg-ink-800/40 p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <span className="eyebrow">Загрузка по часам</span>
+        <div className="flex items-center gap-4 text-xs text-ink-400">
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-brass-500" /> выдано
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-ink-500" /> обслужено
+          </span>
+        </div>
+      </div>
+
+      <div className="flex h-44 items-end gap-2">
+        {data.map((d) => (
+          <div key={d.hour} className="flex flex-1 flex-col items-center gap-2">
+            <div className="flex h-full w-full items-end gap-[3px]">
+              <div
+                className="w-1/2 rounded-t bg-brass-500/80"
+                style={{ height: `${(d.issued / max) * 100}%` }}
+                title={`Выдано: ${d.issued}`}
+              />
+              <div
+                className="w-1/2 rounded-t bg-ink-500/70"
+                style={{ height: `${(d.served / max) * 100}%` }}
+                title={`Обслужено: ${d.served}`}
+              />
+            </div>
+            <span className="font-mono text-[11px] text-ink-400">
+              {String(d.hour).padStart(2, '0')}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
