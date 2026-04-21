@@ -32,7 +32,7 @@ export default function ConfirmPage() {
     mutationFn: createTicket,
     onSuccess: async (ticket) => {
       setTicket(ticket);
-      const result = await printTicket({ ticket, category, service });
+      const result = await printTicket({ ticket, category: category!, service });
       if (!result.ok) {
         router.push(`/${locale}/error`);
         return;
