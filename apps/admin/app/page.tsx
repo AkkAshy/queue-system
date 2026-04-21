@@ -1,10 +1,16 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/auth-store';
+
 export default function Root() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <span className="eyebrow">NDPI · Queue</span>
-        <h1 className="mt-4 text-4xl font-semibold">Admin booting…</h1>
-      </div>
-    </main>
-  );
+  const router = useRouter();
+  const isAuthed = useAuthStore((s) => s.isAuthenticated());
+
+  useEffect(() => {
+    router.replace(isAuthed ? '/dashboard' : '/login');
+  }, [isAuthed, router]);
+
+  return null;
 }
