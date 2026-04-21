@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "username": "admin",
+    "name": "Administrator",
+    "role": "admin",
+    "counter_id": null,
+    "is_active": true
+  },
+  {
+    "id": 2,
+    "username": "operator1",
+    "name": "Aygül Nurmanova",
+    "role": "operator",
+    "counter_id": 1,
+    "is_active": true
+  },
+  {
+    "id": 3,
+    "username": "operator2",
+    "name": "Bahadır Qadirov",
+    "role": "operator",
+    "counter_id": 2,
+    "is_active": true
+  },
+  {
+    "id": 4,
+    "username": "viewer",
+    "name": "Marat Rejepov",
+    "role": "viewer",
+    "counter_id": null,
+    "is_active": true
+  }
+]
