@@ -9,7 +9,7 @@ Design: [`docs/superpowers/specs/2026-04-20-queue-system-design.md`](docs/superp
 - ✅ Phase 0 — monorepo skeleton, 65-service fixture
 - ✅ Phase 1 — kiosk frontend on mocks
 - ✅ Phase 2 — Go agent + Xprinter XP-80T (bilingual ticket, QR code, CUPS/file/null backends)
-- ⏳ Phase 3 — admin on mocks
+- ✅ Phase 3 — admin on mocks (login, dashboard, services/categories/counters/operators CRUD)
 - ⏳ Phase 4 — operator console on mocks
 - ⏳ Phase 5 — display (табло) on mocks
 - ⏳ Phase 6 — Django 6 API (replace mocks)
@@ -21,7 +21,7 @@ Design: [`docs/superpowers/specs/2026-04-20-queue-system-design.md`](docs/superp
 ```
 apps/
   kiosk/       # touch-screen kiosk (Next.js 15, built)
-  admin/       # admin panel (planned)
+  admin/       # admin panel — Next.js 15, shadcn/ui, MSW-backed CRUD
   operator/    # operator console (planned)
   display/     # waiting-hall display (planned)
 packages/
@@ -42,6 +42,7 @@ agent/         # Go local agent — ESC/POS for Xprinter XP-80T, built
 ```bash
 pnpm install
 pnpm --filter @queue/kiosk dev   # http://localhost:3001
+pnpm --filter @queue/admin dev   # http://localhost:3002  (login admin/admin)
 ```
 
 Default locale is `kaa` (Karakalpak). Switch to `ru` via the top-right button.
