@@ -6,7 +6,9 @@ import { useAuthStore } from '@/store/auth-store';
 
 export default function Root() {
   const router = useRouter();
-  const isAuthed = useAuthStore((s) => s.isAuthenticated());
+  const isAuthed = useAuthStore(
+    (s) => !!s.token && !!s.expiresAt && s.expiresAt > Date.now(),
+  );
 
   useEffect(() => {
     router.replace(isAuthed ? '/dashboard' : '/login');

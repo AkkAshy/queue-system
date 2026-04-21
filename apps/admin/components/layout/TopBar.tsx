@@ -7,11 +7,10 @@ import { useAuthStore } from '@/store/auth-store';
 
 export function TopBar() {
   const router = useRouter();
-  const { username, role, logout } = useAuthStore((s) => ({
-    username: s.username,
-    role: s.role,
-    logout: s.logout,
-  }));
+  // Use individual selectors to avoid object-literal identity issues in React 19
+  const username = useAuthStore((s) => s.username);
+  const role = useAuthStore((s) => s.role);
+  const logout = useAuthStore((s) => s.logout);
 
   function onLogout() {
     logout();
