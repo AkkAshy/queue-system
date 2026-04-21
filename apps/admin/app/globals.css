@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 11%;
+    --foreground: 35 25% 95%;
+    --card: 220 20% 11%;
+    --card-foreground: 35 25% 95%;
+    --primary: 39 55% 58%;
+    --primary-foreground: 220 40% 9%;
+    --muted: 220 15% 20%;
+    --muted-foreground: 30 8% 65%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 39 55% 58%;
+    --radius: 0.75rem;
+  }
+
+  * { border-color: hsl(var(--border)); }
+
+  html, body {
+    height: 100%;
+    background-color: #141312;
+    color: #F5F1E8;
+    background-image:
+      radial-gradient(at 18% 10%, rgba(201, 169, 97, 0.035) 0px, transparent 50%),
+      radial-gradient(at 82% 90%, rgba(201, 169, 97, 0.025) 0px, transparent 55%);
+  }
+
+  body {
+    font-feature-settings: 'ss01', 'zero', 'cv11';
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    font-family: var(--font-jetbrains);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
+    color: #8A8277;
+  }
+
+  .admin-table {
+    font-size: 0.875rem;
+  }
+  .admin-table th {
+    text-align: left;
+    padding: 0.625rem 0.875rem;
+    font-weight: 500;
+    color: #B8AEA0;
+    border-bottom: 1px solid #26231F;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .admin-table td {
+    padding: 0.875rem;
+    border-bottom: 1px solid rgba(38, 35, 31, 0.5);
+  }
+  .admin-table tbody tr {
+    transition: background-color 120ms ease;
+  }
+  .admin-table tbody tr:hover {
+    background-color: rgba(245, 241, 232, 0.02);
+  }
+}
