@@ -8,7 +8,7 @@ Design: [`docs/superpowers/specs/2026-04-20-queue-system-design.md`](docs/superp
 
 - ✅ Phase 0 — monorepo skeleton, 65-service fixture
 - ✅ Phase 1 — kiosk frontend on mocks
-- ⏳ Phase 2 — Go agent + Xprinter XP-80T
+- ✅ Phase 2 — Go agent + Xprinter XP-80T (bilingual ticket, QR code, CUPS/file/null backends)
 - ⏳ Phase 3 — admin on mocks
 - ⏳ Phase 4 — operator console on mocks
 - ⏳ Phase 5 — display (табло) on mocks
@@ -28,7 +28,7 @@ packages/
   types/       # shared TS types
   mocks/       # MSW handlers + fixture (65 services, 9 categories)
 backend/       # Django 6 API (planned)
-agent/         # Go local agent (planned)
+agent/         # Go local agent — ESC/POS for Xprinter XP-80T, built
 ```
 
 ## Prerequisites
