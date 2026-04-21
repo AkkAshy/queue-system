@@ -1,0 +1,12 @@
+# build artifacts
+agent
+ndpi-queue-agent
+dist/
+*.test
+
+# logs
+*.log
+
+# local env overrides
+.env
+.env.local
