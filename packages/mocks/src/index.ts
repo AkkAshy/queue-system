@@ -1,4 +1,11 @@
 export { handlers } from './handlers';
 export { TicketStore } from './ticket-store';
+export { CategoryStore } from './category-store';
+export { ServiceStore } from './service-store';
+export { CounterStore } from './counter-store';
+export { UserStore } from './user-store';
 export { default as categories } from './fixtures/categories.json';
 export { default as services } from './fixtures/services.json';
+export { default as counters } from './fixtures/counters.json';
+export { default as users } from './fixtures/users.json';
+export { default as dashboard } from './fixtures/dashboard.json';

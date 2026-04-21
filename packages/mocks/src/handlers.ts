@@ -1,30 +1,152 @@
 import { http, HttpResponse } from 'msw';
-import categories from './fixtures/categories.json';
-import services from './fixtures/services.json';
+import categoriesSeed from './fixtures/categories.json';
+import servicesSeed from './fixtures/services.json';
+import countersSeed from './fixtures/counters.json';
+import usersSeed from './fixtures/users.json';
+import dashboardSeed from './fixtures/dashboard.json';
 import { TicketStore } from './ticket-store';
-import type { CreateTicketRequest, ServiceCategory } from '@queue/types';
+import { CategoryStore } from './category-store';
+import { ServiceStore } from './service-store';
+import { CounterStore } from './counter-store';
+import { UserStore } from './user-store';
+import type {
+  CreateTicketRequest,
+  ServiceCategory,
+  Counter,
+  User,
+  LoginRequest,
+} from '@queue/types';
 
-const store = new TicketStore();
+// Module-level singletons — the MSW service worker holds their state for the
+// entire session. Each app that runs MSW has its own SW → independent state.
+import type { Service } from '@queue/types';
+const categories = new CategoryStore(categoriesSeed as ServiceCategory[]);
+const servicesStore = new ServiceStore(servicesSeed as unknown as Service[]);
+const counters = new CounterStore(countersSeed as unknown as Counter[]);
+const users = new UserStore(usersSeed as unknown as User[]);
+const tickets = new TicketStore();
 
 export const handlers = [
-  http.get('/api/categories', () => HttpResponse.json(categories)),
+  // ---------- auth ----------
+  http.post('/api/auth/login', async ({ request }) => {
+    const body = (await request.json()) as LoginRequest;
+    const user = users.authenticate(body.username, body.password);
+    if (!user) {
+      return HttpResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 },
+      );
+    }
+    const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8h
+    return HttpResponse.json({
+      token: `dev.${user.username}.${expiresAt.getTime()}`,
+      username: user.username,
+      role: user.role,
+      expires_at: expiresAt.toISOString(),
+    });
+  }),
 
+  // ---------- categories ----------
+  http.get('/api/categories', () => HttpResponse.json(categories.list())),
+
+  http.patch('/api/categories/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    const patch = (await request.json()) as Record<string, unknown>;
+    const updated = categories.update(id, patch);
+    if (!updated) {
+      return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return HttpResponse.json(updated);
+  }),
+
+  // ---------- services ----------
   http.get('/api/services', ({ request }) => {
     const url = new URL(request.url);
     const cat = url.searchParams.get('category_id');
-    const list = cat ? services.filter((s) => s.category_id === Number(cat)) : services;
+    const list = cat
+      ? servicesStore.listByCategory(Number(cat))
+      : servicesStore.list();
     return HttpResponse.json(list);
   }),
 
+  http.patch('/api/services/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    const patch = (await request.json()) as Record<string, unknown>;
+    const updated = servicesStore.update(id, patch);
+    if (!updated) {
+      return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return HttpResponse.json(updated);
+  }),
+
+  // ---------- counters ----------
+  http.get('/api/counters', () => HttpResponse.json(counters.list())),
+
+  http.post('/api/counters', async ({ request }) => {
+    const body = (await request.json()) as Omit<Counter, 'id'>;
+    const created = counters.create(body);
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.patch('/api/counters/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    const patch = (await request.json()) as Record<string, unknown>;
+    const updated = counters.update(id, patch);
+    if (!updated) {
+      return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return HttpResponse.json(updated);
+  }),
+
+  http.delete('/api/counters/:id', ({ params }) => {
+    const id = Number(params.id);
+    const ok = counters.remove(id);
+    if (!ok) {
+      return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ---------- users ----------
+  http.get('/api/users', () => HttpResponse.json(users.list())),
+
+  http.post('/api/users', async ({ request }) => {
+    const body = (await request.json()) as Omit<User, 'id'>;
+    const created = users.create(body);
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.patch('/api/users/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    const patch = (await request.json()) as Record<string, unknown>;
+    const updated = users.update(id, patch);
+    if (!updated) {
+      return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return HttpResponse.json(updated);
+  }),
+
+  http.delete('/api/users/:id', ({ params }) => {
+    const id = Number(params.id);
+    const ok = users.remove(id);
+    if (!ok) {
+      return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  // ---------- dashboard ----------
+  http.get('/api/dashboard', () => HttpResponse.json(dashboardSeed)),
+
+  // ---------- tickets (unchanged from Phase 1) ----------
   http.post('/api/tickets', async ({ request }) => {
     const body = (await request.json()) as CreateTicketRequest;
-    const category = (categories as ServiceCategory[]).find((c) => c.id === body.category_id);
-    if (!category) return HttpResponse.json({ error: 'unknown category' }, { status: 400 });
-
-    // simulate small latency
+    const category = categories.get(body.category_id);
+    if (!category) {
+      return HttpResponse.json({ error: 'unknown category' }, { status: 400 });
+    }
     await new Promise((r) => setTimeout(r, 150));
-
-    const ticket = store.create({
+    const ticket = tickets.create({
       category_id: body.category_id,
       code: category.code,
       service_id: body.service_id,
