@@ -1,0 +1,24 @@
+[Unit]
+Description=NDPI Queue System — local printer agent
+After=network.target cups.service
+Wants=cups.service
+
+[Service]
+Type=simple
+User=ndpi-agent
+Group=ndpi-agent
+ExecStart=/usr/local/bin/ndpi-queue-agent
+Environment=AGENT_ADDR=127.0.0.1:8089
+Environment=AGENT_BACKEND=cups
+Environment=AGENT_PRINTER_NAME=XP-80T
+Environment=AGENT_LOG_FILE=/var/log/ndpi-queue-agent.log
+Restart=on-failure
+RestartSec=3
+# Reasonable lockdown for a local agent
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/log/ndpi-queue-agent.log
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
