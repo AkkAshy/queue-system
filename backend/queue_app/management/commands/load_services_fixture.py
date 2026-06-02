@@ -65,6 +65,7 @@ class Command(BaseCommand):
                     "delivery_type": s["delivery_type"],
                     "requires_visit": s["requires_visit"],
                     "is_active": s["is_active"],
+                    "is_popular": s.get("is_popular", False),
                 },
             )
 

@@ -36,7 +36,7 @@ def test_categories_and_services(seeded, client):
     svcs = client.get("/api/services?category_id=1").json()
     assert all(s["category_id"] == 1 for s in svcs)
     assert {"id", "category_id", "name_kaa", "name_ru", "sla_days",
-            "delivery_type", "requires_visit", "is_active"} == set(svcs[0])
+            "delivery_type", "requires_visit", "is_active", "is_popular"} == set(svcs[0])
 
 
 def test_counters_serialize_service_ids(seeded, client):

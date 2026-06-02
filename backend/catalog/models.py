@@ -40,6 +40,7 @@ class Service(models.Model):
     )
     requires_visit = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    is_popular = models.BooleanField(default=False)  # kiosk "popular" shortcut
 
     class Meta:
         ordering = ["category__order", "id"]
