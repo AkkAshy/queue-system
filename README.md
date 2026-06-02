@@ -13,7 +13,7 @@ Design: [`docs/superpowers/specs/2026-04-20-queue-system-design.md`](docs/superp
 - ✅ Phase 4 — operator mini-widget (Chrome app-mode, 360×560)
 - ✅ Phase 5 — display (табло) on mocks — fullscreen board, active calls, ticker, chime
 - ✅ Phase 6 — Django 6 API (DRF, JWT, Postgres) — full contract parity, frontends switchable off MSW
-- ⏳ Phase 7 — realtime (Channels + Redis)
+- ✅ Phase 7 — realtime (Channels + Redis) — WS push to display/operator/admin (<1s), polling fallback
 - ⏳ Phase 8 — deploy
 
 ## Structure
@@ -35,7 +35,8 @@ agent/         # Go local agent — ESC/POS for Xprinter XP-80T, built
 
 - Node.js 20+ and pnpm 9+
 - (Phase 2+) Go 1.22+
-- (Phase 6+) Python 3.12, Poetry, PostgreSQL 16, Redis 7
+- (Phase 6+) Python 3.12+, Poetry, PostgreSQL 16
+- (Phase 7+) Redis 7+ (channel layer; backend runs via Daphne/ASGI)
 
 ## Quick start
 
@@ -66,6 +67,11 @@ Point any frontend at the real API instead of MSW:
 ```bash
 NEXT_PUBLIC_USE_MSW=0 pnpm --filter @queue/admin dev   # proxies /api/* → http://localhost:8000
 ```
+
+In real-API mode the frontends also open a WebSocket (`NEXT_PUBLIC_WS_URL`, default
+`ws://localhost:8000`) and update instantly on queue changes; polling stays as the
+fallback. Requires Redis running (`redis-server`) and the backend served via Daphne
+(`runserver` does this automatically once `channels` is installed).
 
 ## Scripts
 
