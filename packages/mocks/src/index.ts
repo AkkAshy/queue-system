@@ -11,3 +11,4 @@ export { default as counters } from './fixtures/counters.json';
 export { default as users } from './fixtures/users.json';
 export { default as dashboard } from './fixtures/dashboard.json';
 export { default as queueSeed } from './fixtures/queue-seed.json';
+export { default as displaySeed } from './fixtures/display-seed.json';

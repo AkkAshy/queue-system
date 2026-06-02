@@ -1,0 +1,5 @@
+[
+  { "number": "A018", "category_id": 1, "service_id": 1,  "counter_id": 1, "operator_id": 2, "called_at": "2026-04-20T10:16:00Z" },
+  { "number": "E010", "category_id": 5, "service_id": 31, "counter_id": 3, "operator_id": 4, "called_at": "2026-04-20T10:18:00Z" },
+  { "number": "G004", "category_id": 7, "service_id": 44, "counter_id": 5, "operator_id": 5, "called_at": "2026-04-20T10:20:00Z" }
+]

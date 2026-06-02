@@ -5,6 +5,7 @@ import countersSeed from './fixtures/counters.json';
 import usersSeed from './fixtures/users.json';
 import dashboardSeed from './fixtures/dashboard.json';
 import queueSeed from './fixtures/queue-seed.json';
+import displaySeed from './fixtures/display-seed.json';
 import { TicketStore } from './ticket-store';
 import { CategoryStore } from './category-store';
 import { ServiceStore } from './service-store';
@@ -17,6 +18,7 @@ import type {
   Counter,
   User,
   LoginRequest,
+  DisplayCall,
 } from '@queue/types';
 
 // Module-level singletons — the MSW service worker holds their state for the
@@ -33,6 +35,8 @@ const sessions = new OperatorSessionStore();
 // Cast through unknown because JSON types look structurally compatible but
 // TS can't infer this statically.
 tickets.seedWaiting(queueSeed as unknown as Parameters<typeof tickets.seedWaiting>[0]);
+// A few already-called tickets so the waiting-hall board has content on first load.
+tickets.seedCalled(displaySeed as unknown as Parameters<typeof tickets.seedCalled>[0]);
 
 export const handlers = [
   // ---------- auth ----------
@@ -233,5 +237,32 @@ export const handlers = [
     const t = tickets.transfer(String(params.id), body.counter_id);
     if (!t) return HttpResponse.json({ error: 'not found' }, { status: 404 });
     return HttpResponse.json(t);
+  }),
+
+  // ---------- display board ----------
+  http.get('/api/display/active', () => {
+    const calls: DisplayCall[] = tickets
+      .activeCalls()
+      .flatMap((t) => {
+        if (t.counter_id === null) return [];
+        const counter = counters.get(t.counter_id);
+        if (!counter) return [];
+        return [
+          {
+            id: t.id,
+            number: t.number,
+            category_id: t.category_id,
+            counter_id: t.counter_id,
+            counter_number: counter.number,
+            counter_name: counter.name,
+            called_at: t.called_at ?? t.created_at,
+            status: (t.status === 'serving' ? 'serving' : 'called') as
+              | 'called'
+              | 'serving',
+          },
+        ];
+      })
+      .slice(0, 12);
+    return HttpResponse.json(calls);
   }),
 ];
