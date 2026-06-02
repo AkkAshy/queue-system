@@ -51,15 +51,13 @@ export default function Page() {
     <main className="flex h-screen w-screen flex-col gap-3 p-4">
       <header className="leading-tight">
         <div className="flex items-baseline gap-2">
-          <span className="font-mono text-lg font-bold text-brass-400">
-            №{counterNumber}
-          </span>
-          <span className="truncate text-xs text-ink-300">{counterName}</span>
+          <span className="text-lg font-bold text-coral">№{counterNumber}</span>
+          <span className="truncate text-xs text-coal-2">{counterName}</span>
         </div>
         <div className="mt-1 flex items-center gap-2">
-          <span className="text-[11px] text-ink-400">· {userName}</span>
+          <span className="text-[11px] text-coal-3">· {userName}</span>
           {onBreak && (
-            <span className="rounded-full border border-brass-500/50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-brass-400">
+            <span className="rounded-full bg-coral-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-coral">
               перерыв
             </span>
           )}

@@ -54,8 +54,8 @@ export function LoginScreen() {
   return (
     <main className="flex h-screen w-screen flex-col justify-between p-6">
       <div>
-        <span className="eyebrow text-brass-500">NDPI · Пульт</span>
-        <h1 className="mt-3 text-xl font-semibold leading-tight">
+        <span className="eyebrow text-coral">NDPI · Пульт</span>
+        <h1 className="mt-3 text-2xl font-bold leading-tight text-coal">
           Начало смены
         </h1>
       </div>
@@ -97,7 +97,7 @@ export function LoginScreen() {
       <Button
         onClick={() => start.mutate()}
         disabled={!canStart}
-        className="h-12 w-full bg-brass-500 text-ink-900 hover:bg-brass-400"
+        className="h-12 w-full rounded-r bg-coral font-bold text-white shadow-coral hover:bg-coral-600"
       >
         {start.isPending ? '…' : 'Начать смену'}
       </Button>

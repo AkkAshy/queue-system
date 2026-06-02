@@ -48,12 +48,12 @@ export function TransferSheet({ current, open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="bg-ink-900 text-paper-100">
+      <SheetContent side="bottom" className="bg-cream text-coal">
         <SheetHeader>
-          <SheetTitle className="font-serif text-xl font-normal">
+          <SheetTitle className="text-xl font-bold text-coal">
             Перевод {current?.number ?? ''}
           </SheetTitle>
-          <SheetDescription className="text-xs text-ink-400">
+          <SheetDescription className="text-xs text-coal-3">
             Выберите окно, куда передать талон
           </SheetDescription>
         </SheetHeader>
@@ -79,7 +79,7 @@ export function TransferSheet({ current, open, onOpenChange }: Props) {
           <Button
             onClick={() => transfer.mutate()}
             disabled={!destination || !current || transfer.isPending}
-            className="bg-brass-500 text-ink-900 hover:bg-brass-400"
+            className="rounded-r bg-coral font-bold text-white hover:bg-coral-600"
           >
             {transfer.isPending ? '…' : 'Перевести'}
           </Button>

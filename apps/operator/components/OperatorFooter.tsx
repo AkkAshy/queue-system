@@ -55,7 +55,7 @@ export function OperatorFooter({ current }: Props) {
           variant="outline"
           onClick={() => toggleBreak.mutate()}
           disabled={toggleBreak.isPending}
-          className="h-9 flex-1 gap-1.5 border-ink-700 text-[11px]"
+          className="h-9 flex-1 gap-1.5 rounded-rsm border-hair-2 bg-white text-[11px]"
         >
           <Coffee className="h-3 w-3" />
           {onBreak ? 'Продолжить' : 'Перерыв'}
@@ -65,7 +65,7 @@ export function OperatorFooter({ current }: Props) {
           variant="outline"
           onClick={() => setTransferOpen(true)}
           disabled={!current}
-          className="h-9 flex-1 gap-1.5 border-ink-700 text-[11px]"
+          className="h-9 flex-1 gap-1.5 rounded-rsm border-hair-2 bg-white text-[11px]"
         >
           <ArrowRightLeft className="h-3 w-3" />
           Перевод
@@ -74,7 +74,7 @@ export function OperatorFooter({ current }: Props) {
           size="sm"
           variant="outline"
           onClick={() => endShift.mutate()}
-          className="h-9 gap-1.5 border-ink-700 text-[11px] text-ink-400"
+          className="h-9 gap-1.5 rounded-rsm border-hair-2 bg-white text-[11px] text-coal-3"
         >
           <LogOut className="h-3 w-3" />
         </Button>
