@@ -19,6 +19,13 @@ class User(AbstractUser):
     role = models.CharField(
         max_length=16, choices=Role.choices, default=Role.OPERATOR
     )
+    counter = models.ForeignKey(
+        "queue_app.Counter",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="operators",
+    )
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"
