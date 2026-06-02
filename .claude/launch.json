@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "kiosk",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@queue/kiosk", "dev"],
+      "port": 3001
+    },
+    {
+      "name": "operator",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@queue/operator", "dev"],
+      "port": 3003
+    }
+  ]
+}
