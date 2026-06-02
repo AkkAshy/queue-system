@@ -4,11 +4,13 @@ import servicesSeed from './fixtures/services.json';
 import countersSeed from './fixtures/counters.json';
 import usersSeed from './fixtures/users.json';
 import dashboardSeed from './fixtures/dashboard.json';
+import queueSeed from './fixtures/queue-seed.json';
 import { TicketStore } from './ticket-store';
 import { CategoryStore } from './category-store';
 import { ServiceStore } from './service-store';
 import { CounterStore } from './counter-store';
 import { UserStore } from './user-store';
+import { OperatorSessionStore } from './operator-session-store';
 import type {
   CreateTicketRequest,
   ServiceCategory,
@@ -25,6 +27,12 @@ const servicesStore = new ServiceStore(servicesSeed as unknown as Service[]);
 const counters = new CounterStore(countersSeed as unknown as Counter[]);
 const users = new UserStore(usersSeed as unknown as User[]);
 const tickets = new TicketStore();
+const sessions = new OperatorSessionStore();
+
+// Pre-populate the queue so operators have something to call in demos.
+// Cast through unknown because JSON types look structurally compatible but
+// TS can't infer this statically.
+tickets.seedWaiting(queueSeed as unknown as Parameters<typeof tickets.seedWaiting>[0]);
 
 export const handlers = [
   // ---------- auth ----------
@@ -153,5 +161,77 @@ export const handlers = [
       idempotency_key: body.idempotency_key,
     });
     return HttpResponse.json(ticket, { status: 201 });
+  }),
+
+  // ---------- operator sessions ----------
+  http.post('/api/operator-sessions', async ({ request }) => {
+    const body = (await request.json()) as { user_id: number; counter_id: number };
+    const session = sessions.create(body);
+    return HttpResponse.json(session, { status: 201 });
+  }),
+
+  http.patch('/api/operator-sessions/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    const body = (await request.json()) as { status: 'active' | 'break' | 'ended' };
+    const updated = sessions.updateStatus(id, body.status);
+    if (!updated) {
+      return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    }
+    return HttpResponse.json(updated);
+  }),
+
+  // ---------- queue + current ticket (per-counter) ----------
+  http.get('/api/queue', ({ request }) => {
+    const url = new URL(request.url);
+    const counterId = Number(url.searchParams.get('counter_id'));
+    const counter = counters.get(counterId);
+    if (!counter) {
+      return HttpResponse.json({ error: 'unknown counter' }, { status: 404 });
+    }
+    const q = tickets.queueForCounter(counter.service_ids);
+    return HttpResponse.json(q.slice(0, 20)); // cap — widget only shows 5 anyway
+  }),
+
+  http.get('/api/tickets/current', ({ request }) => {
+    const url = new URL(request.url);
+    const counterId = Number(url.searchParams.get('counter_id'));
+    return HttpResponse.json(tickets.currentForCounter(counterId));
+  }),
+
+  // ---------- ticket transitions ----------
+  http.post('/api/tickets/call-next', async ({ request }) => {
+    const body = (await request.json()) as { counter_id: number; operator_id: number };
+    const counter = counters.get(body.counter_id);
+    if (!counter) {
+      return HttpResponse.json({ error: 'unknown counter' }, { status: 404 });
+    }
+    const t = tickets.callNext({
+      counter_id: body.counter_id,
+      operator_id: body.operator_id,
+      service_ids: counter.service_ids,
+    });
+    if (!t) {
+      return HttpResponse.json({ error: 'queue empty' }, { status: 409 });
+    }
+    return HttpResponse.json(t);
+  }),
+
+  http.post('/api/tickets/:id/finish', ({ params }) => {
+    const t = tickets.finish(String(params.id));
+    if (!t) return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    return HttpResponse.json(t);
+  }),
+
+  http.post('/api/tickets/:id/skip', ({ params }) => {
+    const t = tickets.skip(String(params.id));
+    if (!t) return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    return HttpResponse.json(t);
+  }),
+
+  http.post('/api/tickets/:id/transfer', async ({ params, request }) => {
+    const body = (await request.json()) as { counter_id: number };
+    const t = tickets.transfer(String(params.id), body.counter_id);
+    if (!t) return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    return HttpResponse.json(t);
   }),
 ];
