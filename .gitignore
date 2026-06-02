@@ -36,3 +36,8 @@ test-results
 # MSW
 public/mockServiceWorker.js
 !**/apps/*/public/mockServiceWorker.js
+
+# deploy secrets
+deploy/.env.prod
+deploy/nginx/queue.conf
+deploy/certbot/
