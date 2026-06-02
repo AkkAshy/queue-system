@@ -12,6 +12,12 @@
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@queue/operator", "dev"],
       "port": 3003
+    },
+    {
+      "name": "display",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@queue/display", "dev"],
+      "port": 3004
     }
   ]
 }
