@@ -1,26 +1,40 @@
 {
+  "institution": {
+    "short": "NDPI",
+    "full": "Ájiniyaz atındaǵı Nókis mámleketlik pedagogikalıq institutı",
+    "office": "Registrator ofisi"
+  },
   "welcome": {
+    "eyebrow": "Elektron nóbet",
     "title": "Xosh kelipsiz",
-    "subtitle": "Xızmettiń kategoriyasın tańlań"
+    "subtitle": "Xızmet kategoriyasın tańlań"
   },
   "category": {
+    "eyebrow": "Kategoriya",
     "back": "Artqa",
-    "selectService": "Xızmetti tańlań"
+    "selectService": "Xızmetti tańlań",
+    "serviceCount": "{count} xızmet",
+    "onlineHint": "Onlayn — HEMIS arqalı"
   },
   "confirm": {
+    "eyebrow": "Tastıyıqlaw",
     "title": "Tastıyıqlań",
     "service": "Xızmet",
     "category": "Kategoriya",
     "getTicket": "Talonnı alıw",
-    "cancel": "Biykar etiw"
+    "cancel": "Biykar etiw",
+    "printing": "Basıp shıǵarılmaqta…"
   },
   "ticket": {
+    "eyebrow": "Talon",
     "title": "Siziń nomeriniz",
     "goTo": "Kútiw zalında ekranǵa qarań",
+    "issued": "Shıǵarıldı",
     "new": "Jańa talon"
   },
   "error": {
-    "title": "Qáte júz berdi",
+    "eyebrow": "Qáte",
+    "title": "Printer juwap bermedi",
     "retry": "Qaytalań",
     "contact": "Operatorǵa múrájat etiń"
   },

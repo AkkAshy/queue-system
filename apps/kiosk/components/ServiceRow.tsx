@@ -1,6 +1,6 @@
 'use client';
 
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import type { Service, ServiceCategory } from '@queue/types';
 import { cn } from '@/lib/utils';
 
@@ -8,12 +8,13 @@ interface Props {
   service: Service;
   category: ServiceCategory;
   onClick: () => void;
+  index: number;
 }
 
-export function ServiceRow({ service, category, onClick }: Props) {
+export function ServiceRow({ service, category, onClick, index }: Props) {
   const locale = useLocale();
+  const t = useTranslations('category');
   const name = locale === 'ru' ? service.name_ru : service.name_kaa;
-
   const disabled = !service.requires_visit;
 
   return (
@@ -21,32 +22,44 @@ export function ServiceRow({ service, category, onClick }: Props) {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        'flex w-full items-center gap-6 rounded-2xl border-4 p-6 text-left transition-transform',
-        'touch-target',
+        'group relative flex w-full items-center gap-7 rounded-2xl px-7 py-6 text-left transition-all duration-200 touch-target',
         disabled
-          ? 'cursor-not-allowed border-muted bg-muted/30 opacity-50'
-          : 'active:scale-[0.98] hover:brightness-110',
+          ? 'cursor-not-allowed border border-ink-700/50 bg-ink-800/40 opacity-55'
+          : 'card-surface card-surface-interactive',
       )}
-      style={
-        disabled
-          ? undefined
-          : { borderColor: category.color, backgroundColor: `${category.color}18` }
-      }
     >
-      <div
-        className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl font-bold text-kiosk-md"
-        style={{ backgroundColor: category.color, color: '#0f172a' }}
-      >
-        {category.code}
-      </div>
+      {/* left tonal marker on active rows */}
+      {!disabled && (
+        <span
+          className="absolute left-0 top-6 h-[calc(100%-3rem)] w-[3px] rounded-r-full"
+          style={{ backgroundColor: category.color }}
+          aria-hidden
+        />
+      )}
+
+      <span className="font-mono text-eyebrow tabular-nums text-ink-400 w-10 shrink-0">
+        {String(index + 1).padStart(2, '0')}
+      </span>
+
       <div className="flex-1">
-        <div className="text-2xl font-semibold leading-snug">{name}</div>
+        <div className="font-sans text-lead font-medium leading-snug text-paper-100">
+          {name}
+        </div>
         {disabled && (
-          <div className="mt-1 text-base text-muted-foreground">
-            {locale === 'ru' ? 'Доступно онлайн — HEMIS' : 'Onlayn — HEMIS'}
+          <div className="eyebrow mt-2 text-ink-400" style={{ letterSpacing: '0.15em' }}>
+            {t('onlineHint')}
           </div>
         )}
       </div>
+
+      {!disabled && (
+        <span
+          className="font-serif text-h3 text-ink-500 transition-all duration-200 group-hover:translate-x-1 group-hover:text-brass-400"
+          aria-hidden
+        >
+          →
+        </span>
+      )}
     </button>
   );
 }
