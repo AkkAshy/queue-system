@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from catalog.models import Service, ServiceCategory
 
-from . import services
+from . import realtime, services
 from .models import Counter, OperatorSession, Ticket, TicketStatus
 from .serializers import (
     CounterSerializer,
@@ -45,6 +45,7 @@ class TicketCreateView(APIView):
         ticket = services.create_ticket(
             category=category, service=service, idempotency_key=data["idempotency_key"]
         )
+        realtime.broadcast([realtime.OPERATORS, realtime.ADMIN], "ticket.created")
         return Response(TicketSerializer(ticket).data, status=201)
 
 
@@ -158,6 +159,9 @@ class CallNextView(APIView):
         )
         if not ticket:
             return Response({"error": "queue empty"}, status=409)
+        realtime.broadcast(
+            [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "ticket.called"
+        )
         return Response(TicketSerializer(ticket).data)
 
 
@@ -174,6 +178,10 @@ class TicketActionView(APIView):
             services.finish(ticket)
         elif self.action == "skip":
             services.skip(ticket)
+        realtime.broadcast(
+            [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN],
+            f"ticket.{self.action}ed",
+        )
         return Response(TicketSerializer(ticket).data)
 
 
@@ -186,6 +194,9 @@ class TicketTransferView(APIView):
         if not counter:
             return Response({"error": "unknown counter"}, status=404)
         services.transfer(ticket, counter)
+        realtime.broadcast(
+            [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "ticket.transferred"
+        )
         return Response(TicketSerializer(ticket).data)
 
 

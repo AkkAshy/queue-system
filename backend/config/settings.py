@@ -21,6 +21,7 @@ DEBUG = env("DEBUG")
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["localhost", "127.0.0.1"])
 
 INSTALLED_APPS = [
+    "daphne",  # must precede staticfiles so runserver uses the ASGI server
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -28,6 +29,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # third-party
+    "channels",
     "rest_framework",
     "corsheaders",
     "drf_spectacular",
@@ -67,6 +69,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+
+# ---- Channels (realtime) ----
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [env("REDIS_URL", default="redis://localhost:6379/0")],
+        },
+    },
+}
 
 # Database — local Postgres in dev (DATABASE_URL), prod passes its own.
 DATABASES = {
