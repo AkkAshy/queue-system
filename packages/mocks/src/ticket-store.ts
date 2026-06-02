@@ -20,6 +20,15 @@ interface SeedArgs {
   created_at: string;    // ISO
 }
 
+interface SeedCalledArgs {
+  number: string;
+  category_id: number;
+  service_id: number;
+  counter_id: number;
+  operator_id: number;
+  called_at: string;     // ISO
+}
+
 export class TicketStore {
   private counters = new Map<string, number>();        // prefix → last number
   private byKey = new Map<string, Ticket>();           // idempotency_key → ticket (kept for Phase 1 compat)
@@ -70,6 +79,14 @@ export class TicketStore {
         x.counter_id === counterId && (x.status === 'called' || x.status === 'serving'),
     );
     return t ? { ...t } : null;
+  }
+
+  /** All active calls (called or serving) across every counter, newest call first. */
+  activeCalls(): Ticket[] {
+    return [...this.byId.values()]
+      .filter((t) => t.status === 'called' || t.status === 'serving')
+      .sort((a, b) => (b.called_at ?? '').localeCompare(a.called_at ?? ''))
+      .map((t) => ({ ...t }));
   }
 
   /** Waiting tickets whose service_id is eligible for this counter, oldest first. */
@@ -133,6 +150,24 @@ export class TicketStore {
         operator_id: null,
         created_at: s.created_at,
         called_at: null,
+      };
+      this.byId.set(ticket.id, ticket);
+    }
+  }
+
+  /** Load already-called tickets for demos (so the display board isn't empty). */
+  seedCalled(items: SeedCalledArgs[]): void {
+    for (const s of items) {
+      const ticket: Ticket = {
+        id: crypto.randomUUID(),
+        number: s.number,
+        category_id: s.category_id,
+        service_id: s.service_id,
+        status: 'called',
+        counter_id: s.counter_id,
+        operator_id: s.operator_id,
+        created_at: s.called_at,
+        called_at: s.called_at,
       };
       this.byId.set(ticket.id, ticket);
     }

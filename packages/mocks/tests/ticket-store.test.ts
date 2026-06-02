@@ -88,6 +88,29 @@ describe('TicketStore — query + transitions', () => {
     expect(q.every((t) => t.status === 'waiting')).toBe(true);
   });
 
+  it('seedCalled inserts called tickets; activeCalls returns them newest-first', () => {
+    store.seedCalled([
+      { number: 'A001', category_id: 1, service_id: 1, counter_id: 1, operator_id: 2, called_at: '2026-04-20T10:00:00Z' },
+      { number: 'E007', category_id: 5, service_id: 31, counter_id: 3, operator_id: 4, called_at: '2026-04-20T10:05:00Z' },
+    ]);
+    const calls = store.activeCalls();
+    expect(calls.map((t) => t.number)).toEqual(['E007', 'A001']); // newest called_at first
+    expect(calls.every((t) => t.status === 'called')).toBe(true);
+  });
+
+  it('callNext result shows up in activeCalls', () => {
+    store.callNext({ counter_id: 3, operator_id: 2, service_ids: [5] }); // E001
+    const calls = store.activeCalls();
+    expect(calls.some((t) => t.number === 'E001')).toBe(true);
+  });
+
+  it('finish removes a ticket from activeCalls', () => {
+    const called = store.callNext({ counter_id: 3, operator_id: 2, service_ids: [5] })!;
+    expect(store.activeCalls().some((t) => t.id === called.id)).toBe(true);
+    store.finish(called.id);
+    expect(store.activeCalls().some((t) => t.id === called.id)).toBe(false);
+  });
+
   it('create still works (idempotency preserved from Phase 1)', () => {
     const a = store.create({ category_id: 1, code: 'A', idempotency_key: 'k1' });
     const b = store.create({ category_id: 1, code: 'A', idempotency_key: 'k1' });
