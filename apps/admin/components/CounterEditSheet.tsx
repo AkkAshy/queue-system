@@ -74,12 +74,12 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-2xl overflow-y-auto bg-ink-900 text-paper-100">
+      <SheetContent className="w-full max-w-2xl overflow-y-auto bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl font-normal">
             {counter ? `Окно #${counter.id}` : 'Новое окно'}
           </SheetTitle>
-          <SheetDescription className="text-ink-400">
+          <SheetDescription className="text-coal-3">
             Настройка рабочего места оператора
           </SheetDescription>
         </SheetHeader>
@@ -106,10 +106,10 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-ink-700 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
               <div className="text-sm font-medium">Активно</div>
-              <div className="text-xs text-ink-400">
+              <div className="text-xs text-coal-3">
                 Участвует в распределении очереди
               </div>
             </div>
@@ -121,18 +121,18 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
 
           <div className="space-y-2">
             <Label>Обслуживаемые услуги ({draft.service_ids.length})</Label>
-            <div className="max-h-80 space-y-1 overflow-y-auto rounded-xl border border-ink-700 p-3">
+            <div className="max-h-80 space-y-1 overflow-y-auto rounded-xl border border-hair p-3">
               {services.map((s) => (
                 <label
                   key={s.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-ink-800/60"
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-white/60"
                 >
                   <Checkbox
                     checked={draft.service_ids.includes(s.id)}
                     onCheckedChange={() => toggleService(s.id)}
                   />
                   <span className="flex-1 text-sm">{s.name_ru}</span>
-                  <span className="font-mono text-xs text-ink-400">#{s.id}</span>
+                  <span className="font-mono text-xs text-coal-3">#{s.id}</span>
                 </label>
               ))}
             </div>
@@ -146,7 +146,7 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={mutation.isPending}
-            className="bg-brass-500 text-ink-900 hover:bg-brass-400"
+            className="bg-coral text-cream hover:bg-coral-600"
           >
             {mutation.isPending ? '…' : 'Сохранить'}
           </Button>

@@ -54,9 +54,9 @@ export default function ServicesPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-brass-500">Справочник</span>
+          <span className="eyebrow text-coral">Справочник</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">Услуги</h1>
-          <p className="mt-1 text-sm text-ink-400">{services.length} записей</p>
+          <p className="mt-1 text-sm text-coal-3">{services.length} записей</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -83,9 +83,9 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-800/40">
+      <section className="overflow-hidden rounded-2xl border border-hair bg-white/40">
         {isLoading ? (
-          <div className="p-8 text-sm text-ink-400">Загрузка…</div>
+          <div className="p-8 text-sm text-coal-3">Загрузка…</div>
         ) : (
           <table className="admin-table w-full">
             <thead>
@@ -107,34 +107,34 @@ export default function ServicesPage() {
                   className="cursor-pointer"
                   onClick={() => setEditing(s)}
                 >
-                  <td className="font-mono text-xs text-ink-400">{s.id}</td>
+                  <td className="font-mono text-xs text-coal-3">{s.id}</td>
                   <td>
-                    <span className="font-mono text-sm font-semibold text-brass-400">
+                    <span className="font-mono text-sm font-semibold text-coral-600">
                       {codeOf(s)}
                     </span>
                   </td>
                   <td className="max-w-[260px] truncate">{s.name_kaa}</td>
-                  <td className="max-w-[260px] truncate text-ink-300">{s.name_ru}</td>
+                  <td className="max-w-[260px] truncate text-coal-2">{s.name_ru}</td>
                   <td className="font-mono text-sm">
                     {s.sla_days === 0 ? 'сразу' : `${s.sla_days} д.`}
                   </td>
-                  <td className="font-mono text-xs text-ink-400">{s.delivery_type}</td>
+                  <td className="font-mono text-xs text-coal-3">{s.delivery_type}</td>
                   <td>
                     {s.requires_visit ? (
-                      <Badge className="bg-brass-500/15 text-brass-400">да</Badge>
+                      <Badge className="bg-coral/15 text-coral-600">да</Badge>
                     ) : (
-                      <Badge variant="outline" className="border-ink-600 text-ink-400">
+                      <Badge variant="outline" className="border-hair-2 text-coal-3">
                         нет
                       </Badge>
                     )}
                   </td>
                   <td>
                     {s.is_active ? (
-                      <Badge variant="outline" className="border-ink-600 text-paper-100">
+                      <Badge variant="outline" className="border-hair-2 text-coal">
                         активна
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="border-ink-700 text-ink-500">
+                      <Badge variant="outline" className="border-hair text-coal-3">
                         выкл
                       </Badge>
                     )}

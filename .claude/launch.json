@@ -14,6 +14,12 @@
       "port": 3003
     },
     {
+      "name": "admin",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@queue/admin", "dev"],
+      "port": 3002
+    },
+    {
       "name": "display",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@queue/display", "dev"],

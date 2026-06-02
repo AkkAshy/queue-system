@@ -18,9 +18,9 @@ export function TopBar() {
   }
 
   return (
-    <header className="flex items-center justify-between border-b border-ink-700 bg-ink-900/60 px-8 py-5 backdrop-blur">
+    <header className="flex items-center justify-between border-b border-hair bg-cream/60 px-8 py-5 backdrop-blur">
       <div className="leading-tight">
-        <span className="eyebrow text-brass-500">
+        <span className="eyebrow text-coral">
           Ájiniyaz atındaǵı NDPI · Registrator ofisi
         </span>
       </div>
@@ -28,13 +28,13 @@ export function TopBar() {
       <div className="flex items-center gap-4">
         <div className="text-right leading-tight">
           <div className="text-sm font-medium">{username ?? '—'}</div>
-          <div className="text-xs text-ink-400">{role ?? 'guest'}</div>
+          <div className="text-xs text-coal-3">{role ?? 'guest'}</div>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={onLogout}
-          className="gap-2 border-ink-600"
+          className="gap-2 border-hair-2"
         >
           <LogOut className="h-3.5 w-3.5" />
           Выйти

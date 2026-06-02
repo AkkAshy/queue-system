@@ -69,12 +69,12 @@ export function ServiceEditSheet({ service, open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-lg overflow-y-auto bg-ink-900 text-paper-100">
+      <SheetContent className="w-full max-w-lg overflow-y-auto bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl font-normal">
             Услуга #{draft.id}
           </SheetTitle>
-          <SheetDescription className="text-ink-400">
+          <SheetDescription className="text-coal-3">
             Редактирование карточки услуги
           </SheetDescription>
         </SheetHeader>
@@ -130,10 +130,10 @@ export function ServiceEditSheet({ service, open, onOpenChange }: Props) {
               </Select>
             </div>
           </div>
-          <div className="flex items-center justify-between rounded-xl border border-ink-700 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
               <div className="text-sm font-medium">Требует визит</div>
-              <div className="text-xs text-ink-400">
+              <div className="text-xs text-coal-3">
                 Попадает в очередь в киоске
               </div>
             </div>
@@ -142,10 +142,10 @@ export function ServiceEditSheet({ service, open, onOpenChange }: Props) {
               onCheckedChange={(v) => setDraft({ ...draft, requires_visit: v })}
             />
           </div>
-          <div className="flex items-center justify-between rounded-xl border border-ink-700 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
               <div className="text-sm font-medium">Активна</div>
-              <div className="text-xs text-ink-400">
+              <div className="text-xs text-coal-3">
                 Видна операторам и в киоске
               </div>
             </div>
@@ -163,7 +163,7 @@ export function ServiceEditSheet({ service, open, onOpenChange }: Props) {
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={mutation.isPending}
-            className="bg-brass-500 text-ink-900 hover:bg-brass-400"
+            className="bg-coral text-cream hover:bg-coral-600"
           >
             {mutation.isPending ? '…' : 'Сохранить'}
           </Button>

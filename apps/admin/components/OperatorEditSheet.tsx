@@ -76,12 +76,12 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-md bg-ink-900 text-paper-100">
+      <SheetContent className="w-full max-w-md bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl font-normal">
             {user ? `Пользователь #${user.id}` : 'Новый оператор'}
           </SheetTitle>
-          <SheetDescription className="text-ink-400">
+          <SheetDescription className="text-coal-3">
             Учётная запись для работы в системе
           </SheetDescription>
         </SheetHeader>
@@ -147,10 +147,10 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
               </Select>
             </div>
           )}
-          <div className="flex items-center justify-between rounded-xl border border-ink-700 px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
               <div className="text-sm font-medium">Активен</div>
-              <div className="text-xs text-ink-400">
+              <div className="text-xs text-coal-3">
                 Может входить в систему
               </div>
             </div>
@@ -168,7 +168,7 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={mutation.isPending}
-            className="bg-brass-500 text-ink-900 hover:bg-brass-400"
+            className="bg-coral text-cream hover:bg-coral-600"
           >
             {mutation.isPending ? '…' : 'Сохранить'}
           </Button>

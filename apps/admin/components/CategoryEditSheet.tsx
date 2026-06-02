@@ -51,12 +51,12 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full max-w-md bg-ink-900 text-paper-100">
+      <SheetContent className="w-full max-w-md bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl font-normal">
             Категория {draft.code}
           </SheetTitle>
-          <SheetDescription className="text-ink-400">
+          <SheetDescription className="text-coal-3">
             Редактирование карточки категории
           </SheetDescription>
         </SheetHeader>
@@ -86,7 +86,7 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
                 type="color"
                 value={draft.color}
                 onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-                className="h-10 w-16 cursor-pointer rounded-md border border-ink-700 bg-ink-800"
+                className="h-10 w-16 cursor-pointer rounded-md border border-hair bg-white"
               />
             </div>
             <div className="space-y-2">
@@ -111,7 +111,7 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={mutation.isPending}
-            className="bg-brass-500 text-ink-900 hover:bg-brass-400"
+            className="bg-coral text-cream hover:bg-coral-600"
           >
             {mutation.isPending ? '…' : 'Сохранить'}
           </Button>

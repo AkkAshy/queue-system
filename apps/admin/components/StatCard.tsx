@@ -7,15 +7,15 @@ interface Props {
 
 export function StatCard({ eyebrow, value, unit, hint }: Props) {
   return (
-    <div className="rounded-2xl border border-ink-700 bg-ink-800/40 p-6">
+    <div className="rounded-2xl border border-hair bg-white/40 p-6">
       <span className="eyebrow">{eyebrow}</span>
       <div className="mt-4 flex items-baseline gap-2">
-        <span className="text-4xl font-semibold tabular-nums text-paper-100">
+        <span className="text-4xl font-semibold tabular-nums text-coal">
           {value}
         </span>
-        {unit && <span className="text-sm text-ink-400">{unit}</span>}
+        {unit && <span className="text-sm text-coal-3">{unit}</span>}
       </div>
-      {hint && <p className="mt-2 text-xs text-ink-400">{hint}</p>}
+      {hint && <p className="mt-2 text-xs text-coal-3">{hint}</p>}
     </div>
   );
 }

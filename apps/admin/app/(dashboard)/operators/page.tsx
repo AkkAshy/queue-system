@@ -57,20 +57,20 @@ export default function OperatorsPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-brass-500">Справочник</span>
+          <span className="eyebrow text-coral">Справочник</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">Операторы</h1>
-          <p className="mt-1 text-sm text-ink-400">{users.length} учётных записей</p>
+          <p className="mt-1 text-sm text-coal-3">{users.length} учётных записей</p>
         </div>
         <Button
           onClick={() => setCreating(true)}
-          className="gap-2 bg-brass-500 text-ink-900 hover:bg-brass-400"
+          className="gap-2 bg-coral text-cream hover:bg-coral-600"
         >
           <Plus className="h-4 w-4" />
           Создать оператора
         </Button>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-800/40">
+      <section className="overflow-hidden rounded-2xl border border-hair bg-white/40">
         <table className="admin-table w-full">
           <thead>
             <tr>
@@ -87,15 +87,15 @@ export default function OperatorsPage() {
               <tr key={u.id}>
                 <td className="font-mono text-sm">{u.username}</td>
                 <td>{u.name}</td>
-                <td className="text-ink-300">{ROLE_LABEL[u.role]}</td>
+                <td className="text-coal-2">{ROLE_LABEL[u.role]}</td>
                 <td className="font-mono text-sm">{counterLabel(u.counter_id)}</td>
                 <td>
                   {u.is_active ? (
-                    <Badge variant="outline" className="border-ink-600 text-paper-100">
+                    <Badge variant="outline" className="border-hair-2 text-coal">
                       активен
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="border-ink-700 text-ink-500">
+                    <Badge variant="outline" className="border-hair text-coal-3">
                       выкл
                     </Badge>
                   )}
@@ -106,7 +106,7 @@ export default function OperatorsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => setEditing(u)}
-                      className="gap-1.5 border-ink-600"
+                      className="gap-1.5 border-hair-2"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -116,7 +116,7 @@ export default function OperatorsPage() {
                       onClick={() => {
                         if (confirm(`Удалить ${u.username}?`)) deleteMut.mutate(u.id);
                       }}
-                      className="gap-1.5 border-ink-600 text-red-400 hover:text-red-300"
+                      className="gap-1.5 border-hair-2 text-red-400 hover:text-red-300"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>

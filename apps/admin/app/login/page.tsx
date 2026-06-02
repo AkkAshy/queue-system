@@ -43,15 +43,15 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md space-y-7 rounded-2xl border border-ink-700 bg-ink-800/50 p-10 shadow-paper-lift"
+        className="w-full max-w-md space-y-7 rounded-2xl border border-hair bg-white/50 p-10 shadow-paper-lift"
       >
         <div>
-          <span className="eyebrow text-brass-500">NDPI · Admin</span>
+          <span className="eyebrow text-coral">NDPI · Admin</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">
             Вход в панель
           </h1>
-          <p className="mt-2 text-sm text-ink-400">
-            Демо: <code className="text-brass-400">admin / admin</code>
+          <p className="mt-2 text-sm text-coal-3">
+            Демо: <code className="text-coral-600">admin / admin</code>
           </p>
         </div>
 
@@ -83,7 +83,7 @@ export default function LoginPage() {
         <Button
           type="submit"
           disabled={submitting}
-          className="w-full bg-brass-500 text-ink-900 hover:bg-brass-400"
+          className="w-full bg-coral text-cream hover:bg-coral-600"
         >
           {submitting ? '…' : 'Войти'}
         </Button>

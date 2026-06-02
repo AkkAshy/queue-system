@@ -48,20 +48,20 @@ export default function CountersPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-brass-500">Справочник</span>
+          <span className="eyebrow text-coral">Справочник</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">Окна</h1>
-          <p className="mt-1 text-sm text-ink-400">{counters.length} рабочих мест</p>
+          <p className="mt-1 text-sm text-coal-3">{counters.length} рабочих мест</p>
         </div>
         <Button
           onClick={() => setCreating(true)}
-          className="gap-2 bg-brass-500 text-ink-900 hover:bg-brass-400"
+          className="gap-2 bg-coral text-cream hover:bg-coral-600"
         >
           <Plus className="h-4 w-4" />
           Создать окно
         </Button>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-ink-700 bg-ink-800/40">
+      <section className="overflow-hidden rounded-2xl border border-hair bg-white/40">
         <table className="admin-table w-full">
           <thead>
             <tr>
@@ -75,20 +75,20 @@ export default function CountersPage() {
           <tbody>
             {counters.map((c) => (
               <tr key={c.id}>
-                <td className="font-mono text-lg font-semibold text-brass-400">
+                <td className="font-mono text-lg font-semibold text-coral-600">
                   {c.number}
                 </td>
                 <td>{c.name}</td>
-                <td className="font-mono text-sm text-ink-300">
+                <td className="font-mono text-sm text-coal-2">
                   {c.service_ids.length}
                 </td>
                 <td>
                   {c.is_active ? (
-                    <Badge variant="outline" className="border-ink-600 text-paper-100">
+                    <Badge variant="outline" className="border-hair-2 text-coal">
                       активно
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="border-ink-700 text-ink-500">
+                    <Badge variant="outline" className="border-hair text-coal-3">
                       выкл
                     </Badge>
                   )}
@@ -99,7 +99,7 @@ export default function CountersPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => setEditing(c)}
-                      className="gap-1.5 border-ink-600"
+                      className="gap-1.5 border-hair-2"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -111,7 +111,7 @@ export default function CountersPage() {
                           deleteMut.mutate(c.id);
                         }
                       }}
-                      className="gap-1.5 border-ink-600 text-red-400 hover:text-red-300"
+                      className="gap-1.5 border-hair-2 text-red-400 hover:text-red-300"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>

@@ -1,14 +1,14 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono } from 'next/font/google';
+import { Rubik } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { AuthGuard } from '@/components/AuthGuard';
 
-const jetbrains = JetBrains_Mono({
+const rubik = Rubik({
   subsets: ['latin', 'latin-ext', 'cyrillic'],
-  variable: '--font-jetbrains',
+  variable: '--font-rubik',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
@@ -17,8 +17,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={jetbrains.variable}>
-      <body className="min-h-screen bg-ink-900 font-sans text-paper-100 antialiased">
+    <html lang="ru" className={rubik.variable}>
+      <body className="min-h-screen bg-cream font-sans text-coal antialiased">
         <Providers>
           <AuthGuard>{children}</AuthGuard>
         </Providers>

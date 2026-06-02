@@ -44,14 +44,14 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <span className="eyebrow text-brass-500">Обзор</span>
+        <span className="eyebrow text-coral">Обзор</span>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">
           Сегодня в офисе регистратора
         </h1>
       </div>
 
       {isLoading || !data ? (
-        <div className="text-sm text-ink-400">Загрузка…</div>
+        <div className="text-sm text-coal-3">Загрузка…</div>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-5">
@@ -75,10 +75,10 @@ export default function DashboardPage() {
 
           <HourlyLoadChart data={data.hourly} />
 
-          <section className="rounded-2xl border border-ink-700 bg-ink-800/40 p-6">
+          <section className="rounded-2xl border border-hair bg-white/40 p-6">
             <div className="mb-4 flex items-center justify-between">
               <span className="eyebrow">Последние талоны</span>
-              <span className="text-xs text-ink-400">{data.recent.length} записей</span>
+              <span className="text-xs text-coal-3">{data.recent.length} записей</span>
             </div>
             <table className="admin-table w-full">
               <thead>
@@ -94,16 +94,16 @@ export default function DashboardPage() {
               <tbody>
                 {data.recent.map((t) => (
                   <tr key={t.id}>
-                    <td className="font-mono font-semibold text-brass-400">{t.number}</td>
-                    <td className="text-ink-300">{t.category_code}</td>
-                    <td className="max-w-[340px] truncate text-paper-100">{t.service_name}</td>
-                    <td className="font-mono text-ink-300">{t.counter_number ?? '—'}</td>
+                    <td className="font-mono font-semibold text-coral-600">{t.number}</td>
+                    <td className="text-coal-2">{t.category_code}</td>
+                    <td className="max-w-[340px] truncate text-coal">{t.service_name}</td>
+                    <td className="font-mono text-coal-2">{t.counter_number ?? '—'}</td>
                     <td>
-                      <Badge variant="outline" className="border-ink-600 text-ink-300">
+                      <Badge variant="outline" className="border-hair-2 text-coal-2">
                         {STATUS_LABEL[t.status] ?? t.status}
                       </Badge>
                     </td>
-                    <td className="font-mono text-xs text-ink-400">
+                    <td className="font-mono text-xs text-coal-3">
                       {new Date(t.issued_at).toLocaleTimeString('ru-RU', {
                         hour: '2-digit',
                         minute: '2-digit',

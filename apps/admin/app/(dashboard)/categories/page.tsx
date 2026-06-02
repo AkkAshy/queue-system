@@ -28,9 +28,9 @@ export default function CategoriesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <span className="eyebrow text-brass-500">Справочник</span>
+        <span className="eyebrow text-coral">Справочник</span>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">Категории</h1>
-        <p className="mt-1 text-sm text-ink-400">
+        <p className="mt-1 text-sm text-coal-3">
           {categories.length} категорий · {services.length} услуг всего
         </p>
       </div>
@@ -45,7 +45,7 @@ export default function CategoriesPage() {
               <button
                 key={c.id}
                 onClick={() => setEditing(c)}
-                className="group relative overflow-hidden rounded-2xl border border-ink-700 bg-ink-800/40 p-6 text-left transition-all duration-200 hover:border-ink-600 hover:bg-ink-800/70"
+                className="group relative overflow-hidden rounded-2xl border border-hair bg-white/40 p-6 text-left transition-all duration-200 hover:border-hair-2 hover:bg-white/70"
               >
                 <span
                   className="absolute inset-x-6 top-0 h-[3px] rounded-b-full"
@@ -70,9 +70,9 @@ export default function CategoriesPage() {
                     {c.code}
                   </span>
                 </div>
-                <div className="text-sm font-medium text-paper-100">{c.name_ru}</div>
-                <div className="mt-1 text-xs text-ink-400">{c.name_kaa}</div>
-                <div className="mt-5 border-t border-ink-700 pt-4 text-xs text-ink-400">
+                <div className="text-sm font-medium text-coal">{c.name_ru}</div>
+                <div className="mt-1 text-xs text-coal-3">{c.name_kaa}</div>
+                <div className="mt-5 border-t border-hair pt-4 text-xs text-coal-3">
                   {count} услуг
                 </div>
               </button>
