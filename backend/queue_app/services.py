@@ -69,7 +69,7 @@ def current_for_counter(counter: Counter) -> Ticket | None:
 
 
 @transaction.atomic
-def call_next(*, counter: Counter, operator) -> Ticket | None:
+def call_next(*, counter: Counter, operator_id=None) -> Ticket | None:
     """Call the oldest eligible waiting ticket to this counter."""
     q = queue_for_counter(counter)
     if not q:
@@ -77,7 +77,7 @@ def call_next(*, counter: Counter, operator) -> Ticket | None:
     ticket = Ticket.objects.select_for_update().get(pk=q[0].pk)
     ticket.status = TicketStatus.CALLED
     ticket.counter = counter
-    ticket.operator = operator
+    ticket.operator_id = operator_id
     ticket.called_at = timezone.now()
     ticket.save(update_fields=["status", "counter", "operator", "called_at"])
     return ticket

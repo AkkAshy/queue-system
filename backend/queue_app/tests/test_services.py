@@ -48,7 +48,7 @@ def test_call_next_picks_oldest_eligible():
     t_mid = services.create_ticket(category=a, service=s2, idempotency_key="k2")  # eligible, oldest eligible
     services.create_ticket(category=a, service=s2, idempotency_key="k3")
 
-    called = services.call_next(counter=counter, operator=None)
+    called = services.call_next(counter=counter, operator_id=None)
     assert called is not None
     assert called.id == t_mid.id
     assert called.status == TicketStatus.CALLED
@@ -61,7 +61,7 @@ def test_call_next_picks_oldest_eligible():
 
 def test_call_next_returns_none_when_empty():
     counter = Counter.objects.create(number="9", name="Okno 9")
-    assert services.call_next(counter=counter, operator=None) is None
+    assert services.call_next(counter=counter, operator_id=None) is None
 
 
 def test_finish_skip_transfer_transitions():
@@ -72,7 +72,7 @@ def test_finish_skip_transfer_transitions():
     c2 = Counter.objects.create(number="2", name="Okno 2")
 
     services.create_ticket(category=a, service=s, idempotency_key="k1")
-    called = services.call_next(counter=c1, operator=None)
+    called = services.call_next(counter=c1, operator_id=None)
 
     moved = services.transfer(called, c2)
     assert moved.status == TicketStatus.WAITING
@@ -89,8 +89,8 @@ def test_active_calls_newest_first():
     c.services.set([s])
     services.create_ticket(category=a, service=s, idempotency_key="k1")
     services.create_ticket(category=a, service=s, idempotency_key="k2")
-    first = services.call_next(counter=c, operator=None)
-    second = services.call_next(counter=c, operator=None)
+    first = services.call_next(counter=c, operator_id=None)
+    second = services.call_next(counter=c, operator_id=None)
     calls = services.active_calls()
     assert [t.id for t in calls] == [second.id, first.id]
 

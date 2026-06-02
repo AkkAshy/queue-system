@@ -1,0 +1,63 @@
+from rest_framework import serializers
+
+from catalog.models import Service
+
+from .models import Counter, OperatorSession, Ticket
+
+
+class CounterSerializer(serializers.ModelSerializer):
+    service_ids = serializers.PrimaryKeyRelatedField(
+        source="services", many=True, queryset=Service.objects.all(), required=False
+    )
+
+    class Meta:
+        model = Counter
+        fields = ["id", "number", "name", "service_ids", "is_active"]
+
+
+class TicketSerializer(serializers.ModelSerializer):
+    category_id = serializers.PrimaryKeyRelatedField(source="category", read_only=True)
+    service_id = serializers.PrimaryKeyRelatedField(
+        source="service", read_only=True, allow_null=True
+    )
+    counter_id = serializers.PrimaryKeyRelatedField(
+        source="counter", read_only=True, allow_null=True
+    )
+    operator_id = serializers.PrimaryKeyRelatedField(
+        source="operator", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = Ticket
+        fields = [
+            "id", "number", "category_id", "service_id", "status",
+            "counter_id", "operator_id", "created_at", "called_at",
+        ]
+
+
+class CreateTicketSerializer(serializers.Serializer):
+    category_id = serializers.IntegerField()
+    service_id = serializers.IntegerField(required=False, allow_null=True)
+    idempotency_key = serializers.CharField()
+
+
+class OperatorSessionSerializer(serializers.ModelSerializer):
+    user_id = serializers.PrimaryKeyRelatedField(source="user", read_only=True)
+    counter_id = serializers.PrimaryKeyRelatedField(source="counter", read_only=True)
+
+    class Meta:
+        model = OperatorSession
+        fields = ["id", "user_id", "counter_id", "status", "started_at", "ended_at"]
+
+
+class DisplayCallSerializer(serializers.Serializer):
+    """Serializes a Ticket (with .counter) into the DisplayCall shape."""
+
+    id = serializers.UUIDField()
+    number = serializers.CharField()
+    category_id = serializers.IntegerField()
+    counter_id = serializers.IntegerField()
+    counter_number = serializers.CharField(source="counter.number")
+    counter_name = serializers.CharField(source="counter.name")
+    called_at = serializers.DateTimeField()
+    status = serializers.CharField()
