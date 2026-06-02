@@ -12,7 +12,7 @@ Design: [`docs/superpowers/specs/2026-04-20-queue-system-design.md`](docs/superp
 - ✅ Phase 3 — admin on mocks (login, dashboard, services/categories/counters/operators CRUD)
 - ✅ Phase 4 — operator mini-widget (Chrome app-mode, 360×560)
 - ✅ Phase 5 — display (табло) on mocks — fullscreen board, active calls, ticker, chime
-- ⏳ Phase 6 — Django 6 API (replace mocks)
+- ✅ Phase 6 — Django 6 API (DRF, JWT, Postgres) — full contract parity, frontends switchable off MSW
 - ⏳ Phase 7 — realtime (Channels + Redis)
 - ⏳ Phase 8 — deploy
 
@@ -27,7 +27,7 @@ apps/
 packages/
   types/       # shared TS types
   mocks/       # MSW handlers + fixture (65 services, 9 categories)
-backend/       # Django 6 API (planned)
+backend/       # Django 6 + DRF API — Postgres, JWT, drf-spectacular (/api/docs)
 agent/         # Go local agent — ESC/POS for Xprinter XP-80T, built
 ```
 
@@ -48,6 +48,24 @@ pnpm --filter @queue/display dev  # http://localhost:3004  (fullscreen waiting-h
 ```
 
 Default locale is `kaa` (Karakalpak). Switch to `ru` via the top-right button.
+
+### Backend (Phase 6)
+
+```bash
+cd backend
+poetry install
+createdb queue_system                       # or: docker compose -f docker-compose.dev.yml up -d
+cp .env.example .env
+poetry run python manage.py migrate
+poetry run python manage.py load_services_fixture   # 9 categories, 65 services, 5 counters, admin/admin
+poetry run python manage.py runserver 8000          # API on http://localhost:8000, docs at /api/docs
+```
+
+Point any frontend at the real API instead of MSW:
+
+```bash
+NEXT_PUBLIC_USE_MSW=0 pnpm --filter @queue/admin dev   # proxies /api/* → http://localhost:8000
+```
 
 ## Scripts
 

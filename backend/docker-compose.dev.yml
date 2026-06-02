@@ -1,0 +1,19 @@
+# Optional local Postgres for the backend. Production (Phase 8) targets PG 16.
+# Local dev can also just use a host Postgres — point DATABASE_URL at it.
+#
+#   docker compose -f docker-compose.dev.yml up -d
+#   DATABASE_URL=postgres://queue:queue@localhost:5432/queue_system
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: queue
+      POSTGRES_PASSWORD: queue
+      POSTGRES_DB: queue_system
+    ports:
+      - "5432:5432"
+    volumes:
+      - queue_pgdata:/var/lib/postgresql/data
+
+volumes:
+  queue_pgdata:
