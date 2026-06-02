@@ -8,6 +8,7 @@ frontend's expectations.
 """
 
 import json
+import os
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
@@ -17,9 +18,12 @@ from django.db import transaction
 from catalog.models import Service, ServiceCategory
 from queue_app.models import Counter
 
-FIXTURES = (
+# Dev reads the monorepo single source; prod (Docker) vendors a copy and sets
+# FIXTURES_DIR (the JS packages aren't shipped in the backend image).
+_DEFAULT_FIXTURES = (
     Path(__file__).resolve().parents[4] / "packages" / "mocks" / "src" / "fixtures"
 )
+FIXTURES = Path(os.environ.get("FIXTURES_DIR", _DEFAULT_FIXTURES))
 
 DEFAULT_PASSWORDS = {"admin": "admin"}
 FALLBACK_PASSWORD = "operator"
