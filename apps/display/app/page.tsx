@@ -69,15 +69,18 @@ export default function Page() {
   const rest = list.slice(1);
 
   return (
-    <main className="flex h-screen w-screen flex-col">
-      <header className="flex items-start justify-between px-12 pt-10">
-        <div className="leading-none">
-          <span className="eyebrow text-brass-500">NDPI · Gezek tablosı</span>
-          <h1 className="mt-3 font-serif text-h3 font-normal text-paper-100">
-            Ájiniyaz atındaǵı NMPI — Registrator ofisi
-          </h1>
+    <main className="flex h-screen w-screen flex-col bg-cream">
+      <header className="flex items-center justify-between border-b border-hair bg-white px-12 py-6">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-r bg-coral text-lg font-bold text-white shadow-coral">
+            NP
+          </div>
+          <div className="flex flex-col leading-tight">
+            <span className="text-xl font-bold text-coal">Ájiniyaz atındaǵı NMPI</span>
+            <span className="text-base text-coal-2">Registrator ofisi · Gezek tablosı</span>
+          </div>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
           <DisplayClock />
           <MuteButton muted={muted} onToggle={toggleMute} />
         </div>

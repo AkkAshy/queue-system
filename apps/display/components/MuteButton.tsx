@@ -15,7 +15,7 @@ export function MuteButton({ muted, onToggle }: Props) {
       variant="outline"
       size="icon"
       aria-label={muted ? 'Unmute' : 'Mute'}
-      className="h-12 w-12 border-ink-700 text-ink-300 hover:text-brass-400"
+      className="h-12 w-12 border-hair-2 bg-white text-coal-2 hover:text-coral"
     >
       {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
     </Button>

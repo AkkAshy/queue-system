@@ -3,79 +3,57 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // warm institutional palette — "paper on charcoal"
+        // ── New "warm paper" design system (light) ──
+        cream: { DEFAULT: '#FBF6EE', deep: '#F4ECE0' },
+        coral: { DEFAULT: '#DC6A4C', 600: '#C8573B', soft: '#FBE9E1' },
+        coal: { DEFAULT: '#2C2722', 2: '#6E655A', 3: '#A79D8F' },
+        hair: { DEFAULT: '#ECE2D2', 2: '#E0D4C0' },
+        grass: { DEFAULT: '#2F9E72', soft: '#E4F2EA' },
+        cat: {
+          a: { DEFAULT: '#3F7CC4', soft: '#E7F0FB' },
+          b: { DEFAULT: '#2C9E76', soft: '#E4F3EC' },
+          c: { DEFAULT: '#7B6AD2', soft: '#ECE9FA' },
+          d: { DEFAULT: '#E0973A', soft: '#FBEEDB' },
+          e: { DEFAULT: '#1FA2A2', soft: '#E0F3F3' },
+          f: { DEFAULT: '#E0654F', soft: '#FBE7E2' },
+          g: { DEFAULT: '#C85C9C', soft: '#F9E7F2' },
+          h: { DEFAULT: '#4E97D1', soft: '#E5F1FA' },
+          i: { DEFAULT: '#8C79C6', soft: '#EFEAF8' },
+        },
+
+        // ── Legacy dark tokens (kept until fully migrated; harmless) ──
         ink: {
-          950: '#0E0D0C', // deepest
-          900: '#141312', // primary bg
-          800: '#1B1918', // surface
-          700: '#26231F', // raised surface
-          600: '#38342E', // border / divider
-          500: '#5C574F', // muted text
-          400: '#8A8277', // secondary text
-          300: '#B8AEA0', // tertiary text
+          950: '#0E0D0C', 900: '#141312', 800: '#1B1918', 700: '#26231F',
+          600: '#38342E', 500: '#5C574F', 400: '#8A8277', 300: '#B8AEA0',
         },
-        paper: {
-          50:  '#FBF9F3',
-          100: '#F5F1E8', // foreground / primary text
-          200: '#E8E1D0',
-          300: '#D6CBB2',
-        },
-        // single accent — muted brass / medal gold
-        brass: {
-          300: '#E0C98D',
-          400: '#D4B878',
-          500: '#C9A961', // primary accent
-          600: '#B5922F',
-          700: '#8C7125',
-        },
-        // subtle tonal indicators for the 9 categories (4px stripe on each card,
-        // not dominant fills). All desaturated, similar luminosity.
+        paper: { 50: '#FBF9F3', 100: '#F5F1E8', 200: '#E8E1D0', 300: '#D6CBB2' },
+        brass: { 300: '#E0C98D', 400: '#D4B878', 500: '#C9A961', 600: '#B5922F', 700: '#8C7125' },
         category: {
-          A: '#7A8FA3', // slate blue
-          B: '#8D9C7C', // sage
-          C: '#A98A63', // taupe
-          D: '#C2A359', // ochre
-          E: '#9B8F6E', // linen
-          F: '#B56E5A', // terracotta
-          G: '#8C5E6B', // plum
-          H: '#6E8489', // pewter teal
-          I: '#7E7489', // heather
+          A: '#7A8FA3', B: '#8D9C7C', C: '#A98A63', D: '#C2A359', E: '#9B8F6E',
+          F: '#B56E5A', G: '#8C5E6B', H: '#6E8489', I: '#7E7489',
         },
       },
       fontFamily: {
-        // JetBrains Mono across the board — one voice.
-        sans: ['var(--font-jetbrains)', 'ui-monospace', 'monospace'],
-        serif: ['var(--font-jetbrains)', 'ui-monospace', 'monospace'],
+        // Rubik — the new system typeface (apps load it as --font-rubik).
+        sans: ['var(--font-rubik)', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['var(--font-rubik)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'ui-monospace', 'monospace'],
       },
-      fontSize: {
-        // editorial hierarchy — many sizes, not just "big/medium/small"
-        'micro': ['0.6875rem', { lineHeight: '1', letterSpacing: '0.12em' }], // uppercase labels
-        'eyebrow': ['0.75rem', { lineHeight: '1.1', letterSpacing: '0.18em' }],
-        'meta': ['0.875rem', { lineHeight: '1.4' }],
-        'body': ['1.0625rem', { lineHeight: '1.55' }],
-        'lead': ['1.375rem', { lineHeight: '1.45' }],
-        'h3': ['1.75rem', { lineHeight: '1.2' }],
-        'h2': ['2.5rem', { lineHeight: '1.1', letterSpacing: '-0.015em' }],
-        'h1': ['3.75rem', { lineHeight: '1.02', letterSpacing: '-0.02em' }],
-        'display': ['5.5rem', { lineHeight: '0.95', letterSpacing: '-0.025em' }],
-        // touch-kiosk specific
-        'ticket': ['11rem', { lineHeight: '0.88', letterSpacing: '-0.04em' }],
-        'category-letter': ['3.5rem', { lineHeight: '1', letterSpacing: '-0.02em' }],
-      },
-      boxShadow: {
-        'paper': '0 1px 2px 0 rgba(0,0,0,0.4), 0 12px 40px -12px rgba(0,0,0,0.55)',
-        'paper-lift': '0 2px 4px 0 rgba(0,0,0,0.35), 0 20px 60px -18px rgba(0,0,0,0.65)',
-        'inset-line': 'inset 0 1px 0 0 rgba(245,241,232,0.05)',
-      },
-      spacing: {
-        '18': '4.5rem',
-        '22': '5.5rem',
-        '30': '7.5rem',
-      },
       borderRadius: {
+        rsm: '10px',
+        r: '16px',
+        rlg: '22px',
+        rxl: '28px',
         '4xl': '2rem',
       },
+      boxShadow: {
+        soft: '0 4px 8px rgba(74,57,40,.06), 0 24px 48px -16px rgba(74,57,40,.12)',
+        coral: '0 8px 20px -6px rgba(220,106,76,.45)',
+        // legacy
+        paper: '0 1px 2px 0 rgba(0,0,0,0.4), 0 12px 40px -12px rgba(0,0,0,0.55)',
+        'paper-lift': '0 2px 4px 0 rgba(0,0,0,0.35), 0 20px 60px -18px rgba(0,0,0,0.65)',
+      },
+      spacing: { '18': '4.5rem', '22': '5.5rem', '30': '7.5rem' },
     },
   },
 };

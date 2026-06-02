@@ -12,7 +12,7 @@ export function DisplayClock() {
   }, []);
 
   if (!now) {
-    return <span className="font-mono text-h3 tabular-nums text-ink-300">—:—</span>;
+    return <span className="text-3xl tabular-nums text-coal-3">—:—</span>;
   }
 
   const time = new Intl.DateTimeFormat('ru-RU', {
@@ -29,12 +29,8 @@ export function DisplayClock() {
 
   return (
     <div className="flex flex-col items-end leading-none">
-      <span className="font-mono text-h2 font-semibold tabular-nums text-paper-100">
-        {time}
-      </span>
-      <span className="mt-2 font-mono text-meta capitalize tabular-nums text-ink-400">
-        {date}
-      </span>
+      <span className="text-4xl font-bold tabular-nums text-coal">{time}</span>
+      <span className="mt-1.5 text-base capitalize tabular-nums text-coal-3">{date}</span>
     </div>
   );
 }
