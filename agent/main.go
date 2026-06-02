@@ -114,6 +114,8 @@ func newWriter(c config.Config) (printer.Writer, error) {
 		return printer.NewFileWriter(c.PrinterDevice, timeout), nil
 	case config.BackendNull:
 		return printer.NewNullWriter(), nil
+	case config.BackendWindows:
+		return printer.NewWindowsWriter(c.PrinterName, timeout), nil
 	}
 	return nil, fmt.Errorf("unreachable: validated backend %q has no constructor", c.Backend)
 }

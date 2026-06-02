@@ -11,9 +11,10 @@ import (
 type Backend = string
 
 const (
-	BackendCUPS Backend = "cups" // pipe ESC/POS bytes into `lp -d <name> -o raw`
-	BackendFile Backend = "file" // write raw bytes to a file/device path
-	BackendNull Backend = "null" // discard bytes (for tests + dev without printer)
+	BackendCUPS    Backend = "cups"    // pipe ESC/POS bytes into `lp -d <name> -o raw`
+	BackendFile    Backend = "file"    // write raw bytes to a file/device path
+	BackendNull    Backend = "null"    // discard bytes (for tests + dev without printer)
+	BackendWindows Backend = "windows" // Windows print spooler RAW (uses PrinterName)
 )
 
 // Config is the fully-resolved runtime configuration.
@@ -77,16 +78,19 @@ func FromEnv(c Config) Config {
 // Validate checks the config is internally consistent.
 func (c Config) Validate() error {
 	switch c.Backend {
-	case BackendCUPS, BackendFile, BackendNull:
+	case BackendCUPS, BackendFile, BackendNull, BackendWindows:
 		// ok
 	default:
-		return fmt.Errorf("unknown backend %q (allowed: cups, file, null)", c.Backend)
+		return fmt.Errorf("unknown backend %q (allowed: cups, file, null, windows)", c.Backend)
 	}
 	if c.Backend == BackendFile && c.PrinterDevice == "" {
 		return fmt.Errorf("backend=file requires AGENT_PRINTER_DEVICE (printer device path)")
 	}
 	if c.Backend == BackendCUPS && c.PrinterName == "" {
 		return fmt.Errorf("backend=cups requires AGENT_PRINTER_NAME (CUPS queue name)")
+	}
+	if c.Backend == BackendWindows && c.PrinterName == "" {
+		return fmt.Errorf("backend=windows requires AGENT_PRINTER_NAME (Windows printer name)")
 	}
 	if c.Addr == "" {
 		return fmt.Errorf("listen address must not be empty")

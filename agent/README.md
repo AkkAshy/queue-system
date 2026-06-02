@@ -125,10 +125,36 @@ Errors return `4xx` / `5xx` with `{"ok": false, "error": "…"}`.
   thermal printers only have one code page active at a time and we picked
   CP1251 for Russian. A v2 upgrade can render KAA text as a raster bitmap
   and combine both scripts on the same ticket.
-- **Windows not supported.** The `file` backend path format is POSIX. A
-  future Windows backend can use named-pipe raw printing.
 - **No retry.** A failed `Write` returns `502`. The kiosk retries via the
   same idempotency-key path.
+
+## Windows kiosk (backend=windows)
+
+The kiosk in the office runs on Windows, so the agent has a `windows` backend
+that sends raw ESC/POS bytes through the Windows print spooler (RAW datatype) —
+no driver rendering, no CUPS.
+
+```
+GOOS=windows GOARCH=amd64 go build -o ndpi-agent.exe .
+```
+
+Run it on the kiosk PC (set the printer's *installed Windows name*):
+
+```bat
+set AGENT_BACKEND=windows
+set AGENT_PRINTER_NAME=XP-80T
+set AGENT_ADDR=127.0.0.1:8089
+ndpi-agent.exe
+```
+
+Autostart: drop a shortcut (or the above as a `.bat`) into
+`shell:startup`, or register it as a service with `nssm`.
+
+**No mixed-content problem:** the kiosk page is served over HTTPS
+(`https://nmpi.avtoxizmet.uz`) but calls the agent at `http://localhost:8089`.
+Browsers treat `localhost`/`127.0.0.1` as a *secure context*, so the HTTPS page
+is allowed to reach the local HTTP agent — as long as the agent runs on the
+**same machine** as the kiosk browser.
 
 ## Deploying on the kiosk PC (Ubuntu)
 
