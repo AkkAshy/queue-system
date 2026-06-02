@@ -141,3 +141,17 @@ export interface CallNextRequest {
 export interface TransferTicketRequest {
   counter_id: number;
 }
+
+// -------- Phase 5 additions --------
+
+/** A call rendered on the waiting-hall display — ticket joined with its counter. */
+export interface DisplayCall {
+  id: string;             // ticket id
+  number: string;         // 'A013'
+  category_id: number;
+  counter_id: number;
+  counter_number: string; // '1'
+  counter_name: string;   // 'Okno 1 — …'
+  called_at: string;      // ISO
+  status: 'called' | 'serving';
+}
