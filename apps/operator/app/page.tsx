@@ -8,6 +8,7 @@ import { CallNextButton } from '@/components/CallNextButton';
 import { QueueList } from '@/components/QueueList';
 import { OperatorFooter } from '@/components/OperatorFooter';
 import { api } from '@/lib/api';
+import { useRealtime } from '@/lib/useRealtime';
 import { useOperatorStore } from '@/store/operator-store';
 
 async function fetchServices(): Promise<Service[]> {
@@ -23,6 +24,10 @@ export default function Page() {
   const counterName = useOperatorStore((s) => s.counterName);
   const userName = useOperatorStore((s) => s.userName);
   const onBreak = useOperatorStore((s) => s.onBreak);
+
+  // Realtime: another operator's call/finish or a new kiosk ticket pushes a WS
+  // event → refetch current + queue instantly. Polling remains the fallback.
+  useRealtime('/ws/operator', [['current'], ['queue']]);
 
   const current = useQuery({
     queryKey: ['current', counterId],

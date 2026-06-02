@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useChime } from '@/lib/useChime';
+import { useRealtime } from '@/lib/useRealtime';
 import { Hero } from '@/components/Hero';
 import { CallsGrid } from '@/components/CallsGrid';
 import { Ticker } from '@/components/Ticker';
@@ -34,6 +35,10 @@ export default function Page() {
       return next;
     });
   };
+
+  // Realtime: a call/finish on the backend pushes a WS event → instant refetch.
+  // Polling stays as the fallback when the socket is down (or in mock mode).
+  useRealtime('/ws/display', [['display-active']]);
 
   const calls = useQuery({
     queryKey: ['display-active'],

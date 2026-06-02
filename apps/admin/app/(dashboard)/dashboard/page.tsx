@@ -9,6 +9,7 @@ import type {
 import { StatCard } from '@/components/StatCard';
 import { HourlyLoadChart } from '@/components/HourlyLoadChart';
 import { Badge } from '@/components/ui/badge';
+import { useRealtime } from '@/lib/useRealtime';
 
 interface DashboardResp {
   metrics: DashboardMetrics;
@@ -32,6 +33,9 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function DashboardPage() {
+  // Realtime: ticket created/finished pushes a WS event → live metrics refresh.
+  useRealtime('/ws/admin', [['dashboard']]);
+
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: fetchDashboard,
