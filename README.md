@@ -14,7 +14,7 @@ Design: [`docs/superpowers/specs/2026-04-20-queue-system-design.md`](docs/superp
 - ✅ Phase 5 — display (табло) on mocks — fullscreen board, active calls, ticker, chime
 - ✅ Phase 6 — Django 6 API (DRF, JWT, Postgres) — full contract parity, frontends switchable off MSW
 - ✅ Phase 7 — realtime (Channels + Redis) — WS push to display/operator/admin (<1s), polling fallback
-- ✅ Phase 8 — deploy artifacts (Docker compose, Nginx/TLS, runbook) — full stack verified locally; live VPS rollout operator-run
+- ✅ Phase 8 — deploy: **live at https://nmpi.avtoxizmet.uz** (single host, path-routed: `/`=kiosk, `/admin`, `/operator`, `/tablo`, `/api`, `/ws`) — Docker stack behind the shared host nginx + Let's Encrypt TLS
 
 ## Structure
 
