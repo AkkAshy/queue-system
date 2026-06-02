@@ -43,7 +43,9 @@ export interface Ticket {
   service_id: number | null;
   status: TicketStatus;
   counter_id: number | null;
-  created_at: string;   // ISO
+  operator_id: number | null;   // who's currently serving (null while waiting)
+  created_at: string;           // ISO
+  called_at: string | null;     // ISO — set when status becomes 'called'
 }
 
 export interface CreateTicketRequest {
@@ -111,4 +113,31 @@ export interface LoginResponse {
   username: string;
   role: UserRole;
   expires_at: string;     // ISO
+}
+
+// -------- Phase 4 additions --------
+
+export type OperatorSessionStatus = 'active' | 'break' | 'ended';
+
+export interface OperatorSession {
+  id: number;
+  user_id: number;
+  counter_id: number;
+  status: OperatorSessionStatus;
+  started_at: string;       // ISO
+  ended_at: string | null;  // ISO
+}
+
+export interface CreateOperatorSessionRequest {
+  user_id: number;
+  counter_id: number;
+}
+
+export interface CallNextRequest {
+  counter_id: number;
+  operator_id: number;
+}
+
+export interface TransferTicketRequest {
+  counter_id: number;
 }
