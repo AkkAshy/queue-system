@@ -1,0 +1,9 @@
+**/node_modules
+**/.next
+**/.turbo
+**/dist
+.git
+backend/.venv
+backend/staticfiles
+**/*.log
+**/.DS_Store

@@ -1,6 +1,10 @@
+import path from 'node:path';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  output: 'standalone',
+  outputFileTracingRoot: path.join(import.meta.dirname, '../../'),
   transpilePackages: ['@queue/types', '@queue/mocks'],
   // Phase 6: when MSW is off, proxy /api/* to the real Django backend so
   // frontend code keeps using same-origin relative paths (no CORS needed).

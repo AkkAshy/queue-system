@@ -23,6 +23,10 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+// The kiosk is fully dynamic/interactive — skip static prerender (next-intl
+// server APIs opt into dynamic rendering anyway). Needed for `next build`.
+export const dynamic = 'force-dynamic';
+
 export default async function LocaleLayout({
   children,
   params,
