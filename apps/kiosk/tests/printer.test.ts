@@ -9,7 +9,9 @@ const sampleTicket: Ticket = {
   service_id: 5,
   status: 'waiting',
   counter_id: null,
+  operator_id: null,
   created_at: new Date('2026-04-20T14:30:00Z').toISOString(),
+  called_at: null,
 };
 
 const sampleCategory: ServiceCategory = {

@@ -13,6 +13,9 @@ export default defineConfig({
     url: 'http://localhost:3001',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
+    // No physical Xprinter / Go agent in the test env — mock the print step
+    // so the happy path is deterministic. See lib/printer.ts.
+    env: { NEXT_PUBLIC_PRINTER_MOCK: '1' },
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
