@@ -1,4 +1,8 @@
+import uuid
+
+from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 class Counter(models.Model):
@@ -15,3 +19,86 @@ class Counter(models.Model):
 
     def __str__(self) -> str:
         return f"№{self.number} · {self.name}"
+
+
+class TicketStatus(models.TextChoices):
+    WAITING = "waiting"
+    CALLED = "called"
+    SERVING = "serving"
+    SERVED = "served"
+    SKIPPED = "skipped"
+    CANCELLED = "cancelled"
+
+
+class Ticket(models.Model):
+    """A queue ticket. `id` is a uuid string to match the frontend contract."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    number = models.CharField(max_length=8)  # 'A042'
+    category = models.ForeignKey(
+        "catalog.ServiceCategory", on_delete=models.PROTECT, related_name="tickets"
+    )
+    service = models.ForeignKey(
+        "catalog.Service", on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tickets",
+    )
+    status = models.CharField(
+        max_length=16, choices=TicketStatus.choices, default=TicketStatus.WAITING
+    )
+    counter = models.ForeignKey(
+        Counter, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="tickets",
+    )
+    operator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="served_tickets",
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+    called_at = models.DateTimeField(null=True, blank=True)
+    # Phase-1 idempotency for kiosk double-taps; not part of the API response.
+    idempotency_key = models.CharField(max_length=128, unique=True, null=True, blank=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self) -> str:
+        return self.number
+
+
+class OperatorSession(models.Model):
+    """An operator's shift on a counter. Matches the `OperatorSession` contract."""
+
+    class Status(models.TextChoices):
+        ACTIVE = "active"
+        BREAK = "break"
+        ENDED = "ended"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="sessions"
+    )
+    counter = models.ForeignKey(
+        Counter, on_delete=models.CASCADE, related_name="sessions"
+    )
+    status = models.CharField(
+        max_length=16, choices=Status.choices, default=Status.ACTIVE
+    )
+    started_at = models.DateTimeField(default=timezone.now)
+    ended_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"session#{self.pk} user={self.user_id} counter={self.counter_id}"
+
+
+class DailyCounter(models.Model):
+    """Per-category-code daily sequence for ticket numbers. Reset implicitly by
+    keying on the date; concurrency-safe via select_for_update in services."""
+
+    code = models.CharField(max_length=4)
+    date = models.DateField()
+    last_seq = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        unique_together = ("code", "date")
+
+    def __str__(self) -> str:
+        return f"{self.code}@{self.date}={self.last_seq}"
