@@ -18,10 +18,10 @@ export function LocaleSwitcher() {
   return (
     <button
       onClick={switchTo}
-      className="group flex items-center gap-3 rounded-full border border-ink-600/70 px-5 py-2.5 text-meta font-medium tracking-wide text-paper-100/90 transition-colors duration-200 hover:border-brass-500/60 hover:text-brass-300"
+      className="group flex items-center gap-2.5 rounded-full border border-hair-2 px-5 py-2.5 text-sm font-medium tracking-wide text-coal-2 transition-colors duration-200 hover:border-coral hover:text-coral"
     >
       <span
-        className="h-1.5 w-1.5 rounded-full bg-brass-500/80 transition-transform duration-200 group-hover:scale-125"
+        className="h-1.5 w-1.5 rounded-full bg-coral transition-transform duration-200 group-hover:scale-125"
         aria-hidden
       />
       {t('switch')}

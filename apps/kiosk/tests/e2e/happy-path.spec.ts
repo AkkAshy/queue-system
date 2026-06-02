@@ -5,7 +5,7 @@ test('student picks a service and gets a ticket number', async ({ page }) => {
 
   // Wait for MSW to boot and categories to load (dev mode spinner may show briefly)
   // Main screen shows 9 category cards
-  await expect(page.getByRole('heading', { name: 'Xosh kelipsiz' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Sizge ne kerek?' })).toBeVisible({ timeout: 15_000 });
   const categoryA = page.locator('a', { hasText: 'Akademiyalıq iskerlik' });
   await expect(categoryA).toBeVisible();
   await categoryA.click();
@@ -25,7 +25,7 @@ test('student picks a service and gets a ticket number', async ({ page }) => {
 test('idle timer returns to home from category page', async ({ page }) => {
   await page.goto('/kaa');
   // Wait for MSW boot
-  await expect(page.getByRole('heading', { name: 'Xosh kelipsiz' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Sizge ne kerek?' })).toBeVisible({ timeout: 15_000 });
   await page.locator('a', { hasText: 'Akademiyalıq iskerlik' }).click();
   await expect(page.locator('text=Akademiyalıq maǵlıwmatnama').first()).toBeVisible();
 
@@ -33,5 +33,5 @@ test('idle timer returns to home from category page', async ({ page }) => {
   // so verify the hook exists by waiting >30s would be slow. Instead
   // just ensure navigation works when the store is reset:
   await page.goto('/kaa');
-  await expect(page.getByRole('heading', { name: 'Xosh kelipsiz' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sizge ne kerek?' })).toBeVisible();
 });

@@ -1,48 +1,29 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Monogram } from './Monogram';
 import { Clock } from './Clock';
 import { LocaleSwitcher } from './LocaleSwitcher';
 
-interface Props {
-  /** When true, a thin brass separator line is rendered under the header */
-  withDivider?: boolean;
-}
-
-export function KioskHeader({ withDivider = true }: Props) {
+export function KioskHeader() {
   const t = useTranslations('institution');
 
   return (
-    <header className="flex items-center justify-between gap-8 px-12 pt-10 pb-7">
-      <div className="flex items-center gap-5">
-        <Monogram className="h-12 w-12 text-brass-500" />
-        <div className="flex flex-col leading-none">
-          <span className="eyebrow" style={{ color: '#C9A961' }}>
-            {t('short')} · {t('office')}
-          </span>
-          <span className="mt-2 font-serif text-h3 font-normal text-paper-100">
-            {t('full')}
-          </span>
+    <header className="flex items-center justify-between gap-8 border-b border-hair bg-white px-10 py-5">
+      <div className="flex items-center gap-4">
+        {/* coral monogram chip */}
+        <div className="flex h-12 w-12 items-center justify-center rounded-r bg-coral text-base font-bold text-white shadow-coral">
+          NP
+        </div>
+        <div className="flex flex-col leading-tight">
+          <span className="text-lg font-bold text-coal">{t('name')}</span>
+          <span className="text-sm text-coal-2">{t('office')}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-6">
         <Clock />
-        <span className="h-10 w-px bg-ink-600" aria-hidden />
         <LocaleSwitcher />
       </div>
-
-      {withDivider && (
-        <div
-          className="pointer-events-none absolute left-0 right-0 mt-[100px] h-px"
-          style={{
-            background:
-              'linear-gradient(90deg, transparent 0%, rgba(201,169,97,0.35) 20%, rgba(201,169,97,0.35) 80%, transparent 100%)',
-          }}
-          aria-hidden
-        />
-      )}
     </header>
   );
 }

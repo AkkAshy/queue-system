@@ -2,12 +2,15 @@
   "institution": {
     "short": "NDPI",
     "full": "Ájiniyaz atındaǵı Nókis mámleketlik pedagogikalıq institutı",
-    "office": "Registrator ofisi"
+    "office": "Registrator ofisi",
+    "name": "Ájiniyaz atındaǵı NMPI"
   },
   "welcome": {
     "eyebrow": "Elektron nóbet",
-    "title": "Xosh kelipsiz",
-    "subtitle": "Xızmet kategoriyasın tańlań"
+    "title": "Sizge ne kerek?",
+    "subtitle": "Xızmet kategoriyasın tańlań",
+    "popular": "Kóp soralatuǵın",
+    "byCategory": "Yamasa kategoriya boyınsha tabıń"
   },
   "category": {
     "eyebrow": "Kategoriya",

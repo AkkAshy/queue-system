@@ -13,7 +13,7 @@ export function Clock() {
     return () => clearInterval(id);
   }, []);
 
-  if (!now) return <span className="font-mono text-meta text-ink-300">—:—</span>;
+  if (!now) return <span className="text-base text-coal-3">—:—</span>;
 
   const time = new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
     hour: '2-digit',
@@ -28,8 +28,8 @@ export function Clock() {
 
   return (
     <div className="flex flex-col items-end leading-none">
-      <span className="font-mono text-lead tabular-nums text-paper-100">{time}</span>
-      <span className="mt-1 font-mono text-meta tabular-nums text-ink-400">{date}</span>
+      <span className="text-xl font-semibold tabular-nums text-coal">{time}</span>
+      <span className="mt-1 text-sm tabular-nums text-coal-3">{date}</span>
     </div>
   );
 }

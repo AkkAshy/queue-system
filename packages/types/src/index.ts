@@ -34,6 +34,7 @@ export interface Service {
   delivery_type: DeliveryType;
   requires_visit: boolean;
   is_active: boolean;
+  is_popular?: boolean;   // surfaced in the kiosk "popular" shortcut block
 }
 
 export interface Ticket {

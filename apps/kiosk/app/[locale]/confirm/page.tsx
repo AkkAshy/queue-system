@@ -7,6 +7,7 @@ import type { Ticket } from '@queue/types';
 import { useKioskStore } from '@/store/kiosk-store';
 import { printTicket } from '@/lib/printer';
 import { KioskHeader } from '@/components/KioskHeader';
+import { categoryVisual } from '@/lib/category-visual';
 
 async function createTicket(body: {
   category_id: number;
@@ -49,6 +50,7 @@ export default function ConfirmPage() {
 
   const serviceName = locale === 'ru' ? service.name_ru : service.name_kaa;
   const categoryName = locale === 'ru' ? category.name_ru : category.name_kaa;
+  const { Icon, chip } = categoryVisual(category.code);
 
   const confirm = () => {
     const key = prepareIdempotencyKey();
@@ -60,67 +62,47 @@ export default function ConfirmPage() {
   };
 
   return (
-    <main className="relative flex min-h-screen flex-col bg-fade-top">
+    <main className="flex min-h-screen flex-col bg-cream">
       <KioskHeader />
 
-      <section className="flex flex-1 items-center justify-center px-12 pb-16">
-        <div className="w-full max-w-3xl">
-          <div className="mb-10 text-center">
-            <span className="eyebrow text-brass-400">{t('eyebrow')}</span>
-            <h1 className="mt-4 font-serif text-h1 font-normal text-paper-100">
-              {t('title')}
-            </h1>
+      <section className="flex flex-1 items-center justify-center px-10 pb-16">
+        <div className="w-full max-w-2xl">
+          <div className="mb-8 text-center">
+            <span className="eyebrow text-coral">{t('eyebrow')}</span>
+            <h1 className="mt-3 text-4xl font-extrabold text-coal">{t('title')}</h1>
           </div>
 
-          <div className="card-surface rounded-3xl p-10">
-            <span
-              className="absolute inset-x-10 top-0 h-[3px] rounded-b-full"
-              style={{ backgroundColor: category.color }}
-              aria-hidden
-            />
-
-            <div className="grid grid-cols-[auto_1fr] gap-x-10 gap-y-8">
-              <span
-                className="font-serif text-display leading-none"
-                style={{ color: category.color, fontWeight: 400 }}
-              >
-                {category.code}
+          <div className="paper rounded-rxl p-8">
+            <div className="flex items-center gap-5">
+              <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-rlg ${chip}`}>
+                <Icon className="h-8 w-8" strokeWidth={2} />
               </span>
-              <div className="flex flex-col justify-center">
+              <div>
                 <span className="eyebrow">{t('category')}</span>
-                <span className="mt-3 font-serif text-h3 font-normal leading-tight text-paper-100">
-                  {categoryName}
-                </span>
+                <div className="mt-1 text-xl font-bold text-coal">{categoryName}</div>
               </div>
-
-              <div className="col-span-2 h-px bg-ink-700" aria-hidden />
-
-              <span className="eyebrow col-span-2">{t('service')}</span>
-              <p className="col-span-2 -mt-6 font-sans text-lead leading-snug text-paper-100">
-                {serviceName}
-              </p>
             </div>
+
+            <div className="my-6 h-px bg-hair" aria-hidden />
+
+            <span className="eyebrow">{t('service')}</span>
+            <p className="mt-2 text-lg font-medium leading-snug text-coal">{serviceName}</p>
           </div>
 
-          <div className="mt-10 flex gap-5">
+          <div className="mt-8 flex gap-4">
             <button
-              className="flex-1 rounded-2xl border border-ink-700 bg-ink-800/60 py-7 font-sans text-lead font-medium text-ink-300 transition-all duration-200 hover:border-ink-600 hover:text-paper-100 disabled:opacity-40"
+              className="flex-1 rounded-r border border-hair-2 bg-white py-6 text-lg font-semibold text-coal-2 transition-colors hover:text-coal disabled:opacity-40"
               onClick={() => router.push(`/${locale}`)}
               disabled={mutation.isPending}
             >
               {t('cancel')}
             </button>
             <button
-              className="group relative flex-1 overflow-hidden rounded-2xl bg-brass-500 py-7 font-sans text-lead font-semibold text-ink-900 shadow-paper-lift transition-all duration-200 hover:bg-brass-400 active:translate-y-[1px] disabled:opacity-60"
+              className="flex-1 rounded-r bg-coral py-6 text-lg font-bold text-white shadow-coral transition-all hover:bg-coral-600 active:translate-y-px disabled:opacity-60"
               onClick={confirm}
               disabled={mutation.isPending}
             >
-              <span className="relative z-10">
-                {mutation.isPending ? t('printing') : t('getTicket')}
-              </span>
-              {mutation.isPending && (
-                <span className="absolute inset-x-0 bottom-0 h-1 animate-pulse bg-ink-900/20" />
-              )}
+              {mutation.isPending ? t('printing') : t('getTicket')}
             </button>
           </div>
         </div>
