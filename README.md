@@ -14,7 +14,7 @@ Design: [`docs/superpowers/specs/2026-04-20-queue-system-design.md`](docs/superp
 - ✅ Phase 5 — display (табло) on mocks — fullscreen board, active calls, ticker, chime
 - ✅ Phase 6 — Django 6 API (DRF, JWT, Postgres) — full contract parity, frontends switchable off MSW
 - ✅ Phase 7 — realtime (Channels + Redis) — WS push to display/operator/admin (<1s), polling fallback
-- ⏳ Phase 8 — deploy
+- ✅ Phase 8 — deploy artifacts (Docker compose, Nginx/TLS, runbook) — full stack verified locally; live VPS rollout operator-run
 
 ## Structure
 
@@ -29,6 +29,7 @@ packages/
   mocks/       # MSW handlers + fixture (65 services, 9 categories)
 backend/       # Django 6 + DRF API — Postgres, JWT, drf-spectacular (/api/docs)
 agent/         # Go local agent — ESC/POS for Xprinter XP-80T, built
+deploy/        # production Docker compose + Nginx/TLS + runbook (Phase 8)
 ```
 
 ## Prerequisites
