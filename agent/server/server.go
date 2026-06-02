@@ -17,12 +17,16 @@ import (
 type Options struct {
 	Writer printer.Writer // where to send ESC/POS bytes
 	Logger *slog.Logger   // nil => slog.Default()
+	// Proxy, when set, handles every request that isn't /print or /health
+	// (kiosk-host mode: forwards the UI + /api + /ws to the cloud).
+	Proxy http.Handler
 }
 
 // Server owns the HTTP router and serializes print jobs.
 type Server struct {
 	writer printer.Writer
 	log    *slog.Logger
+	proxy  http.Handler
 
 	// Serialize print jobs — most thermal printers cannot interleave.
 	mu sync.Mutex
@@ -37,7 +41,7 @@ func New(opt Options) (*Server, error) {
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Server{writer: opt.Writer, log: log}, nil
+	return &Server{writer: opt.Writer, log: log, proxy: opt.Proxy}, nil
 }
 
 // Router returns an http.Handler covering all agent endpoints.
@@ -45,6 +49,10 @@ func (s *Server) Router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", s.handleHealth)
 	mux.HandleFunc("/print", s.handlePrint)
+	// Kiosk-host mode: everything else is reverse-proxied to the cloud.
+	if s.proxy != nil {
+		mux.Handle("/", s.proxy)
+	}
 	return mux
 }
 

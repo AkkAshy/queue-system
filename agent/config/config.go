@@ -36,6 +36,15 @@ type Config struct {
 
 	// Path for append-only log file. If empty, logs go to stdout only.
 	LogFile string
+
+	// Kiosk-host mode: when set, the agent reverse-proxies every non-/print,
+	// non-/health request to this upstream (the cloud), so the kiosk browser
+	// talks to a single same-origin localhost host. Empty = pure print agent.
+	Upstream string
+
+	// When true, launch a Chrome kiosk window pointed at the local server on
+	// startup (Windows kiosk PC).
+	LaunchKiosk bool
 }
 
 // Default returns the baseline configuration (no env / flags applied).
@@ -71,6 +80,12 @@ func FromEnv(c Config) Config {
 		if f, err := strconv.ParseFloat(v, 64); err == nil {
 			c.PrintTimeoutSeconds = f
 		}
+	}
+	if v := os.Getenv("AGENT_UPSTREAM"); v != "" {
+		c.Upstream = v
+	}
+	if v := os.Getenv("AGENT_KIOSK"); v == "1" || v == "true" {
+		c.LaunchKiosk = true
 	}
 	return c
 }

@@ -7,8 +7,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
+	"os/exec"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -30,6 +34,8 @@ func main() {
 	printerDevice := flag.String("printer-device", cfg.PrinterDevice, "raw device path, e.g. /dev/usb/lp0")
 	printSecs := flag.Float64("print-timeout-seconds", cfg.PrintTimeoutSeconds, "write-to-printer timeout (seconds)")
 	logFile := flag.String("log-file", cfg.LogFile, "append structured logs to this file (stdout too)")
+	upstream := flag.String("upstream", cfg.Upstream, "kiosk-host: reverse-proxy non-/print requests to this URL (e.g. https://nmpi.avtoxizmet.uz)")
+	kioskFlag := flag.Bool("kiosk", cfg.LaunchKiosk, "launch a Chrome kiosk window at the local server on startup")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
@@ -44,6 +50,8 @@ func main() {
 	cfg.PrinterDevice = *printerDevice
 	cfg.PrintTimeoutSeconds = *printSecs
 	cfg.LogFile = *logFile
+	cfg.Upstream = *upstream
+	cfg.LaunchKiosk = *kioskFlag
 
 	if err := cfg.Validate(); err != nil {
 		fmt.Fprintln(os.Stderr, "config error:", err)
@@ -62,7 +70,16 @@ func main() {
 		os.Exit(2)
 	}
 
-	srv, err := server.New(server.Options{Writer: writer, Logger: logger})
+	var proxy http.Handler
+	if cfg.Upstream != "" {
+		proxy, err = newProxy(cfg.Upstream)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "proxy error:", err)
+			os.Exit(2)
+		}
+	}
+
+	srv, err := server.New(server.Options{Writer: writer, Logger: logger, Proxy: proxy})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "server error:", err)
 		os.Exit(2)
@@ -74,6 +91,12 @@ func main() {
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 20 * time.Second, // printing can be slow
 		IdleTimeout:  60 * time.Second,
+	}
+	// Kiosk-host proxies long-lived WebSockets — global read/write deadlines
+	// would kill them, so disable them in that mode.
+	if proxy != nil {
+		httpSrv.ReadTimeout = 0
+		httpSrv.WriteTimeout = 0
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(),
@@ -93,6 +116,10 @@ func main() {
 			stop()
 		}
 	}()
+
+	if cfg.LaunchKiosk {
+		go launchKiosk("http://"+cfg.Addr+"/", logger)
+	}
 
 	<-ctx.Done()
 	logger.Info("shutting down")
@@ -118,6 +145,53 @@ func newWriter(c config.Config) (printer.Writer, error) {
 		return printer.NewWindowsWriter(c.PrinterName, timeout), nil
 	}
 	return nil, fmt.Errorf("unreachable: validated backend %q has no constructor", c.Backend)
+}
+
+// newProxy builds a reverse proxy to the cloud upstream. The Host header is
+// rewritten to the upstream host so the cloud nginx vhost matches. WebSocket
+// upgrades are handled transparently by httputil.ReverseProxy.
+func newProxy(upstream string) (http.Handler, error) {
+	target, err := url.Parse(upstream)
+	if err != nil {
+		return nil, fmt.Errorf("parse upstream %q: %w", upstream, err)
+	}
+	rp := httputil.NewSingleHostReverseProxy(target)
+	base := rp.Director
+	rp.Director = func(req *http.Request) {
+		base(req)
+		req.Host = target.Host // match cloud server_name + TLS SNI
+	}
+	return rp, nil
+}
+
+// launchKiosk opens a Chrome kiosk window at the local URL. Best-effort:
+// logs and returns on failure (the server keeps running regardless).
+func launchKiosk(targetURL string, logger *slog.Logger) {
+	var candidates []string
+	switch runtime.GOOS {
+	case "windows":
+		candidates = []string{
+			`C:\Program Files\Google\Chrome\Application\chrome.exe`,
+			`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+		}
+	case "darwin":
+		candidates = []string{"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"}
+	default:
+		candidates = []string{"google-chrome", "chromium", "chromium-browser"}
+	}
+	args := []string{
+		"--kiosk", targetURL,
+		"--no-first-run", "--no-default-browser-check",
+		"--disable-pinch", "--overscroll-history-navigation=0",
+	}
+	for _, bin := range candidates {
+		cmd := exec.Command(bin, args...)
+		if err := cmd.Start(); err == nil {
+			logger.Info("kiosk browser launched", "bin", bin, "url", targetURL)
+			return
+		}
+	}
+	logger.Warn("could not launch a Chrome/Chromium kiosk window; open it manually", "url", targetURL)
 }
 
 func buildLogger(logFile string) (*slog.Logger, error) {

@@ -156,6 +156,27 @@ Browsers treat `localhost`/`127.0.0.1` as a *secure context*, so the HTTPS page
 is allowed to reach the local HTTP agent — as long as the agent runs on the
 **same machine** as the kiosk browser.
 
+## Kiosk-host mode (single binary: UI + API + print + Chrome)
+
+Set `AGENT_UPSTREAM` and the agent becomes the *only* thing the kiosk PC needs:
+it serves the kiosk UI + `/api` + `/ws` by reverse-proxying the cloud, handles
+`/print` locally, and (with `--kiosk` / `AGENT_KIOSK=1`) launches Chrome in
+kiosk mode at its own `http://localhost` — the whole page is one same-origin
+HTTP host (no mixed content at all).
+
+```bat
+set AGENT_BACKEND=windows
+set AGENT_PRINTER_NAME=XP-80T
+set AGENT_ADDR=127.0.0.1:8089
+set AGENT_UPSTREAM=https://nmpi.avtoxizmet.uz
+set AGENT_KIOSK=1
+ndpi-agent.exe
+```
+
+Entire kiosk install = `ndpi-agent.exe` + this `.bat` in `shell:startup`.
+Chrome must already be installed (Go can't embed a browser). The UI still loads
+from the cloud (needs internet); an offline-cached UI is a future `embed` build.
+
 ## Deploying on the kiosk PC (Ubuntu)
 
 ```bash
