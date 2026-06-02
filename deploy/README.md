@@ -75,6 +75,25 @@ docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 ```
 (The `/deploy` skill automates pull + rebuild + restart + health check.)
 
+## Shared-host variant (single domain, path-routed, existing host nginx)
+
+For a VPS that already runs nginx + other sites (e.g. the `avtoxizmet.uz` box),
+use `docker-compose.host.yml`: services bind to `127.0.0.1` free ports
+(backend 8210, kiosk 3210, admin 3211, operator 3212, display 3213), and the
+HOST nginx serves one vhost `nmpi.avtoxizmet.uz` with **path routing**
+(`/`=kiosk, `/admin`, `/operator`, `/tablo`, `/api`, `/ws`). The frontends are
+built with `APP_BASE_PATH` so assets resolve under their subpath.
+
+```bash
+cd /root/kanat/queue-system/deploy
+cp .env.prod.example .env.prod   # DOMAIN=nmpi.avtoxizmet.uz, real secrets
+docker compose -f docker-compose.host.yml --env-file .env.prod up -d --build
+sudo cp nginx/nmpi.avtoxizmet.uz.conf /etc/nginx/sites-available/
+sudo ln -s /etc/nginx/sites-available/nmpi.avtoxizmet.uz.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d nmpi.avtoxizmet.uz
+```
+
 ## Notes
 - `.env.prod`, `nginx/queue.conf` (rendered), and `certbot/` are gitignored — they hold
   secrets / host-specific values.

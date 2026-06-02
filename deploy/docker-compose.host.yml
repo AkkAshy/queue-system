@@ -1,0 +1,91 @@
+# Variant for a shared VPS that already runs nginx on 80/443 (e.g. avtoxizmet.uz
+# box). Services bind to 127.0.0.1 free ports; the HOST nginx proxies a single
+# vhost (nmpi.avtoxizmet.uz) to them with path routing. No nginx container here.
+#   docker compose -f deploy/docker-compose.host.yml --env-file deploy/.env.prod up -d --build
+name: ndpi-queue
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    env_file: .env.prod
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+    ports:
+      - "127.0.0.1:8210:8000"
+
+  kiosk:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        APP: kiosk
+        NEXT_PUBLIC_USE_MSW: "0"
+        NEXT_PUBLIC_WS_URL: wss://${DOMAIN}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3210:3000"
+
+  admin:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        APP: admin
+        NEXT_PUBLIC_USE_MSW: "0"
+        NEXT_PUBLIC_WS_URL: wss://${DOMAIN}
+        APP_BASE_PATH: /admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3211:3000"
+
+  operator:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        APP: operator
+        NEXT_PUBLIC_USE_MSW: "0"
+        NEXT_PUBLIC_WS_URL: wss://${DOMAIN}
+        APP_BASE_PATH: /operator
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3212:3000"
+
+  display:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        APP: display
+        NEXT_PUBLIC_USE_MSW: "0"
+        NEXT_PUBLIC_WS_URL: wss://${DOMAIN}
+        APP_BASE_PATH: /tablo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3213:3000"
+
+volumes:
+  pgdata:

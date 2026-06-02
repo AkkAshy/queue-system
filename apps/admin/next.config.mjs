@@ -5,6 +5,8 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
   outputFileTracingRoot: path.join(import.meta.dirname, '../../'),
+  // Single-host path routing in prod (e.g. /admin). Unset in dev → served at /.
+  basePath: process.env.APP_BASE_PATH || undefined,
   transpilePackages: ['@queue/types', '@queue/mocks'],
   // Phase 6: when MSW is off, proxy /api/* to the real Django backend so
   // frontend code keeps using same-origin relative paths (no CORS needed).
