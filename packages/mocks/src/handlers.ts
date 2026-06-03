@@ -61,6 +61,11 @@ export const handlers = [
   // ---------- categories ----------
   http.get('/api/categories', () => HttpResponse.json(categories.list())),
 
+  http.post('/api/categories', async ({ request }) => {
+    const body = (await request.json()) as Omit<ServiceCategory, 'id'>;
+    return HttpResponse.json(categories.create(body), { status: 201 });
+  }),
+
   http.patch('/api/categories/:id', async ({ params, request }) => {
     const id = Number(params.id);
     const patch = (await request.json()) as Record<string, unknown>;
@@ -69,6 +74,12 @@ export const handlers = [
       return HttpResponse.json({ error: 'not found' }, { status: 404 });
     }
     return HttpResponse.json(updated);
+  }),
+
+  http.delete('/api/categories/:id', ({ params }) => {
+    const ok = categories.remove(Number(params.id));
+    if (!ok) return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // ---------- services ----------
@@ -81,6 +92,11 @@ export const handlers = [
     return HttpResponse.json(list);
   }),
 
+  http.post('/api/services', async ({ request }) => {
+    const body = (await request.json()) as Omit<Service, 'id'>;
+    return HttpResponse.json(servicesStore.create(body), { status: 201 });
+  }),
+
   http.patch('/api/services/:id', async ({ params, request }) => {
     const id = Number(params.id);
     const patch = (await request.json()) as Record<string, unknown>;
@@ -89,6 +105,12 @@ export const handlers = [
       return HttpResponse.json({ error: 'not found' }, { status: 404 });
     }
     return HttpResponse.json(updated);
+  }),
+
+  http.delete('/api/services/:id', ({ params }) => {
+    const ok = servicesStore.remove(Number(params.id));
+    if (!ok) return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    return new HttpResponse(null, { status: 204 });
   }),
 
   // ---------- counters ----------

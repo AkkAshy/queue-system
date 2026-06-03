@@ -24,4 +24,18 @@ export class CategoryStore {
     this.items[idx] = updated;
     return { ...updated };
   }
+
+  create(data: Omit<ServiceCategory, 'id'>): ServiceCategory {
+    const id = this.items.reduce((m, c) => Math.max(m, c.id), 0) + 1;
+    const created: ServiceCategory = { ...data, id };
+    this.items.push(created);
+    return { ...created };
+  }
+
+  remove(id: number): boolean {
+    const idx = this.items.findIndex((x) => x.id === id);
+    if (idx < 0) return false;
+    this.items.splice(idx, 1);
+    return true;
+  }
 }

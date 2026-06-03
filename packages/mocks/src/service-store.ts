@@ -30,4 +30,18 @@ export class ServiceStore {
     this.items[idx] = updated;
     return { ...updated };
   }
+
+  create(data: Omit<Service, 'id'>): Service {
+    const id = this.items.reduce((m, s) => Math.max(m, s.id), 0) + 1;
+    const created: Service = { ...data, id };
+    this.items.push(created);
+    return { ...created };
+  }
+
+  remove(id: number): boolean {
+    const idx = this.items.findIndex((x) => x.id === id);
+    if (idx < 0) return false;
+    this.items.splice(idx, 1);
+    return true;
+  }
 }
