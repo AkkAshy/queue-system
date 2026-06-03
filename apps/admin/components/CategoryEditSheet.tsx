@@ -17,23 +17,36 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 interface Props {
-  category: ServiceCategory | null;
+  category: ServiceCategory | null; // null = creating
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+type Draft = Omit<ServiceCategory, 'id'> & { id?: number };
+
+const EMPTY: Draft = {
+  code: '',
+  name_kaa: '',
+  name_ru: '',
+  color: '#DC6A4C',
+  order: 0,
+};
+
 export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<ServiceCategory | null>(category);
+  const [draft, setDraft] = useState<Draft>(category ?? EMPTY);
 
-  useEffect(() => setDraft(category), [category]);
+  useEffect(() => setDraft(category ?? EMPTY), [category]);
+
+  const isCreate = !draft.id;
 
   const mutation = useMutation({
-    mutationFn: async (c: ServiceCategory) => {
-      const res = await fetch(`/api/categories/${c.id}`, {
-        method: 'PATCH',
+    mutationFn: async (d: Draft) => {
+      const url = isCreate ? '/api/categories' : `/api/categories/${d.id}`;
+      const res = await fetch(url, {
+        method: isCreate ? 'POST' : 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(c),
+        body: JSON.stringify(d),
       });
       if (!res.ok) throw new Error('save failed');
       return (await res.json()) as ServiceCategory;
@@ -41,34 +54,56 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['services'] });
-      toast.success('Сохранено');
+      toast.success(isCreate ? 'Категория создана' : 'Сохранено');
       onOpenChange(false);
     },
     onError: () => toast.error('Не удалось сохранить'),
   });
 
-  if (!draft) return null;
+  const canSave =
+    !!draft.code.trim() &&
+    !!draft.name_ru.trim() &&
+    !!draft.name_kaa.trim() &&
+    !mutation.isPending;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full max-w-md bg-cream text-coal">
         <SheetHeader>
-          <SheetTitle className="font-serif text-2xl font-normal">
-            Категория {draft.code}
+          <SheetTitle className="text-2xl font-bold">
+            {isCreate ? 'Новая категория' : `Категория ${draft.code}`}
           </SheetTitle>
           <SheetDescription className="text-coal-3">
-            Редактирование карточки категории
+            {isCreate ? 'Создание категории услуг' : 'Редактирование категории'}
           </SheetDescription>
         </SheetHeader>
 
         <div className="my-8 space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="name_kaa">Название (kaa)</Label>
-            <Input
-              id="name_kaa"
-              value={draft.name_kaa}
-              onChange={(e) => setDraft({ ...draft, name_kaa: e.target.value })}
-            />
+          <div className="grid grid-cols-[1fr_auto] gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="code">Код (A, B, …)</Label>
+              <Input
+                id="code"
+                value={draft.code}
+                maxLength={4}
+                onChange={(e) =>
+                  setDraft({ ...draft, code: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="order">Порядок</Label>
+              <Input
+                id="order"
+                type="number"
+                min={0}
+                className="w-24"
+                value={draft.order}
+                onChange={(e) =>
+                  setDraft({ ...draft, order: Number(e.target.value) || 0 })
+                }
+              />
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="name_ru">Название (ru)</Label>
@@ -78,29 +113,23 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
               onChange={(e) => setDraft({ ...draft, name_ru: e.target.value })}
             />
           </div>
-          <div className="grid grid-cols-[auto_1fr] gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="color">Цвет</Label>
-              <input
-                id="color"
-                type="color"
-                value={draft.color}
-                onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-                className="h-10 w-16 cursor-pointer rounded-md border border-hair bg-white"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="order">Порядок</Label>
-              <Input
-                id="order"
-                type="number"
-                min={0}
-                value={draft.order}
-                onChange={(e) =>
-                  setDraft({ ...draft, order: Number(e.target.value) || 0 })
-                }
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="name_kaa">Название (kaa)</Label>
+            <Input
+              id="name_kaa"
+              value={draft.name_kaa}
+              onChange={(e) => setDraft({ ...draft, name_kaa: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="color">Цвет</Label>
+            <input
+              id="color"
+              type="color"
+              value={draft.color}
+              onChange={(e) => setDraft({ ...draft, color: e.target.value })}
+              className="h-10 w-16 cursor-pointer rounded-md border border-hair bg-white"
+            />
           </div>
         </div>
 
@@ -110,10 +139,10 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
           </Button>
           <Button
             onClick={() => mutation.mutate(draft)}
-            disabled={mutation.isPending}
+            disabled={!canSave}
             className="bg-coral text-cream hover:bg-coral-600"
           >
-            {mutation.isPending ? '…' : 'Сохранить'}
+            {mutation.isPending ? '…' : isCreate ? 'Создать' : 'Сохранить'}
           </Button>
         </SheetFooter>
       </SheetContent>
