@@ -132,3 +132,28 @@ def test_dashboard_shape(seeded, client):
     assert set(body) == {"metrics", "hourly", "recent"}
     assert set(body["metrics"]) == {"ticketsToday", "avgWaitMinutes", "activeCounters", "served"}
     assert body["metrics"]["activeCounters"] == 5
+
+
+def test_display_settings_get_and_patch(seeded, client):
+    r = client.get("/api/display/settings")
+    assert r.status_code == 200
+    assert "youtube_url" in r.json()
+
+    p = client.patch(
+        "/api/display/settings",
+        {"youtube_url": "https://youtu.be/abc123"},
+        format="json",
+    )
+    assert p.status_code == 200
+    assert p.json()["youtube_url"] == "https://youtu.be/abc123"
+    # persisted (singleton)
+    assert client.get("/api/display/settings").json()["youtube_url"] == "https://youtu.be/abc123"
+
+
+def test_display_board_lists_active_windows(seeded, client):
+    board = client.get("/api/display/board").json()
+    assert len(board) >= 1
+    row = board[0]
+    assert set(row) == {"counter_id", "counter_number", "counter_name", "current"}
+    # all windows idle right after seeding
+    assert all(w["current"] is None for w in board)

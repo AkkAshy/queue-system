@@ -5,25 +5,29 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useChime } from '@/lib/useChime';
 import { useRealtime } from '@/lib/useRealtime';
-import { Hero } from '@/components/Hero';
-import { CallsGrid } from '@/components/CallsGrid';
+import { MediaZone } from '@/components/MediaZone';
+import { NowServing } from '@/components/NowServing';
+import { WindowStrip } from '@/components/WindowStrip';
 import { Ticker } from '@/components/Ticker';
 import { DisplayClock } from '@/components/DisplayClock';
 import { MuteButton } from '@/components/MuteButton';
 
 const TICKER_ITEMS = [
-  'Talonıńızdı joǵaltpań — nómer ekranда kórsetiledi',
+  'Talonıńızdı joǵaltpań — nómer ekranda kórsetiledi',
   'Сохраняйте талон до вызова',
   'Shaqırıw boyınsha kórsetilgen aynaǵa barıń',
   'NDPI · Registrator ofisi',
 ];
 
+// How long a freshly-called ticket flashes coral before settling to neutral.
+const FLASH_MS = 4000;
+
 export default function Page() {
   const playChime = useChime();
   const [muted, setMuted] = useState(false);
   const seenIds = useRef<Set<string> | null>(null);
+  const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
 
-  // Restore mute preference once on mount.
   useEffect(() => {
     setMuted(localStorage.getItem('display-muted') === '1');
   }, []);
@@ -36,41 +40,68 @@ export default function Page() {
     });
   };
 
-  // Realtime: a call/finish on the backend pushes a WS event → instant refetch.
-  // Polling stays as the fallback when the socket is down (or in mock mode).
-  useRealtime('/ws/display', [['display-active']]);
+  // A call/finish on the backend pushes a WS event → instant refetch of all
+  // three board queries. Polling is the fallback when the socket is down.
+  useRealtime('/ws/display', [
+    ['display-active'],
+    ['display-board'],
+    ['display-settings'],
+  ]);
 
-  const calls = useQuery({
+  const active = useQuery({
     queryKey: ['display-active'],
     queryFn: api.getActiveCalls,
     refetchInterval: 2000,
-    // The board is an always-on TV; keep polling even when the OS/browser
-    // reports the tab as hidden (kiosk shells often do).
     refetchIntervalInBackground: true,
   });
+  const board = useQuery({
+    queryKey: ['display-board'],
+    queryFn: api.getBoard,
+    refetchInterval: 2000,
+    refetchIntervalInBackground: true,
+  });
+  const settings = useQuery({
+    queryKey: ['display-settings'],
+    queryFn: api.getSettings,
+    refetchInterval: 30_000,
+  });
 
-  const list = calls.data ?? [];
+  const calls = active.data ?? [];
 
-  // Chime when a call id appears that wasn't present on the previous tick.
-  // The very first load only seeds the baseline (no chime for pre-existing calls).
+  // Detect newly-called tickets → queue a chime per call + flash their rows.
+  // First load only seeds the baseline (no chime/flash for pre-existing calls).
   useEffect(() => {
-    if (!calls.data) return;
-    const ids = new Set(calls.data.map((c) => c.id));
+    if (!active.data) return;
+    const ids = new Set(active.data.map((c) => c.id));
     if (seenIds.current === null) {
       seenIds.current = ids;
       return;
     }
-    const hasNew = calls.data.some((c) => !seenIds.current!.has(c.id));
+    const fresh = active.data.filter((c) => !seenIds.current!.has(c.id));
     seenIds.current = ids;
-    if (hasNew) playChime(muted);
-  }, [calls.data, muted, playChime]);
+    if (fresh.length === 0) return;
 
-  const hero = list[0] ?? null;
-  const rest = list.slice(1);
+    // Visuals flash in parallel; audio is queued one-by-one inside useChime.
+    fresh.forEach(() => playChime(muted));
+    setFreshIds((prev) => {
+      const next = new Set(prev);
+      fresh.forEach((c) => next.add(c.id));
+      return next;
+    });
+    const freshNow = fresh.map((c) => c.id);
+    const timer = setTimeout(() => {
+      setFreshIds((prev) => {
+        const next = new Set(prev);
+        freshNow.forEach((id) => next.delete(id));
+        return next;
+      });
+    }, FLASH_MS);
+    return () => clearTimeout(timer);
+  }, [active.data, muted, playChime]);
 
   return (
     <main className="flex h-screen w-screen flex-col bg-cream">
-      <header className="flex items-center justify-between border-b border-hair bg-white px-12 py-6">
+      <header className="flex items-center justify-between border-b border-hair bg-white px-12 py-5">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-r bg-coral text-lg font-bold text-white shadow-coral">
             NP
@@ -86,9 +117,14 @@ export default function Page() {
         </div>
       </header>
 
-      <Hero call={hero} />
-
-      <CallsGrid calls={rest} />
+      <div
+        className="grid min-h-0 flex-1 gap-4 p-5"
+        style={{ gridTemplateColumns: '1.55fr 1fr', gridTemplateRows: '1fr auto' }}
+      >
+        <MediaZone url={settings.data?.youtube_url} />
+        <NowServing calls={calls} freshIds={freshIds} />
+        <WindowStrip windows={board.data ?? []} freshIds={freshIds} />
+      </div>
 
       <Ticker items={TICKER_ITEMS} />
     </main>

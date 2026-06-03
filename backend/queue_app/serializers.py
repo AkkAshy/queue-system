@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from catalog.models import Service
 
-from .models import Counter, OperatorSession, Ticket
+from .models import Counter, DisplaySettings, OperatorSession, Ticket
 
 
 class CounterSerializer(serializers.ModelSerializer):
@@ -61,3 +61,18 @@ class DisplayCallSerializer(serializers.Serializer):
     counter_name = serializers.CharField(source="counter.name")
     called_at = serializers.DateTimeField()
     status = serializers.CharField()
+
+
+class DisplaySettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DisplaySettings
+        fields = ["youtube_url"]
+
+
+class DisplayBoardCounterSerializer(serializers.Serializer):
+    """One window on the board: the counter + its current call (or null)."""
+
+    counter_id = serializers.IntegerField(source="id")
+    counter_number = serializers.CharField(source="number")
+    counter_name = serializers.CharField(source="name")
+    current = DisplayCallSerializer(allow_null=True)

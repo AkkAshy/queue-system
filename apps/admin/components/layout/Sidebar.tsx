@@ -8,6 +8,7 @@ import {
   Layers,
   Building2,
   Users,
+  Monitor,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +18,7 @@ const items = [
   { href: '/categories', label: 'Категории',  Icon: Layers },
   { href: '/counters',   label: 'Окна',       Icon: Building2 },
   { href: '/operators',  label: 'Операторы',  Icon: Users },
+  { href: '/settings',   label: 'Табло',      Icon: Monitor },
 ];
 
 export function Sidebar() {

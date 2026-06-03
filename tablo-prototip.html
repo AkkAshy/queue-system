@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Табло — прототипы (NDPI очередь)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FBF6EE; --cream-deep:#F4ECE0;
+    --coral:#DC6A4C; --coral-600:#C8573B; --coral-soft:#FBE9E1;
+    --coal:#2C2722; --coal-2:#6E655A; --coal-3:#A79D8F;
+    --hair:#ECE2D2; --hair-2:#E0D4C0;
+    --grass:#2F9E72;
+    --shadow-soft:0 8px 24px -10px rgba(44,39,34,.18);
+    --shadow-coral:0 10px 26px -8px rgba(220,106,76,.45);
+  }
+  /* категории A..I */
+  .c-A{--cat:#3F7CC4} .c-B{--cat:#2C9E76} .c-C{--cat:#7B6AD2}
+  .c-D{--cat:#E0973A} .c-E{--cat:#1FA2A2} .c-F{--cat:#E0654F}
+  .c-G{--cat:#C85C9C} .c-H{--cat:#4E97D1} .c-I{--cat:#8C79C6}
+
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  html,body{margin:0;height:100%}
+  body{font-family:Rubik,system-ui,sans-serif;background:var(--cream);color:var(--coal);overflow:hidden}
+  .eyebrow{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--coal-3)}
+  .tnum{font-variant-numeric:tabular-nums;font-weight:900;letter-spacing:-.02em}
+
+  /* ===== каркас ===== */
+  .screen{display:flex;flex-direction:column;height:100vh}
+  header.board{display:flex;align-items:center;justify-content:space-between;
+    padding:14px 28px;background:#fff;border-bottom:1px solid var(--hair)}
+  .brand{display:flex;align-items:center;gap:14px}
+  .badge{width:46px;height:46px;border-radius:13px;background:var(--coral);color:#fff;
+    font-weight:800;display:grid;place-items:center;box-shadow:var(--shadow-coral)}
+  .brand b{font-size:1.05rem}.brand span{display:block;font-size:.8rem;color:var(--coal-2)}
+  .clock{font-weight:800;font-size:1.4rem}.clock small{display:block;font-size:.8rem;color:var(--coal-2);font-weight:600;text-align:right}
+
+  main.board{flex:1;min-height:0;padding:22px 24px}
+  main.board>section{height:100%}
+  footer.ticker{background:#fff;border-top:1px solid var(--hair);padding:10px 0;overflow:hidden;white-space:nowrap}
+  footer.ticker .run{display:inline-block;padding-left:100%;animation:run 26s linear infinite;color:var(--coal-2);font-weight:600}
+  @keyframes run{to{transform:translateX(-100%)}}
+
+  /* ===== общий вид ячейки окна ===== */
+  .win{position:relative;background:#fff;border:1px solid var(--hair);border-radius:20px;
+    box-shadow:var(--shadow-soft);overflow:hidden;transition:transform .25s}
+  .win .topbar{height:6px;background:var(--cat,var(--coral))}
+  .win .wname{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 0}
+  .win .wname .lbl{font-weight:700;color:var(--coal-2)}
+  .win .dot{width:12px;height:12px;border-radius:50%;background:var(--cat,var(--coral))}
+  .win .cur{padding:6px 16px 14px;text-align:center}
+  .win .cur .num{font-size:clamp(2.6rem,5.2vw,4.6rem);line-height:1;color:var(--cat,var(--coal))}
+  .win .cur .empty{font-size:1.1rem;color:var(--coal-3);font-weight:600;padding:18px 0}
+
+  /* вспышка при вызове — параллельно, без модалки */
+  @keyframes callpulse{
+    0%{box-shadow:0 0 0 0 rgba(220,106,76,.55), var(--shadow-soft)}
+    35%{box-shadow:0 0 0 10px rgba(220,106,76,0), var(--shadow-coral)}
+    100%{box-shadow:0 0 0 0 rgba(220,106,76,0), var(--shadow-soft)}
+  }
+  .win.calling{animation:callpulse 1.4s ease-out 2;transform:translateY(-4px) scale(1.015);
+    border-color:var(--coral);z-index:2}
+  .win.calling .cur .num{animation:numpop .5s cubic-bezier(.16,1,.3,1) both}
+  @keyframes numpop{0%{opacity:0;transform:translateY(10px) scale(.96)}100%{opacity:1;transform:none}}
+  .win .flash{position:absolute;inset:0;background:var(--coral-soft);opacity:0;pointer-events:none}
+  .win.calling .flash{animation:flashfade 1.2s ease-out both}
+  @keyframes flashfade{0%{opacity:.65}100%{opacity:0}}
+
+  /* история под текущим (вариант 1) */
+  .hist{display:flex;gap:8px;justify-content:center;padding:0 12px 14px;flex-wrap:wrap}
+  .hist .h{font-size:1rem;font-weight:800;color:var(--coal-3);background:var(--cream);
+    border:1px solid var(--hair);border-radius:10px;padding:4px 10px;font-variant-numeric:tabular-nums}
+
+  /* ===== Вариант 1: адаптивная сетка окон ===== */
+  #v1 .grid5{display:grid;gap:14px;height:100%;grid-auto-rows:1fr}
+  #v1 .win{display:flex;flex-direction:column}
+  #v1 .cur{flex:1;display:flex;flex-direction:column;justify-content:center}
+  /* при большом числе окон номер мельче, история прячется */
+  .grid5.dense .cur .num{font-size:clamp(1.8rem,3.4vw,3rem)!important}
+  .grid5.dense .hist{display:none}
+  .grid5.dense .cur{padding:4px 8px}
+
+  /* ===== Вариант 2: окна + общий список ===== */
+  #v2{display:flex;flex-direction:column;gap:16px;height:100%}
+  #v2 .row5{display:grid;gap:12px;grid-auto-rows:1fr}
+  #v2 .row5.dense .num{font-size:clamp(1.4rem,2.8vw,2.4rem)!important}
+  #v2 .win .cur .num{font-size:clamp(2rem,4vw,3.4rem)}
+  #v2 .waitwrap{flex:1;min-height:0;background:#fff;border:1px solid var(--hair);border-radius:20px;
+    box-shadow:var(--shadow-soft);padding:16px 20px;display:flex;flex-direction:column}
+  #v2 .waithead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  #v2 .waitlist{display:flex;gap:12px;flex-wrap:wrap;align-content:flex-start;overflow:hidden}
+  #v2 .wt{display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--hair);
+    border-left:5px solid var(--cat,var(--coral));border-radius:12px;padding:10px 16px;font-weight:800;
+    font-size:1.5rem;font-variant-numeric:tabular-nums}
+  #v2 .wt:first-child{background:var(--coral-soft);border-color:var(--coral)}
+  #v2 .wt small{font-size:.7rem;color:var(--coal-3);font-weight:700;letter-spacing:.1em}
+
+  /* ===== Вариант 3: таблица ===== */
+  #v3{height:100%;background:#fff;border:1px solid var(--hair);border-radius:20px;box-shadow:var(--shadow-soft);
+    overflow:hidden;display:flex;flex-direction:column}
+  #v3 table{width:100%;border-collapse:collapse}
+  #v3 thead th{font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--coal-3);
+    text-align:left;padding:16px 26px;border-bottom:2px solid var(--hair)}
+  #v3 tbody td{padding:14px 26px;border-bottom:1px solid var(--hair);font-size:1.7rem;font-weight:800;vertical-align:middle}
+  #v3 tbody tr{transition:background .3s}
+  #v3 .num3{display:inline-flex;align-items:center;gap:14px;font-variant-numeric:tabular-nums;color:var(--cat,var(--coal))}
+  #v3 .num3::before{content:"";width:14px;height:34px;border-radius:6px;background:var(--cat,var(--coral))}
+  #v3 .win3{font-size:1.5rem}
+  #v3 .pill{font-size:.85rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:6px 14px;border-radius:999px}
+  #v3 .pill.called{background:var(--coral-soft);color:var(--coral-600)}
+  #v3 .pill.wait{background:var(--cream-deep);color:var(--coal-2)}
+  #v3 tr.calling{background:var(--coral-soft)}
+  #v3 tr.calling .num3{animation:numpop .5s both}
+
+  /* ===== Вариант 4: Citibank-style (YouTube + now serving + лента окон) ===== */
+  #v4{display:grid;grid-template-columns:1.55fr 1fr;grid-template-rows:1fr auto;gap:16px;height:100%}
+  #v4 .media{grid-column:1;grid-row:1;background:#000;border-radius:20px;overflow:hidden;
+    box-shadow:var(--shadow-soft);position:relative}
+  #v4 .media iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+  #v4 .nowserv{grid-column:2;grid-row:1;background:#fff;border:1px solid var(--hair);border-radius:20px;
+    box-shadow:var(--shadow-soft);display:flex;flex-direction:column;overflow:hidden}
+  #v4 .nshead{background:var(--coral);color:#fff;padding:11px 18px;text-align:center;font-weight:800;letter-spacing:.04em}
+  #v4 .nshead small{display:block;font-size:.66rem;opacity:.9;font-weight:700;letter-spacing:.16em}
+  #v4 .nsrows{flex:1;display:flex;flex-direction:column}
+  #v4 .nsrow{flex:1;display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;
+    padding:0 18px;border-bottom:1px solid var(--hair);position:relative}
+  #v4 .nsrow:last-child{border-bottom:0}
+  /* строго: номера тёмные, цветом выделяем ТОЛЬКО самый свежий (верхний) вызов */
+  #v4 .nsrow .tk{font-size:clamp(2rem,4.4vw,3.5rem);font-weight:800;font-variant-numeric:tabular-nums;color:var(--coal)}
+  #v4 .nsrow .arrow{color:var(--coal-3);font-size:1.4rem}
+  #v4 .nsrow .ct{justify-self:end;background:var(--cream);border:1px solid var(--hair-2);border-radius:12px;
+    min-width:74px;text-align:center;padding:4px 14px;font-size:clamp(1.3rem,3vw,2.2rem);font-weight:800;color:var(--coal-2)}
+  /* временная вспышка строки при НОВОМ вызове (~3.5с), потом гаснет в нейтрал */
+  #v4 .nsrow{transition:background .6s ease}
+  #v4 .nsrow.calling{background:var(--coral-soft)}
+  #v4 .nsrow.calling .tk{color:var(--coral-600);animation:numpop .5s both}
+  #v4 .nsrow.calling .ct{background:var(--coral);border-color:var(--coral);color:#fff}
+  #v4 .strip{grid-column:1/-1;grid-row:2;display:flex;gap:8px;flex-wrap:wrap}
+  /* до 8 плиток в ряд (flex-basis ~1/8), дальше перенос на второй ряд — лента не вылезает */
+  #v4 .stile{flex:1 1 calc(12.5% - 8px);min-width:0;background:#fff;border:1px solid var(--hair);
+    border-radius:12px;padding:8px 6px;text-align:center;box-shadow:var(--shadow-soft)}
+  #v4 .stile .sl{font-size:.6rem;font-weight:700;color:var(--coal-3);letter-spacing:.04em;white-space:nowrap;text-transform:uppercase}
+  #v4 .stile .sn{font-size:clamp(1.1rem,2.2vw,1.7rem);font-weight:800;font-variant-numeric:tabular-nums;color:var(--coal);margin-top:2px}
+  #v4 .stile.calling{border-color:var(--coral);background:var(--coral-soft);color:var(--coral-600);animation:callpulse 1.4s ease-out 2}
+  #v4 .stile.calling .sn{color:var(--coral-600)}
+
+  /* ===== панель управления демо ===== */
+  .demo{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:50;
+    display:flex;gap:8px;align-items:center;background:rgba(44,39,34,.92);backdrop-filter:blur(8px);
+    padding:8px 10px;border-radius:16px;box-shadow:0 12px 30px -8px rgba(0,0,0,.4)}
+  .demo button{font-family:inherit;font-weight:700;font-size:.9rem;border:0;border-radius:11px;
+    padding:9px 14px;cursor:pointer;color:#fff;background:#4a443d;transition:.15s}
+  .demo button:hover{background:#5c554c}
+  .demo button.on{background:var(--coral)}
+  .demo .grp{display:flex;gap:6px;padding:0 6px;border-right:1px solid #5c554c}
+  .demo .grp:last-child{border:0}
+  .demo .ttl{color:#b8aea0;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:0 4px}
+  .demo button.go{background:var(--coral)}.demo button.go:hover{background:var(--coral-600)}
+  .demo button.big{background:#b5453b}.demo button.big:hover{background:#c8573b}
+</style>
+</head>
+<body>
+<div class="screen">
+  <header class="board">
+    <div class="brand">
+      <div class="badge">NP</div>
+      <div><b>Ájiniyaz atındaǵı NMPI</b><span>Registrator ofisi · Gezek tablosı</span></div>
+    </div>
+    <div class="clock" id="clock">00:00<small id="date">—</small></div>
+  </header>
+
+  <main class="board">
+    <!-- Вариант 1: 5 колонок -->
+    <section id="v1"><div class="grid5" id="grid5"></div></section>
+    <!-- Вариант 2: окна + общий список -->
+    <section id="v2" hidden>
+      <div class="row5" id="row5"></div>
+      <div class="waitwrap">
+        <div class="waithead"><span class="eyebrow">Gezekte · В очереди</span><span class="eyebrow" id="waitcount"></span></div>
+        <div class="waitlist" id="waitlist"></div>
+      </div>
+    </section>
+    <!-- Вариант 4: Citibank-style (YouTube + now serving + лента окон) -->
+    <section id="v4" hidden>
+      <div class="media">
+        <iframe id="ytplayer"
+          src="https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?autoplay=1&mute=1&controls=0&loop=1&playlist=aqz-KE-bpKQ&modestbranding=1&rel=0"
+          allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+      </div>
+      <div class="nowserv">
+        <div class="nshead">Házir qabıllanbaqta<small>СЕЙЧАС ОБСЛУЖИВАЕТСЯ</small></div>
+        <div class="nsrows" id="nsrows"></div>
+      </div>
+      <div class="strip" id="strip"></div>
+    </section>
+    <!-- Вариант 3: таблица -->
+    <section id="v3" hidden>
+      <table>
+        <thead><tr><th style="width:40%">Nomer · Номер</th><th style="width:30%">Okno · Окно</th><th>Hal · Статус</th></tr></thead>
+        <tbody id="tbody3"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="ticker"><span class="run">Talonıńızdı joǵaltpań · Сохраняйте талон до вызова  ✦  Vızıv kútiń · Ожидайте вызова на табло  ✦  Ájiniyaz atındaǵı NMPI — Registrator ofisi  ✦</span></footer>
+</div>
+
+<!-- демо-панель (не часть табло) -->
+<div class="demo">
+  <span class="ttl">Макет</span>
+  <div class="grp">
+    <button id="b1" class="on" onclick="setVariant(1)">5 колонок</button>
+    <button id="b2" onclick="setVariant(2)">Окна+список</button>
+    <button id="b3" onclick="setVariant(3)">Таблица</button>
+    <button id="b4" onclick="setVariant(4)">Citibank ▶</button>
+  </div>
+  <span class="ttl">Окон</span>
+  <div class="grp">
+    <button id="n5" class="on" onclick="setN(5)">5</button>
+    <button id="n10" onclick="setN(10)">10</button>
+    <button id="n15" onclick="setN(15)">15</button>
+  </div>
+  <div class="grp">
+    <button class="go" onclick="callOne()">Вызвать (1)</button>
+    <button class="big" onclick="callAll()">⚡ Все разом</button>
+  </div>
+  <div class="grp">
+    <button id="mute" onclick="toggleMute()">🔊 Звук</button>
+  </div>
+</div>
+
+<script>
+// ---------- данные ----------
+const CATS = ['A','B','C','D','E','F','G','H','I'];
+let seq = {}; CATS.forEach(c=>seq[c]=10+Math.floor(Math.random()*30));
+function nextTicket(cat){ cat = cat||CATS[Math.floor(Math.random()*CATS.length)]; seq[cat]++; return {cat, num:cat+String(seq[cat]).padStart(3,'0')}; }
+
+let N = 5;                 // число окон (плавающее!)
+let waiting = [];          // общая очередь ожидания
+let win = [];              // состояние окон
+let recentCalls = [];      // последние вызовы (для now-serving), новые сверху
+const FLASH_MS = 3500;     // как долго строка вспыхивает при новом вызове
+let flashTimer = null;
+function buildWindows(n){
+  N = n;
+  win = Array.from({length:n}, (_,i)=>({ n:i+1, current:nextTicket(CATS[i%CATS.length]),
+    hist:[nextTicket(), nextTicket()] }));
+  waiting = Array.from({length: Math.max(10, n*2)}, ()=>nextTicket());
+  recentCalls = win.slice().reverse().map(w=>({num:w.current.num,cat:w.current.cat,win:w.n,at:0})).slice(0,8);
+}
+// сколько колонок под N окон (для адаптивной сетки)
+function colsFor(n){ if(n<=6) return n; if(n<=12) return Math.ceil(n/2); return 5; }
+
+let variant = 1, muted = false;
+buildWindows(5);
+
+// ---------- звук: всегда в очередь ----------
+let actx=null, soundQ=[], playing=false;
+function ding(){
+  if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
+  const t=actx.currentTime;
+  [ [880,0],[1175,.18] ].forEach(([f,dt])=>{
+    const o=actx.createOscillator(), g=actx.createGain();
+    o.type='sine'; o.frequency.value=f; o.connect(g); g.connect(actx.destination);
+    g.gain.setValueAtTime(0,t+dt); g.gain.linearRampToValueAtTime(.5,t+dt+.02);
+    g.gain.exponentialRampToValueAtTime(.001,t+dt+.32);
+    o.start(t+dt); o.stop(t+dt+.34);
+  });
+}
+function enqueueSound(){ soundQ.push(1); if(!playing) drainSound(); }
+function drainSound(){
+  if(!soundQ.length){ playing=false; return; }
+  playing=true; soundQ.shift(); if(!muted) ding();
+  setTimeout(drainSound, 650); // звук строго по одному
+}
+
+// ---------- вызов ----------
+function callWindow(idx, cat){
+  const w = win[idx];
+  const t = cat ? nextTicket(cat) : (waiting.shift()||nextTicket());
+  w.hist.unshift(w.current); w.hist = w.hist.slice(0,2);
+  w.current = t;
+  recentCalls.unshift({num:t.num, cat:t.cat, win:w.n, at:Date.now()}); recentCalls = recentCalls.slice(0,8);
+  render();
+  enqueueSound();
+  // погасить вспышку после FLASH_MS (перерисовка снимет .calling с истёкших)
+  clearTimeout(flashTimer); flashTimer = setTimeout(render, FLASH_MS + 80);
+  // вспышка ячейки (параллельно для всех)
+  const el = document.querySelector(`[data-win="${idx}"]`);
+  if(el){ el.classList.remove('calling'); void el.offsetWidth; el.classList.add('calling');
+    setTimeout(()=>el.classList.remove('calling'),1600); }
+  const row = document.querySelector(`#tbody3 [data-rwin="${idx}"]`);
+  if(row){ row.classList.remove('calling'); void row.offsetWidth; row.classList.add('calling');
+    setTimeout(()=>row.classList.remove('calling'),1600); }
+  // V4: пульс плитки окна (параллельно) + верхней строки now-serving
+  const st = document.querySelector(`#strip [data-stile="${idx}"]`);
+  if(st){ st.classList.remove('calling'); void st.offsetWidth; st.classList.add('calling');
+    setTimeout(()=>st.classList.remove('calling'),1600); }
+  // вспышка строки now-serving управляется таймштампом в render()
+}
+function callOne(){ callWindow(Math.floor(Math.random()*5)); }
+function callAll(){ // 4-5 операторов разом → параллельные ячейки, звук в очередь
+  win.forEach((_,i)=>callWindow(i));
+}
+
+// ---------- рендер ----------
+function render(){
+  const cols = colsFor(N), dense = N > 6;
+  // V1
+  const g5 = document.getElementById('grid5');
+  g5.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  g5.classList.toggle('dense', dense);
+  g5.innerHTML = win.map((w,i)=>`
+    <div class="win c-${w.current.cat}" data-win="${i}">
+      <div class="flash"></div><div class="topbar"></div>
+      <div class="wname"><span class="lbl">Okno №${w.n}</span><span class="dot"></span></div>
+      <div class="cur"><div class="num tnum">${w.current.num}</div></div>
+      <div class="hist">${w.hist.map(h=>`<span class="h">${h.num}</span>`).join('')}</div>
+    </div>`).join('');
+  // V2 окна
+  const r5 = document.getElementById('row5');
+  r5.style.gridTemplateColumns = `repeat(${cols},1fr)`;
+  r5.classList.toggle('dense', dense);
+  r5.innerHTML = win.map((w,i)=>`
+    <div class="win c-${w.current.cat}" data-win="${i}">
+      <div class="flash"></div><div class="topbar"></div>
+      <div class="wname"><span class="lbl">Okno №${w.n}</span><span class="dot"></span></div>
+      <div class="cur"><div class="num tnum">${w.current.num}</div></div>
+    </div>`).join('');
+  document.getElementById('waitlist').innerHTML = waiting.slice(0,18).map((t,i)=>`
+    <div class="wt c-${t.cat}">${i===0?'<small>Keyingi</small>':''}<span class="tnum">${t.num}</span></div>`).join('');
+  document.getElementById('waitcount').textContent = waiting.length + ' adam';
+  // V3 таблица: вызванные сверху, потом ожидание
+  const calledRows = win.map((w,i)=>`
+    <tr class="c-${w.current.cat}" data-rwin="${i}">
+      <td><span class="num3 tnum">${w.current.num}</span></td>
+      <td class="win3">Okno №${w.n}</td>
+      <td><span class="pill called">Shaqırıldı · Вызван</span></td></tr>`).join('');
+  const waitRows = waiting.slice(0,6).map(t=>`
+    <tr class="c-${t.cat}">
+      <td><span class="num3 tnum" style="opacity:.65">${t.num}</span></td>
+      <td class="win3" style="color:var(--coal-3)">—</td>
+      <td><span class="pill wait">Kútilmekte · Ждёт</span></td></tr>`).join('');
+  document.getElementById('tbody3').innerHTML = calledRows + waitRows;
+  // V4 now-serving: последние вызовы (номер → окно)
+  document.getElementById('nsrows').innerHTML = recentCalls.slice(0,5).map(r=>`
+    <div class="nsrow c-${r.cat}${(Date.now()-r.at < FLASH_MS) ? ' calling' : ''}">
+      <span class="tk tnum">${r.num}</span><span class="arrow">→</span><span class="ct">№${r.win}</span>
+    </div>`).join('');
+  // V4 лента: все окна
+  document.getElementById('strip').innerHTML = win.map((w,i)=>`
+    <div class="stile c-${w.current.cat}" data-stile="${i}">
+      <div class="sl">Okno №${w.n}</div><div class="sn tnum">${w.current.num}</div>
+    </div>`).join('');
+}
+
+function setVariant(v){
+  variant=v;
+  [1,2,3,4].forEach(k=>{ document.getElementById('v'+k).hidden = (k!==v);
+    document.getElementById('b'+k).classList.toggle('on', k===v); });
+}
+function setN(n){ buildWindows(n); [5,10,15].forEach(k=>document.getElementById('n'+k).classList.toggle('on',k===n)); render(); }
+function toggleMute(){ muted=!muted; const b=document.getElementById('mute');
+  b.textContent = muted?'🔇 Выкл':'🔊 Звук'; b.classList.toggle('on',muted); }
+
+// часы
+function tick(){ const d=new Date();
+  document.getElementById('clock').firstChild.textContent =
+    String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('date').textContent =
+    d.toLocaleDateString('ru-RU',{day:'2-digit',month:'long'});
+}
+tick(); setInterval(tick,1000);
+render();
+</script>
+</body>
+</html>

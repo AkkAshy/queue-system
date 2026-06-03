@@ -156,3 +156,16 @@ export interface DisplayCall {
   called_at: string;      // ISO
   status: 'called' | 'serving';
 }
+
+// One window on the board: the counter + its current call (null when idle).
+export interface DisplayBoardWindow {
+  counter_id: number;
+  counter_number: string; // '1'
+  counter_name: string;   // 'Okno 1 — …'
+  current: DisplayCall | null;
+}
+
+// Board configuration, editable from the admin app.
+export interface DisplaySettings {
+  youtube_url: string;
+}

@@ -8,11 +8,13 @@ from rest_framework.views import APIView
 from catalog.models import Service, ServiceCategory
 
 from . import realtime, services
-from .models import Counter, OperatorSession, Ticket, TicketStatus
+from .models import Counter, DisplaySettings, OperatorSession, Ticket, TicketStatus
 from .serializers import (
     CounterSerializer,
     CreateTicketSerializer,
+    DisplayBoardCounterSerializer,
     DisplayCallSerializer,
+    DisplaySettingsSerializer,
     OperatorSessionSerializer,
     TicketSerializer,
 )
@@ -205,3 +207,31 @@ class DisplayActiveView(APIView):
     def get(self, request):
         calls = services.active_calls(limit=12)
         return Response(DisplayCallSerializer(calls, many=True).data)
+
+
+class DisplayBoardView(APIView):
+    """All active windows + the current call on each (null when idle).
+    Powers the board's window strip — scales to any number of counters."""
+
+    def get(self, request):
+        counters = list(Counter.objects.filter(is_active=True))
+        for c in counters:
+            c.current = services.current_for_counter(c)
+        return Response(DisplayBoardCounterSerializer(counters, many=True).data)
+
+
+class DisplaySettingsView(APIView):
+    """Board config (YouTube URL). GET for the board, PATCH from the admin app."""
+
+    def get(self, request):
+        return Response(DisplaySettingsSerializer(DisplaySettings.load()).data)
+
+    def patch(self, request):
+        ser = DisplaySettingsSerializer(
+            DisplaySettings.load(), data=request.data, partial=True
+        )
+        ser.is_valid(raise_exception=True)
+        ser.save()
+        # tell the board to reload its media zone live
+        realtime.broadcast([realtime.DISPLAY], "display.settings")
+        return Response(ser.data)

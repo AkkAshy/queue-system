@@ -21,6 +21,33 @@ class Counter(models.Model):
         return f"№{self.number} · {self.name}"
 
 
+class DisplaySettings(models.Model):
+    """Singleton config for the display board, editable from the admin app.
+
+    Holds the YouTube URL shown in the board's media zone (and room for more
+    board-level settings later, e.g. ticker text).
+    """
+
+    youtube_url = models.URLField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Display settings"
+        verbose_name_plural = "Display settings"
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # enforce singleton row
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls) -> "DisplaySettings":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self) -> str:
+        return "Display settings"
+
+
 class TicketStatus(models.TextChoices):
     WAITING = "waiting"
     CALLED = "called"

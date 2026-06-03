@@ -19,6 +19,7 @@ import type {
   User,
   LoginRequest,
   DisplayCall,
+  DisplayBoardWindow,
 } from '@queue/types';
 
 // Module-level singletons — the MSW service worker holds their state for the
@@ -37,6 +38,9 @@ const sessions = new OperatorSessionStore();
 tickets.seedWaiting(queueSeed as unknown as Parameters<typeof tickets.seedWaiting>[0]);
 // A few already-called tickets so the waiting-hall board has content on first load.
 tickets.seedCalled(displaySeed as unknown as Parameters<typeof tickets.seedCalled>[0]);
+
+// Board settings (YouTube URL set from the admin app). Sample clip for demos.
+let displaySettings = { youtube_url: 'https://youtu.be/aqz-KE-bpKQ' };
 
 export const handlers = [
   // ---------- auth ----------
@@ -286,5 +290,45 @@ export const handlers = [
       })
       .slice(0, 12);
     return HttpResponse.json(calls);
+  }),
+
+  // all active windows + their current call (null when idle) — powers the strip
+  http.get('/api/display/board', () => {
+    const active = tickets.activeCalls();
+    const board: DisplayBoardWindow[] = counters
+      .list()
+      .filter((c) => c.is_active !== false)
+      .map((counter) => {
+        const t = active.find((x) => x.counter_id === counter.id) ?? null;
+        const current: DisplayCall | null = t
+          ? {
+              id: t.id,
+              number: t.number,
+              category_id: t.category_id,
+              counter_id: counter.id,
+              counter_number: counter.number,
+              counter_name: counter.name,
+              called_at: t.called_at ?? t.created_at,
+              status: (t.status === 'serving' ? 'serving' : 'called') as
+                | 'called'
+                | 'serving',
+            }
+          : null;
+        return {
+          counter_id: counter.id,
+          counter_number: counter.number,
+          counter_name: counter.name,
+          current,
+        };
+      });
+    return HttpResponse.json(board);
+  }),
+
+  // board settings — GET for the board, PATCH from the admin app
+  http.get('/api/display/settings', () => HttpResponse.json(displaySettings)),
+  http.patch('/api/display/settings', async ({ request }) => {
+    const body = (await request.json()) as Partial<typeof displaySettings>;
+    displaySettings = { ...displaySettings, ...body };
+    return HttpResponse.json(displaySettings);
   }),
 ];

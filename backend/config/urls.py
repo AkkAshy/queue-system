@@ -16,6 +16,8 @@ from queue_app.views import (
     CurrentTicketView,
     DashboardView,
     DisplayActiveView,
+    DisplayBoardView,
+    DisplaySettingsView,
     OperatorSessionCreateView,
     OperatorSessionDetailView,
     QueueView,
@@ -54,6 +56,8 @@ urlpatterns = [
     # queue + display
     path("api/queue", QueueView.as_view()),
     path("api/display/active", DisplayActiveView.as_view()),
+    path("api/display/board", DisplayBoardView.as_view()),
+    path("api/display/settings", DisplaySettingsView.as_view()),
     # OpenAPI
     path("api/schema", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs", SpectacularSwaggerView.as_view(url_name="schema")),
