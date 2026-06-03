@@ -39,6 +39,34 @@ def test_categories_and_services(seeded, client):
             "delivery_type", "requires_visit", "is_active", "is_popular"} == set(svcs[0])
 
 
+def test_category_create_and_delete(seeded, client):
+    before = len(client.get("/api/categories").json())
+    r = client.post("/api/categories", {
+        "code": "Z", "name_kaa": "Test", "name_ru": "Тест", "color": "#000000", "order": 99,
+    }, format="json")
+    assert r.status_code == 201
+    cid = r.json()["id"]
+    assert len(client.get("/api/categories").json()) == before + 1
+    d = client.delete(f"/api/categories/{cid}")
+    assert d.status_code == 204
+    assert len(client.get("/api/categories").json()) == before
+
+
+def test_service_create_update_delete(seeded, client):
+    r = client.post("/api/services", {
+        "category_id": 1, "name_kaa": "Jańa xızmet", "name_ru": "Новая услуга",
+        "sla_days": 1, "delivery_type": "electron", "requires_visit": True,
+        "is_active": True, "is_popular": False,
+    }, format="json")
+    assert r.status_code == 201
+    body = r.json()
+    assert body["category_id"] == 1
+    sid = body["id"]
+    patched = client.patch(f"/api/services/{sid}", {"is_popular": True}, format="json")
+    assert patched.json()["is_popular"] is True
+    assert client.delete(f"/api/services/{sid}").status_code == 204
+
+
 def test_counters_serialize_service_ids(seeded, client):
     counters = client.get("/api/counters").json()
     c1 = next(c for c in counters if c["id"] == 1)

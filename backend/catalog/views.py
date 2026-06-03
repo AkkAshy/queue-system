@@ -4,18 +4,18 @@ from .models import Service, ServiceCategory
 from .serializers import ServiceCategorySerializer, ServiceSerializer
 
 
-class CategoryListView(generics.ListAPIView):
+class CategoryListView(generics.ListCreateAPIView):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
     pagination_class = None
 
 
-class CategoryDetailView(generics.UpdateAPIView):
+class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
 
 
-class ServiceListView(generics.ListAPIView):
+class ServiceListView(generics.ListCreateAPIView):
     serializer_class = ServiceSerializer
     pagination_class = None
 
@@ -27,6 +27,6 @@ class ServiceListView(generics.ListAPIView):
         return qs
 
 
-class ServiceDetailView(generics.UpdateAPIView):
+class ServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer

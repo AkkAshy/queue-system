@@ -10,8 +10,9 @@ class ServiceCategorySerializer(serializers.ModelSerializer):
 
 
 class ServiceSerializer(serializers.ModelSerializer):
+    # writable: required on create, optional on PATCH
     category_id = serializers.PrimaryKeyRelatedField(
-        source="category", read_only=True
+        source="category", queryset=ServiceCategory.objects.all()
     )
 
     class Meta:

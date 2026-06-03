@@ -99,9 +99,26 @@ class Command(BaseCommand):
             user.set_password(DEFAULT_PASSWORDS.get(u["username"], FALLBACK_PASSWORD))
             user.save(update_fields=["password"])
 
+        # We inserted rows with explicit PKs, which leaves Postgres' auto-increment
+        # sequences behind — the next plain INSERT (e.g. admin "Create") would
+        # collide on the PK. Reset every affected sequence to MAX(id)+1.
+        self._reset_sequences([ServiceCategory, Service, Counter, User])
+
         self.stdout.write(
             self.style.SUCCESS(
                 f"Seeded: {len(cats)} categories, {len(services)} services, "
                 f"{len(counters)} counters, {len(users)} users."
             )
         )
+
+    def _reset_sequences(self, models):
+        """Advance Postgres auto-increment sequences past the explicitly-seeded
+        PKs so the next plain INSERT doesn't collide."""
+        from django.core.management.color import no_style
+        from django.db import connection
+
+        statements = connection.ops.sequence_reset_sql(no_style(), models)
+        if statements:
+            with connection.cursor() as cursor:
+                for sql in statements:
+                    cursor.execute(sql)
