@@ -15,6 +15,7 @@ from .serializers import (
     DisplayBoardCounterSerializer,
     DisplayCallSerializer,
     DisplaySettingsSerializer,
+    DisplayWaitingSerializer,
     OperatorSessionSerializer,
     TicketSerializer,
 )
@@ -47,7 +48,9 @@ class TicketCreateView(APIView):
         ticket = services.create_ticket(
             category=category, service=service, idempotency_key=data["idempotency_key"]
         )
-        realtime.broadcast([realtime.OPERATORS, realtime.ADMIN], "ticket.created")
+        realtime.broadcast(
+            [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "ticket.created"
+        )
         return Response(TicketSerializer(ticket).data, status=201)
 
 
@@ -218,6 +221,14 @@ class DisplayBoardView(APIView):
         for c in counters:
             c.current = services.current_for_counter(c)
         return Response(DisplayBoardCounterSerializer(counters, many=True).data)
+
+
+class DisplayWaitingView(APIView):
+    """The waiting queue (issued, not yet called) shown on the board so a
+    visitor sees their number before it's called."""
+
+    def get(self, request):
+        return Response(DisplayWaitingSerializer(services.waiting_list(20), many=True).data)
 
 
 class DisplaySettingsView(APIView):

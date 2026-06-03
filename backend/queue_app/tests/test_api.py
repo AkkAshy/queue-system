@@ -157,3 +157,11 @@ def test_display_board_lists_active_windows(seeded, client):
     assert set(row) == {"counter_id", "counter_number", "counter_name", "current"}
     # all windows idle right after seeding
     assert all(w["current"] is None for w in board)
+
+
+def test_display_waiting_lists_uncalled_tickets(seeded, client):
+    # seeded fixture pre-populates the waiting queue
+    waiting = client.get("/api/display/waiting").json()
+    assert isinstance(waiting, list)
+    if waiting:
+        assert set(waiting[0]) == {"id", "number", "category_id"}

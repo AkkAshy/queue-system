@@ -20,10 +20,7 @@ export function NowServing({
   const rows = calls.slice(0, limit);
 
   return (
-    <section
-      className="flex flex-col overflow-hidden rounded-rxl border border-hair bg-white shadow-soft"
-      style={{ gridColumn: 2, gridRow: 1 }}
-    >
+    <section className="flex h-full flex-col overflow-hidden rounded-rxl border border-hair bg-white shadow-soft">
       <div className="bg-coral px-5 py-3 text-center text-white">
         <div className="text-xl font-extrabold leading-tight">Házir qabıllanbaqta</div>
         <div className="text-xs font-bold uppercase tracking-[0.16em] opacity-90">

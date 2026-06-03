@@ -3,6 +3,7 @@ import type {
   DisplayBoardWindow,
   DisplayCall,
   DisplaySettings,
+  DisplayWaiting,
 } from '@queue/types';
 
 async function json<T>(res: Response): Promise<T> {
@@ -13,6 +14,7 @@ async function json<T>(res: Response): Promise<T> {
 export const api = {
   getActiveCalls: () => fetch('/api/display/active').then(json<DisplayCall[]>),
   getBoard: () => fetch('/api/display/board').then(json<DisplayBoardWindow[]>),
+  getWaiting: () => fetch('/api/display/waiting').then(json<DisplayWaiting[]>),
   getSettings: () => fetch('/api/display/settings').then(json<DisplaySettings>),
   listCounters: () => fetch('/api/counters').then(json<Counter[]>),
 };

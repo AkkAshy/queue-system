@@ -63,6 +63,14 @@ class DisplayCallSerializer(serializers.Serializer):
     status = serializers.CharField()
 
 
+class DisplayWaitingSerializer(serializers.Serializer):
+    """A waiting ticket as shown in the board's queue list."""
+
+    id = serializers.UUIDField()
+    number = serializers.CharField()
+    category_id = serializers.IntegerField()
+
+
 class DisplaySettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DisplaySettings

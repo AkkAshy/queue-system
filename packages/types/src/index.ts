@@ -165,6 +165,13 @@ export interface DisplayBoardWindow {
   current: DisplayCall | null;
 }
 
+// A waiting (issued, not yet called) ticket shown in the board's queue list.
+export interface DisplayWaiting {
+  id: string;
+  number: string;     // 'A005'
+  category_id: number;
+}
+
 // Board configuration, editable from the admin app.
 export interface DisplaySettings {
   youtube_url: string;

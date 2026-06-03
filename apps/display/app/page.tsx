@@ -7,6 +7,7 @@ import { useChime } from '@/lib/useChime';
 import { useRealtime } from '@/lib/useRealtime';
 import { MediaZone } from '@/components/MediaZone';
 import { NowServing } from '@/components/NowServing';
+import { WaitingQueue } from '@/components/WaitingQueue';
 import { WindowStrip } from '@/components/WindowStrip';
 import { Ticker } from '@/components/Ticker';
 import { DisplayClock } from '@/components/DisplayClock';
@@ -45,6 +46,7 @@ export default function Page() {
   useRealtime('/ws/display', [
     ['display-active'],
     ['display-board'],
+    ['display-waiting'],
     ['display-settings'],
   ]);
 
@@ -57,6 +59,12 @@ export default function Page() {
   const board = useQuery({
     queryKey: ['display-board'],
     queryFn: api.getBoard,
+    refetchInterval: 2000,
+    refetchIntervalInBackground: true,
+  });
+  const waiting = useQuery({
+    queryKey: ['display-waiting'],
+    queryFn: api.getWaiting,
     refetchInterval: 2000,
     refetchIntervalInBackground: true,
   });
@@ -122,7 +130,14 @@ export default function Page() {
         style={{ gridTemplateColumns: '1.55fr 1fr', gridTemplateRows: '1fr auto' }}
       >
         <MediaZone url={settings.data?.youtube_url} />
-        <NowServing calls={calls} freshIds={freshIds} />
+        <div className="flex min-h-0 flex-col gap-4" style={{ gridColumn: 2, gridRow: 1 }}>
+          <div className="min-h-0 flex-[3]">
+            <NowServing calls={calls} freshIds={freshIds} />
+          </div>
+          <div className="min-h-0 flex-[2]">
+            <WaitingQueue waiting={waiting.data ?? []} />
+          </div>
+        </div>
         <WindowStrip windows={board.data ?? []} freshIds={freshIds} />
       </div>
 

@@ -324,6 +324,17 @@ export const handlers = [
     return HttpResponse.json(board);
   }),
 
+  // waiting queue (issued, not yet called) — shown on the board
+  http.get('/api/display/waiting', () => {
+    const waiting = tickets
+      .list()
+      .filter((t) => t.status === 'waiting')
+      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+      .slice(0, 20)
+      .map((t) => ({ id: t.id, number: t.number, category_id: t.category_id }));
+    return HttpResponse.json(waiting);
+  }),
+
   // board settings — GET for the board, PATCH from the admin app
   http.get('/api/display/settings', () => HttpResponse.json(displaySettings)),
   http.patch('/api/display/settings', async ({ request }) => {

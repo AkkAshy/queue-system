@@ -115,6 +115,16 @@ def active_calls(limit: int = 12) -> list[Ticket]:
     )
 
 
+def waiting_list(limit: int = 20) -> list[Ticket]:
+    """All waiting (issued but not yet called) tickets, oldest first —
+    the queue shown on the board so visitors see their number."""
+    return list(
+        Ticket.objects.filter(status=TicketStatus.WAITING).order_by("created_at")[
+            :limit
+        ]
+    )
+
+
 def start_session(*, user, counter: Counter) -> OperatorSession:
     return OperatorSession.objects.create(user=user, counter=counter)
 
