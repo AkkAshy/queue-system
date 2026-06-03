@@ -17,16 +17,20 @@ import (
 type Options struct {
 	Writer printer.Writer // where to send ESC/POS bytes
 	Logger *slog.Logger   // nil => slog.Default()
-	// Proxy, when set, handles every request that isn't /print or /health
-	// (kiosk-host mode: forwards the UI + /api + /ws to the cloud).
+	// Proxy, when set, handles every request that isn't /print, /health or
+	// /printers (kiosk-host mode: forwards the UI + /api + /ws to the cloud).
 	Proxy http.Handler
+	// DefaultPrinter is the configured printer name (cups/windows). Reported by
+	// GET /printers so the kiosk can mark the current default.
+	DefaultPrinter string
 }
 
 // Server owns the HTTP router and serializes print jobs.
 type Server struct {
-	writer printer.Writer
-	log    *slog.Logger
-	proxy  http.Handler
+	writer         printer.Writer
+	log            *slog.Logger
+	proxy          http.Handler
+	defaultPrinter string
 
 	// Serialize print jobs — most thermal printers cannot interleave.
 	mu sync.Mutex
@@ -41,7 +45,12 @@ func New(opt Options) (*Server, error) {
 	if log == nil {
 		log = slog.Default()
 	}
-	return &Server{writer: opt.Writer, log: log, proxy: opt.Proxy}, nil
+	return &Server{
+		writer:         opt.Writer,
+		log:            log,
+		proxy:          opt.Proxy,
+		defaultPrinter: opt.DefaultPrinter,
+	}, nil
 }
 
 // Router returns an http.Handler covering all agent endpoints.
@@ -49,11 +58,49 @@ func (s *Server) Router() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/health", s.handleHealth)
 	mux.HandleFunc("/print", s.handlePrint)
+	mux.HandleFunc("/printers", s.handlePrinters)
 	// Kiosk-host mode: everything else is reverse-proxied to the cloud.
 	if s.proxy != nil {
 		mux.Handle("/", s.proxy)
 	}
 	return mux
+}
+
+// handlePrinters reports the printers installed on this host so the kiosk can
+// offer a choice. Backends without enumeration (file/null) yield just the
+// configured default.
+func (s *Server) handlePrinters(w http.ResponseWriter, r *http.Request) {
+	var names []string
+	if l, ok := s.writer.(printer.Lister); ok {
+		got, err := l.List()
+		if err != nil {
+			s.log.Warn("list printers failed", "err", err, "writer", s.writer.Name())
+		} else {
+			names = got
+		}
+	}
+	// Guarantee the configured default is selectable even if enumeration is
+	// empty or unsupported.
+	if s.defaultPrinter != "" && !contains(names, s.defaultPrinter) {
+		names = append([]string{s.defaultPrinter}, names...)
+	}
+	if names == nil {
+		names = []string{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"ok":       true,
+		"printers": names,
+		"default":  s.defaultPrinter,
+	})
+}
+
+func contains(ss []string, target string) bool {
+	for _, s := range ss {
+		if s == target {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +120,9 @@ type printRequest struct {
 	ServiceNameRu   string    `json:"service_name_ru"`
 	IssuedAt        time.Time `json:"issued_at"`
 	TicketID        string    `json:"ticket_id"`
+	// PrinterName, when set, overrides the agent's default printer for this job
+	// (chosen in the kiosk's hidden settings page). Empty => default queue.
+	PrinterName string `json:"printer_name"`
 }
 
 func (s *Server) handlePrint(w http.ResponseWriter, r *http.Request) {
@@ -118,6 +168,7 @@ func (s *Server) handlePrint(w http.ResponseWriter, r *http.Request) {
 		"number", req.Number,
 		"category", req.CategoryCode,
 		"ticket_id", req.TicketID,
+		"printer", req.PrinterName,
 	)
 
 	bytesOut, err := printer.Render(printer.PrintRequest{
@@ -140,7 +191,12 @@ func (s *Server) handlePrint(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.mu.Lock()
-	_, werr := s.writer.Write(bytesOut)
+	var werr error
+	if tw, ok := s.writer.(printer.TargetWriter); ok && req.PrinterName != "" {
+		_, werr = tw.WriteTo(req.PrinterName, bytesOut)
+	} else {
+		_, werr = s.writer.Write(bytesOut)
+	}
 	s.mu.Unlock()
 	if werr != nil {
 		s.log.Error("printer write failed", "err", werr, "writer", s.writer.Name())

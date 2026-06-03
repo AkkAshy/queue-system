@@ -41,6 +41,23 @@
     "retry": "Qaytalań",
     "contact": "Operatorǵa múrájat etiń"
   },
+  "settings": {
+    "eyebrow": "Texnikalıq xızmet",
+    "title": "Printerdi tańlaw",
+    "subtitle": "Bul kioskte talonlar qay jerge basıladı",
+    "loading": "Printerler izlenbekte…",
+    "empty": "Printer tabılmadı",
+    "agentDefault": "Nátiyje boyınsha",
+    "agentDown": "Basıp shıǵarıw agenti qol jetimsiz",
+    "retry": "Qaytalań",
+    "test": "Sınaq basıp shıǵarıw",
+    "testing": "Sınaq basılmaqta…",
+    "testOk": "Sınaq printerge jiberildi ✓",
+    "testFail": "Sınaq qátesi",
+    "save": "Saqlaw",
+    "saved": "Saqlandı ✓",
+    "back": "Kioskke qaytıw"
+  },
   "locale": {
     "switch": "Русча"
   }

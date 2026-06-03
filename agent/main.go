@@ -79,7 +79,12 @@ func main() {
 		}
 	}
 
-	srv, err := server.New(server.Options{Writer: writer, Logger: logger, Proxy: proxy})
+	srv, err := server.New(server.Options{
+		Writer:         writer,
+		Logger:         logger,
+		Proxy:          proxy,
+		DefaultPrinter: cfg.PrinterName,
+	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "server error:", err)
 		os.Exit(2)
