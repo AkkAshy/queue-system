@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Printer } from 'lucide-react';
 import { useKioskStore } from '@/store/kiosk-store';
 import { KioskHeader } from '@/components/KioskHeader';
 import { categoryVisual } from '@/lib/category-visual';
@@ -11,7 +12,7 @@ export default function TicketPage() {
   const t = useTranslations('ticket');
   const locale = useLocale();
   const router = useRouter();
-  const { ticket, category, service, reset } = useKioskStore();
+  const { ticket, category, service, printFailed, reset } = useKioskStore();
 
   useEffect(() => {
     if (!ticket) router.replace(`/${locale}`);
@@ -76,6 +77,15 @@ export default function TicketPage() {
               )}
             </div>
           </div>
+
+          {printFailed && (
+            <div className="mt-6 flex items-center gap-4 rounded-rlg border border-coral/30 bg-coral-soft px-6 py-5 text-left">
+              <Printer className="h-7 w-7 shrink-0 text-coral" strokeWidth={2} />
+              <p className="text-base font-medium leading-snug text-coal">
+                {t('notPrinted')}
+              </p>
+            </div>
+          )}
 
           <p className="mt-8 text-center text-lg text-coal-2">{t('goTo')}</p>
 

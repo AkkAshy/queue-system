@@ -7,10 +7,14 @@ interface KioskState {
   service: Service | null;
   ticket: Ticket | null;
   idempotencyKey: string | null;
+  // true when the ticket was queued but the printer didn't accept the job —
+  // the ticket page then asks the student to remember their number.
+  printFailed: boolean;
 
   setCategory: (c: ServiceCategory | null) => void;
   setService: (s: Service | null) => void;
   setTicket: (t: Ticket | null) => void;
+  setPrintFailed: (v: boolean) => void;
   prepareIdempotencyKey: () => string;
   reset: () => void;
 }
@@ -25,10 +29,12 @@ export const useKioskStore = create<KioskState>()(
       service: null,
       ticket: null,
       idempotencyKey: null,
+      printFailed: false,
 
       setCategory: (category) => set({ category }),
       setService: (service) => set({ service }),
       setTicket: (ticket) => set({ ticket }),
+      setPrintFailed: (printFailed) => set({ printFailed }),
 
       prepareIdempotencyKey: () => {
         const existing = get().idempotencyKey;
@@ -39,7 +45,13 @@ export const useKioskStore = create<KioskState>()(
       },
 
       reset: () =>
-        set({ category: null, service: null, ticket: null, idempotencyKey: null }),
+        set({
+          category: null,
+          service: null,
+          ticket: null,
+          idempotencyKey: null,
+          printFailed: false,
+        }),
     }),
     {
       name: 'kiosk-flow',

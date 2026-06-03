@@ -27,19 +27,23 @@ export default function ConfirmPage() {
   const t = useTranslations('confirm');
   const locale = useLocale();
   const router = useRouter();
-  const { category, service, prepareIdempotencyKey, setTicket } = useKioskStore();
+  const { category, service, prepareIdempotencyKey, setTicket, setPrintFailed } =
+    useKioskStore();
 
   const mutation = useMutation({
     mutationFn: createTicket,
     onSuccess: async (ticket) => {
+      // The ticket is already queued (and on the display board) the moment the
+      // backend created it. Printing is best-effort: a dead printer must NOT
+      // stop the student from getting their number — we just flag it so the
+      // ticket page tells them to remember it.
       setTicket(ticket);
       const result = await printTicket({ ticket, category: category!, service });
-      if (!result.ok) {
-        router.push(`/${locale}/error`);
-        return;
-      }
+      setPrintFailed(!result.ok);
       router.push(`/${locale}/ticket`);
     },
+    // Only a failed ticket creation (backend down) is a hard error — then there
+    // is no queue entry to show.
     onError: () => router.push(`/${locale}/error`),
   });
 
