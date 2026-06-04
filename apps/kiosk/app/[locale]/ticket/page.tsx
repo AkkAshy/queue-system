@@ -12,7 +12,7 @@ export default function TicketPage() {
   const t = useTranslations('ticket');
   const locale = useLocale();
   const router = useRouter();
-  const { ticket, category, service, printFailed, reset } = useKioskStore();
+  const { ticket, category, service, hall, printFailed, reset } = useKioskStore();
 
   useEffect(() => {
     if (!ticket) router.replace(`/${locale}`);
@@ -61,6 +61,14 @@ export default function TicketPage() {
             <div className="my-8 border-t border-dashed border-hair-2" />
 
             <div className="grid grid-cols-2 gap-y-5">
+              {hall && (
+                <div className="col-span-2">
+                  <span className="eyebrow">{locale === 'ru' ? 'Зал' : 'Zal'}</span>
+                  <div className="mt-1.5 font-semibold text-coal">
+                    {locale === 'ru' ? hall.name_ru : hall.name_kaa}
+                  </div>
+                </div>
+              )}
               <div>
                 <span className="eyebrow">{locale === 'ru' ? 'Категория' : 'Kategoriya'}</span>
                 <div className="mt-1.5 font-semibold text-coal">{categoryName}</div>
