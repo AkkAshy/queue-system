@@ -1,0 +1,13 @@
+{
+  "name": "operator-desktop",
+  "description": "NDPI operator pult — always-on-top Windows widget (thin client over the box)",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2"
+  }
+}

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NDPI · Pult</title>
+    <style>
+      :root {
+        --cream: #faf6f0;
+        --coal: #2b2722;
+        --coal-3: #8a8278;
+        --coral: #e0654a;
+        --hair: #e7ded3;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; height: 100%;
+        font-family: -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        background: var(--cream); color: var(--coal);
+      }
+      body { display: flex; align-items: center; justify-content: center; padding: 24px; }
+      .card { width: 100%; max-width: 300px; text-align: center; }
+      .eyebrow {
+        font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+        color: var(--coral); font-weight: 700;
+      }
+      h1 { font-size: 22px; margin: 10px 0 4px; }
+      p.hint { font-size: 13px; color: var(--coal-3); margin: 0 0 20px; }
+      label { display: block; text-align: left; font-size: 12px; color: var(--coal-3); margin-bottom: 6px; }
+      input {
+        width: 100%; height: 44px; padding: 0 12px; font-size: 15px;
+        border: 1px solid var(--hair); border-radius: 10px; background: #fff;
+        color: var(--coal); outline: none;
+      }
+      input:focus { border-color: var(--coral); }
+      button {
+        width: 100%; height: 46px; margin-top: 14px; font-size: 15px; font-weight: 700;
+        border: none; border-radius: 12px; cursor: pointer;
+        background: var(--coral); color: #fff;
+      }
+      button.ghost { background: transparent; color: var(--coal-3); height: 38px; font-weight: 500; margin-top: 6px; }
+      button.ghost:hover { color: var(--coral); }
+      .count { font-size: 13px; color: var(--coal-3); margin-top: 10px; }
+      .err { color: var(--coral); font-size: 12px; margin-top: 8px; min-height: 14px; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="eyebrow">NDPI · Pult</div>
+
+      <!-- Auto-connect screen (shown when a box address is already saved) -->
+      <div id="connecting" class="hidden">
+        <h1>Ulanmoqda…</h1>
+        <p class="hint" id="connecting-addr"></p>
+        <button id="connect-now">Hozir ulanish</button>
+        <button class="ghost" id="change">Boshqa boks (o'zgartirish)</button>
+        <div class="count" id="countdown"></div>
+      </div>
+
+      <!-- Setup screen (first run or "change") -->
+      <form id="setup" class="hidden">
+        <h1>Boks manzili</h1>
+        <p class="hint">Operatorlar serveri (boks) IP yoki hostnomi</p>
+        <label for="addr">Manzil</label>
+        <input id="addr" placeholder="192.168.1.50" autocomplete="off" />
+        <button type="submit">Ulanish</button>
+        <div class="err" id="err"></div>
+      </form>
+    </div>
+
+    <script>
+      const KEY = 'ndpi-box-url';
+      const COUNT_FROM = 3;
+      const $ = (id) => document.getElementById(id);
+
+      // Normalise user input → bare host[:port]. Strips scheme, paths, slashes.
+      function normalize(raw) {
+        let s = (raw || '').trim();
+        s = s.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').replace(/\/+$/, '');
+        return s;
+      }
+      function operatorUrl(host) {
+        return `http://${host}/operator`;
+      }
+      function go(host) {
+        if (host) window.location.replace(operatorUrl(host));
+      }
+
+      function showSetup(prefill) {
+        $('connecting').classList.add('hidden');
+        $('setup').classList.remove('hidden');
+        if (prefill) $('addr').value = prefill;
+        $('addr').focus();
+      }
+
+      let timer = null;
+      function startCountdown(host) {
+        $('setup').classList.add('hidden');
+        $('connecting').classList.remove('hidden');
+        $('connecting-addr').textContent = host;
+        let n = COUNT_FROM;
+        $('countdown').textContent = `${n}s ichida…`;
+        timer = setInterval(() => {
+          n -= 1;
+          if (n <= 0) { clearInterval(timer); go(host); return; }
+          $('countdown').textContent = `${n}s ichida…`;
+        }, 1000);
+      }
+      function cancelCountdown() {
+        if (timer) clearInterval(timer);
+        timer = null;
+      }
+
+      // Wire up
+      $('connect-now').addEventListener('click', () => {
+        cancelCountdown();
+        go(localStorage.getItem(KEY));
+      });
+      $('change').addEventListener('click', () => {
+        cancelCountdown();
+        showSetup(localStorage.getItem(KEY) || '');
+      });
+      $('setup').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const host = normalize($('addr').value);
+        if (!host) { $('err').textContent = 'Manzilni kiriting'; return; }
+        localStorage.setItem(KEY, host);
+        go(host);
+      });
+
+      // Entry: saved → countdown to auto-connect; otherwise → setup
+      const saved = localStorage.getItem(KEY);
+      if (saved) startCountdown(saved);
+      else showSetup('');
+    </script>
+  </body>
+</html>

@@ -1,0 +1,57 @@
+name: operator-desktop (Windows build)
+
+# Builds the always-on-top operator widget (Tauri v2) for Windows.
+# Produces an NSIS .exe installer + an .msi. Run manually from the Actions tab,
+# or push a tag like `operator-desktop-v0.1.0`.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'operator-desktop-v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            apps/operator-desktop/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('apps/operator-desktop/src-tauri/Cargo.lock') }}
+
+      # The widget itself has no JS build step (static src/), but the workspace
+      # install resolves the local @tauri-apps/cli.
+      - name: Install deps
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build Tauri bundle
+        working-directory: apps/operator-desktop
+        run: pnpm tauri build
+
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
+        with:
+          name: ndpi-operator-windows
+          path: |
+            apps/operator-desktop/src-tauri/target/release/bundle/nsis/*.exe
+            apps/operator-desktop/src-tauri/target/release/bundle/msi/*.msi
+          if-no-files-found: error
