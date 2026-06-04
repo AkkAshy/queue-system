@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/auth-store';
+import { useTr } from '@/lib/i18n';
 import type { LoginResponse } from '@queue/types';
 
 export default function LoginPage() {
   const router = useRouter();
+  const tr = useTr();
   const loginSuccess = useAuthStore((s) => s.loginSuccess);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,14 +28,14 @@ export default function LoginPage() {
         body: JSON.stringify({ username, password }),
       });
       if (!res.ok) {
-        toast.error('Неверные учётные данные');
+        toast.error(tr("Login yoki parol noto'g'ri", "Login yamasa parol natuwrı"));
         return;
       }
       const data = (await res.json()) as LoginResponse;
       loginSuccess(data);
       router.replace('/dashboard');
     } catch {
-      toast.error('Сеть недоступна');
+      toast.error(tr('Tarmoq mavjud emas', 'Tarmaq joq'));
     } finally {
       setSubmitting(false);
     }
@@ -48,16 +50,16 @@ export default function LoginPage() {
         <div>
           <span className="eyebrow text-coral">NDPI · Admin</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-            Вход в панель
+            {tr('Panelga kirish', 'Panelge kiriw')}
           </h1>
           <p className="mt-2 text-sm text-coal-3">
-            Демо: <code className="text-coral-600">admin / admin</code>
+            Demo: <code className="text-coral-600">admin / admin</code>
           </p>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Логин</Label>
+            <Label htmlFor="username">{tr('Login', 'Login')}</Label>
             <Input
               id="username"
               value={username}
@@ -68,7 +70,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Пароль</Label>
+            <Label htmlFor="password">{tr('Parol', 'Parol')}</Label>
             <Input
               id="password"
               type="password"
@@ -85,7 +87,7 @@ export default function LoginPage() {
           disabled={submitting}
           className="w-full bg-coral text-cream hover:bg-coral-600"
         >
-          {submitting ? '…' : 'Войти'}
+          {submitting ? '…' : tr('Kirish', 'Kiriw')}
         </Button>
       </form>
     </main>

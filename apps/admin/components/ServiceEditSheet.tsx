@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTr } from '@/lib/i18n';
 
 const DELIVERY_TYPES: DeliveryType[] = [
   'electron',
@@ -56,6 +57,7 @@ function emptyDraft(categories: ServiceCategory[]): Draft {
 }
 
 export function ServiceEditSheet({ service, categories, open, onOpenChange }: Props) {
+  const tr = useTr();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(service ?? emptyDraft(categories));
 
@@ -78,10 +80,10 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['services'] });
-      toast.success(isCreate ? 'Услуга создана' : 'Сохранено');
+      toast.success(isCreate ? tr('Xizmat yaratildi', 'Xızmet jaratıldı') : tr('Saqlandi', 'Saqlandı'));
       onOpenChange(false);
     },
-    onError: () => toast.error('Не удалось сохранить'),
+    onError: () => toast.error(tr("Saqlab bo'lmadi", 'Saqlap bolmadı')),
   });
 
   const canSave = !!draft.name_ru.trim() && !!draft.category_id && !mutation.isPending;
@@ -91,22 +93,22 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
       <SheetContent className="w-full max-w-lg overflow-y-auto bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="text-2xl font-bold">
-            {isCreate ? 'Новая услуга' : `Услуга #${draft.id}`}
+            {isCreate ? tr('Yangi xizmat', 'Jańa xızmet') : tr(`Xizmat #${draft.id}`, `Xızmet #${draft.id}`)}
           </SheetTitle>
           <SheetDescription className="text-coal-3">
-            {isCreate ? 'Создание услуги' : 'Редактирование услуги'}
+            {isCreate ? tr('Xizmat yaratish', 'Xızmet jaratıw') : tr('Xizmatni tahrirlash', 'Xızmetti redaktorlaw')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="my-8 space-y-5">
           <div className="space-y-2">
-            <Label>Категория</Label>
+            <Label>{tr('Kategoriya', 'Kategoriya')}</Label>
             <Select
               value={String(draft.category_id)}
               onValueChange={(v) => setDraft({ ...draft, category_id: Number(v) })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Категория" />
+                <SelectValue placeholder={tr('Kategoriya', 'Kategoriya')} />
               </SelectTrigger>
               <SelectContent>
                 {categories
@@ -121,7 +123,7 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name_ru">Название (ru)</Label>
+            <Label htmlFor="name_ru">{tr('Nomi (ru)', 'Atı (ru)')}</Label>
             <Input
               id="name_ru"
               value={draft.name_ru}
@@ -129,7 +131,7 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name_kaa">Название (kaa)</Label>
+            <Label htmlFor="name_kaa">{tr('Nomi (kaa)', 'Atı (kaa)')}</Label>
             <Input
               id="name_kaa"
               value={draft.name_kaa}
@@ -138,7 +140,7 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="sla_days">Срок (дней)</Label>
+              <Label htmlFor="sla_days">{tr('Muddat (kun)', 'Múddet (kún)')}</Label>
               <Input
                 id="sla_days"
                 type="number"
@@ -150,7 +152,7 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
               />
             </div>
             <div className="space-y-2">
-              <Label>Тип выдачи</Label>
+              <Label>{tr('Berilish turi', 'Beriliw túri')}</Label>
               <Select
                 value={draft.delivery_type}
                 onValueChange={(v) =>
@@ -172,8 +174,8 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
           </div>
           <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
-              <div className="text-sm font-medium">Требует визит</div>
-              <div className="text-xs text-coal-3">Попадает в очередь в киоске</div>
+              <div className="text-sm font-medium">{tr('Tashrif talab qiladi', 'Keliwdi talap etedi')}</div>
+              <div className="text-xs text-coal-3">{tr('Kioskdagi navbatga tushadi', 'Kioskdaǵı nóbetke túsedi')}</div>
             </div>
             <Switch
               checked={draft.requires_visit}
@@ -182,8 +184,8 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
           </div>
           <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
-              <div className="text-sm font-medium">Популярная</div>
-              <div className="text-xs text-coal-3">Показывать в блоке «Популярное»</div>
+              <div className="text-sm font-medium">{tr('Ommabop', 'Ommabap')}</div>
+              <div className="text-xs text-coal-3">{tr("«Ommabop» blokida ko'rsatish", '«Ommabap» blogında kórsetiw')}</div>
             </div>
             <Switch
               checked={!!draft.is_popular}
@@ -192,8 +194,8 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
           </div>
           <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
-              <div className="text-sm font-medium">Активна</div>
-              <div className="text-xs text-coal-3">Видна операторам и в киоске</div>
+              <div className="text-sm font-medium">{tr('Faol', 'Belsendi')}</div>
+              <div className="text-xs text-coal-3">{tr("Operatorlarga va kioskda ko'rinadi", 'Operatorlarǵa hám kioskda kórinedi')}</div>
             </div>
             <Switch
               checked={draft.is_active}
@@ -204,14 +206,14 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
 
         <SheetFooter className="gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {tr('Bekor qilish', 'Biykarlaw')}
           </Button>
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={!canSave}
             className="bg-coral text-cream hover:bg-coral-600"
           >
-            {mutation.isPending ? '…' : isCreate ? 'Создать' : 'Сохранить'}
+            {mutation.isPending ? '…' : isCreate ? tr('Yaratish', 'Jaratıw') : tr('Saqlash', 'Saqlaw')}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -1,11 +1,11 @@
 [
-  { "id": 1, "code": "A", "name_kaa": "Akademiyalıq iskerlik", "name_ru": "Академическая деятельность", "color": "#7A8FA3", "order": 1 },
-  { "id": 2, "code": "B", "name_kaa": "Onlayn arza tapsırıw", "name_ru": "Подача онлайн-заявлений", "color": "#8D9C7C", "order": 2 },
-  { "id": 3, "code": "C", "name_kaa": "HEMIS", "name_ru": "HEMIS", "color": "#A98A63", "order": 3 },
-  { "id": 4, "code": "D", "name_kaa": "Qosımsha xızmetler", "name_ru": "Дополнительные услуги", "color": "#C2A359", "order": 4 },
-  { "id": 5, "code": "E", "name_kaa": "Buxgalteriya hám marketing", "name_ru": "Бухгалтерия и маркетинг", "color": "#9B8F6E", "order": 5 },
-  { "id": 6, "code": "F", "name_kaa": "Buyrıqlar / Akademiyalıq mobillik", "name_ru": "Приказы и академ. мобильность", "color": "#B56E5A", "order": 6 },
-  { "id": 7, "code": "G", "name_kaa": "Xalıqaralıq baylanıslar", "name_ru": "Международные связи", "color": "#8C5E6B", "order": 7 },
-  { "id": 8, "code": "H", "name_kaa": "Ilimiy iskerlik", "name_ru": "Научная деятельность", "color": "#6E8489", "order": 8 },
-  { "id": 9, "code": "I", "name_kaa": "Hújjetler", "name_ru": "Документы", "color": "#7E7489", "order": 9 }
+  { "id": 1, "code": "A", "name_kaa": "Akademiyalıq iskerlik", "name_ru": "Академическая деятельность", "name_uz": "Akademik faoliyat", "name_en": "Academic activity", "color": "#7A8FA3", "order": 1 },
+  { "id": 2, "code": "B", "name_kaa": "Onlayn arza tapsırıw", "name_ru": "Подача онлайн-заявлений", "name_uz": "Onlayn ariza topshirish", "name_en": "Online applications", "color": "#8D9C7C", "order": 2 },
+  { "id": 3, "code": "C", "name_kaa": "HEMIS", "name_ru": "HEMIS", "name_uz": "HEMIS", "name_en": "HEMIS", "color": "#A98A63", "order": 3 },
+  { "id": 4, "code": "D", "name_kaa": "Qosımsha xızmetler", "name_ru": "Дополнительные услуги", "name_uz": "Qo'shimcha xizmatlar", "name_en": "Additional services", "color": "#C2A359", "order": 4 },
+  { "id": 5, "code": "E", "name_kaa": "Buxgalteriya hám marketing", "name_ru": "Бухгалтерия и маркетинг", "name_uz": "Buxgalteriya va marketing", "name_en": "Accounting and marketing", "color": "#9B8F6E", "order": 5 },
+  { "id": 6, "code": "F", "name_kaa": "Buyrıqlar / Akademiyalıq mobillik", "name_ru": "Приказы и академ. мобильность", "name_uz": "Buyruqlar va akademik mobillik", "name_en": "Orders & academic mobility", "color": "#B56E5A", "order": 6 },
+  { "id": 7, "code": "G", "name_kaa": "Xalıqaralıq baylanıslar", "name_ru": "Международные связи", "name_uz": "Xalqaro aloqalar", "name_en": "International relations", "color": "#8C5E6B", "order": 7 },
+  { "id": 8, "code": "H", "name_kaa": "Ilimiy iskerlik", "name_ru": "Научная деятельность", "name_uz": "Ilmiy faoliyat", "name_en": "Scientific activity", "color": "#6E8489", "order": 8 },
+  { "id": 9, "code": "I", "name_kaa": "Hújjetler", "name_ru": "Документы", "name_uz": "Hujjatlar", "name_en": "Documents", "color": "#7E7489", "order": 9 }
 ]

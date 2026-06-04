@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTr } from '@/lib/i18n';
 
 interface Props {
   counter: Counter | null; // null = creating
@@ -35,6 +36,7 @@ const EMPTY: Draft = {
 };
 
 export function CounterEditSheet({ counter, services, open, onOpenChange }: Props) {
+  const tr = useTr();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(counter ?? EMPTY);
 
@@ -57,10 +59,10 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['counters'] });
-      toast.success(draft.id ? 'Окно обновлено' : 'Окно создано');
+      toast.success(draft.id ? tr('Oyna yangilandi', 'Áyne jańalandı') : tr('Oyna yaratildi', 'Áyne jaratıldı'));
       onOpenChange(false);
     },
-    onError: () => toast.error('Не удалось сохранить'),
+    onError: () => toast.error(tr("Saqlab bo'lmadi", 'Saqlap bolmadı')),
   });
 
   function toggleService(id: number) {
@@ -77,17 +79,17 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
       <SheetContent className="w-full max-w-2xl overflow-y-auto bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl font-normal">
-            {counter ? `Окно #${counter.id}` : 'Новое окно'}
+            {counter ? tr(`Oyna #${counter.id}`, `Áyne #${counter.id}`) : tr('Yangi oyna', 'Jańa áyne')}
           </SheetTitle>
           <SheetDescription className="text-coal-3">
-            Настройка рабочего места оператора
+            {tr("Operator ish o'rnini sozlash", 'Operator jumıs ornın sazlaw')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="my-8 space-y-5">
           <div className="grid grid-cols-[auto_1fr] gap-4">
             <div className="space-y-2">
-              <Label htmlFor="number">Номер</Label>
+              <Label htmlFor="number">{tr('Raqam', 'Nomer')}</Label>
               <Input
                 id="number"
                 value={draft.number}
@@ -97,7 +99,7 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Название</Label>
+              <Label htmlFor="name">{tr('Nomi', 'Atı')}</Label>
               <Input
                 id="name"
                 value={draft.name}
@@ -108,9 +110,9 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
 
           <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
-              <div className="text-sm font-medium">Активно</div>
+              <div className="text-sm font-medium">{tr('Faol', 'Belsendi')}</div>
               <div className="text-xs text-coal-3">
-                Участвует в распределении очереди
+                {tr('Navbat taqsimotida ishtirok etadi', 'Nóbet bólistiriwinde qatnasadı')}
               </div>
             </div>
             <Switch
@@ -120,7 +122,7 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
           </div>
 
           <div className="space-y-2">
-            <Label>Обслуживаемые услуги ({draft.service_ids.length})</Label>
+            <Label>{tr("Xizmat ko'rsatiladigan xizmatlar", 'Xızmet kórsetiletuǵın xızmetler')} ({draft.service_ids.length})</Label>
             <div className="max-h-80 space-y-1 overflow-y-auto rounded-xl border border-hair p-3">
               {services.map((s) => (
                 <label
@@ -141,14 +143,14 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
 
         <SheetFooter className="gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {tr('Bekor qilish', 'Biykarlaw')}
           </Button>
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={mutation.isPending}
             className="bg-coral text-cream hover:bg-coral-600"
           >
-            {mutation.isPending ? '…' : 'Сохранить'}
+            {mutation.isPending ? '…' : tr('Saqlash', 'Saqlaw')}
           </Button>
         </SheetFooter>
       </SheetContent>

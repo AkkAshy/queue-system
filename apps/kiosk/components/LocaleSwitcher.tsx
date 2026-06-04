@@ -1,30 +1,46 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
+
+// Each language shows its own endonym — independent of the current locale.
+const LANGS = [
+  { code: 'kaa', label: 'Qaraqalpaqsha' },
+  { code: 'uz', label: "O'zbekcha" },
+  { code: 'ru', label: 'Русча' },
+  { code: 'en', label: 'English' },
+] as const;
 
 export function LocaleSwitcher() {
   const locale = useLocale();
-  const t = useTranslations('locale');
   const router = useRouter();
   const pathname = usePathname();
-  const next = locale === 'kaa' ? 'ru' : 'kaa';
 
-  function switchTo() {
-    const rest = pathname.replace(/^\/(kaa|ru)/, '');
-    router.push(`/${next}${rest || '/'}`);
+  function switchTo(code: string) {
+    if (code === locale) return;
+    const rest = pathname.replace(/^\/(kaa|ru|uz|en)/, '');
+    router.push(`/${code}${rest || '/'}`);
   }
 
   return (
-    <button
-      onClick={switchTo}
-      className="group flex items-center gap-2.5 rounded-full border border-hair-2 px-5 py-2.5 text-sm font-medium tracking-wide text-coal-2 transition-colors duration-200 hover:border-coral hover:text-coral"
-    >
-      <span
-        className="h-1.5 w-1.5 rounded-full bg-coral transition-transform duration-200 group-hover:scale-125"
-        aria-hidden
-      />
-      {t('switch')}
-    </button>
+    <div className="flex items-center gap-1 rounded-full border border-hair-2 p-1">
+      {LANGS.map(({ code, label }) => {
+        const active = code === locale;
+        return (
+          <button
+            key={code}
+            onClick={() => switchTo(code)}
+            aria-current={active ? 'true' : undefined}
+            className={
+              active
+                ? 'rounded-full bg-coral px-3.5 py-2 text-sm font-medium text-cream'
+                : 'rounded-full px-3.5 py-2 text-sm font-medium text-coal-2 transition-colors duration-200 hover:text-coral'
+            }
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
   );
 }

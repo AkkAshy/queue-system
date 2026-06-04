@@ -14,6 +14,7 @@ import { StatCard } from '@/components/StatCard';
 import { HourlyLoadChart } from '@/components/HourlyLoadChart';
 import { Badge } from '@/components/ui/badge';
 import { useRealtime } from '@/lib/useRealtime';
+import { useTr } from '@/lib/i18n';
 
 interface DashboardResp {
   metrics: DashboardMetrics;
@@ -48,16 +49,17 @@ async function fetchStats(hall: string): Promise<Stats> {
   return res.json();
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  waiting:   'ожидает',
-  called:    'вызван',
-  serving:   'обслуживается',
-  served:    'обслужен',
-  skipped:   'пропущен',
-  cancelled: 'отменён',
+const STATUS_LABEL: Record<string, { uz: string; kaa: string }> = {
+  waiting:   { uz: 'kutmoqda',                  kaa: 'kútpekte' },
+  called:    { uz: 'chaqirilgan',               kaa: 'shaqırılǵan' },
+  serving:   { uz: "xizmat ko'rsatilmoqda",     kaa: 'xızmet kórsetilmekte' },
+  served:    { uz: "xizmat ko'rsatilgan",       kaa: 'xızmet kórsetilgen' },
+  skipped:   { uz: "o'tkazib yuborilgan",       kaa: 'ótkizip jiberilgen' },
+  cancelled: { uz: 'bekor qilingan',            kaa: 'biykarlanǵan' },
 };
 
 export default function DashboardPage() {
+  const tr = useTr();
   // Realtime: ticket created/finished pushes a WS event → live metrics refresh.
   useRealtime('/ws/admin', [['dashboard'], ['stats']]);
 
@@ -90,31 +92,31 @@ export default function DashboardPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['dashboard'] });
       qc.invalidateQueries({ queryKey: ['stats'] });
-      toast.success('Очередь сброшена');
+      toast.success(tr('Navbat tiklandi', 'Nóbet tiklendi'));
     },
-    onError: () => toast.error('Не удалось сбросить'),
+    onError: () => toast.error(tr("Tiklab bo'lmadi", 'Tiklap bolmadı')),
   });
 
   return (
     <div className="space-y-8">
       <div>
-        <span className="eyebrow text-coral">Обзор</span>
+        <span className="eyebrow text-coral">{tr('Boshqaruv paneli', 'Basqarıw paneli')}</span>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-          Сегодня в офисе регистратора
+          {tr('Bugun registrator ofisida', 'Búgin registrator ofisinde')}
         </h1>
       </div>
 
       {/* Статистика по залам (richer metrics + CSV export) */}
       <section className="rounded-2xl border border-hair bg-white/40 p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <span className="eyebrow">Статистика</span>
+          <span className="eyebrow">{tr('Statistika', 'Statistika')}</span>
           <div className="flex items-center gap-2">
             <select
               value={hall}
               onChange={(e) => setHall(e.target.value)}
               className="rounded-lg border border-hair-2 bg-white px-3 py-1.5 text-sm text-coal"
             >
-              <option value="">Все залы</option>
+              <option value="">{tr('Barcha zallar', 'Barlıq zallar')}</option>
               {(halls ?? []).map((h) => (
                 <option key={h.id} value={h.id}>
                   {h.name_ru}
@@ -130,48 +132,51 @@ export default function DashboardPage() {
             </a>
             <button
               onClick={() => {
-                if (hall && window.confirm('Сбросить очередь этого зала?')) reset.mutate();
+                if (hall && window.confirm(tr('Shu zal navbatini tiklaysizmi?', 'Usı zal nóbetin tiklewdi qálaysız ba?'))) reset.mutate();
               }}
               disabled={!hall || reset.isPending}
               className="inline-flex items-center gap-1.5 rounded-lg border border-hair-2 bg-white px-3 py-1.5 text-sm font-semibold text-coal-2 hover:text-coral disabled:opacity-40"
             >
               <RotateCcw className="h-4 w-4" />
-              Сбросить
+              {tr('Tiklash', 'Tiklew')}
             </button>
           </div>
         </div>
         <div className="grid grid-cols-5 gap-5">
-          <StatCard eyebrow="Выдано" value={stats?.issued ?? 0} />
-          <StatCard eyebrow="Обслужено" value={stats?.served ?? 0} />
-          <StatCard eyebrow="Пропущено" value={stats?.skipped ?? 0} />
-          <StatCard eyebrow="Ср. обслуживание" value={stats?.avg_service_minutes ?? 0} unit="мин" />
+          <StatCard eyebrow={tr('Berilgan', 'Berilgen')} value={stats?.issued ?? 0} />
+          <StatCard eyebrow={tr("Xizmat ko'rsatilgan", 'Xızmet kórsetilgen')} value={stats?.served ?? 0} />
+          <StatCard eyebrow={tr("O'tkazib yuborilgan", 'Ótkizip jiberilgen')} value={stats?.skipped ?? 0} />
+          <StatCard eyebrow={tr("O'rt. xizmat", 'Ortasha xızmet')} value={stats?.avg_service_minutes ?? 0} unit={tr('daq', 'min')} />
           <StatCard
-            eyebrow="Час пик"
+            eyebrow={tr('Eng yuqori soat', 'Eń joqarı saat')}
             value={stats?.peak_hour != null ? `${stats.peak_hour}:00` : '—'}
           />
         </div>
       </section>
 
       {isLoading || !data ? (
-        <div className="text-sm text-coal-3">Загрузка…</div>
+        <div className="text-sm text-coal-3">{tr('Yuklanmoqda…', 'Júklenbekte…')}</div>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-5">
-            <StatCard eyebrow="Талонов выдано" value={data.metrics.ticketsToday} />
+            <StatCard eyebrow={tr('Berilgan talonlar', 'Berilgen talonlar')} value={data.metrics.ticketsToday} />
             <StatCard
-              eyebrow="Среднее ожидание"
+              eyebrow={tr("O'rtacha kutish", 'Ortasha kútiw')}
               value={data.metrics.avgWaitMinutes}
-              unit="мин"
+              unit={tr('daq', 'min')}
             />
             <StatCard
-              eyebrow="Активных окон"
+              eyebrow={tr('Faol oynalar', 'Belsendi áyneler')}
               value={data.metrics.activeCounters}
               unit="/ 5"
             />
             <StatCard
-              eyebrow="Обслужено"
+              eyebrow={tr("Xizmat ko'rsatilgan", 'Xızmet kórsetilgen')}
               value={data.metrics.served}
-              hint={`${Math.round((data.metrics.served / data.metrics.ticketsToday) * 100)}% от общего`}
+              hint={tr(
+                `umumiydan ${Math.round((data.metrics.served / data.metrics.ticketsToday) * 100)}%`,
+                `ulıwmadan ${Math.round((data.metrics.served / data.metrics.ticketsToday) * 100)}%`,
+              )}
             />
           </div>
 
@@ -179,18 +184,18 @@ export default function DashboardPage() {
 
           <section className="rounded-2xl border border-hair bg-white/40 p-6">
             <div className="mb-4 flex items-center justify-between">
-              <span className="eyebrow">Последние талоны</span>
-              <span className="text-xs text-coal-3">{data.recent.length} записей</span>
+              <span className="eyebrow">{tr("So'nggi talonlar", 'Sońǵı talonlar')}</span>
+              <span className="text-xs text-coal-3">{data.recent.length} {tr('ta yozuv', 'jazıw')}</span>
             </div>
             <table className="admin-table w-full">
               <thead>
                 <tr>
-                  <th>Номер</th>
-                  <th>Категория</th>
-                  <th>Услуга</th>
-                  <th>Окно</th>
-                  <th>Статус</th>
-                  <th>Время</th>
+                  <th>{tr('Raqam', 'Nomer')}</th>
+                  <th>{tr('Kategoriya', 'Kategoriya')}</th>
+                  <th>{tr('Xizmat', 'Xızmet')}</th>
+                  <th>{tr('Oyna', 'Áyne')}</th>
+                  <th>{tr('Holat', 'Halat')}</th>
+                  <th>{tr('Vaqt', 'Waqıt')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,7 +207,10 @@ export default function DashboardPage() {
                     <td className="font-mono text-coal-2">{t.counter_number ?? '—'}</td>
                     <td>
                       <Badge variant="outline" className="border-hair-2 text-coal-2">
-                        {STATUS_LABEL[t.status] ?? t.status}
+                        {(() => {
+                          const lbl = STATUS_LABEL[t.status];
+                          return lbl ? tr(lbl.uz, lbl.kaa) : t.status;
+                        })()}
                       </Badge>
                     </td>
                     <td className="font-mono text-xs text-coal-3">

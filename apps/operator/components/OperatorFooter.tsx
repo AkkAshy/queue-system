@@ -9,12 +9,14 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { useOperatorStore } from '@/store/operator-store';
 import { TransferSheet } from './TransferSheet';
+import { useTr } from '@/lib/i18n';
 
 interface Props {
   current: Ticket | null;
 }
 
 export function OperatorFooter({ current }: Props) {
+  const tr = useTr();
   const qc = useQueryClient();
   // Individual selectors — a destructured-object selector returns a fresh object
   // each render and triggers re-render storms in React 19 RC (the admin TopBar bug).
@@ -31,9 +33,9 @@ export function OperatorFooter({ current }: Props) {
     },
     onSuccess: () => {
       setOnBreak(!onBreak);
-      toast(onBreak ? 'Работа возобновлена' : 'Вы на перерыве');
+      toast(onBreak ? tr('Ish davom ettirildi', 'Jumıs dawam etti') : tr('Siz tanaffusdasiz', 'Siz tanaffustasız'));
     },
-    onError: () => toast.error('Не удалось'),
+    onError: () => toast.error(tr('Amalga oshmadi', 'Ámelge aspadı')),
   });
 
   const endShift = useMutation({
@@ -58,7 +60,7 @@ export function OperatorFooter({ current }: Props) {
           className="h-9 flex-1 gap-1.5 rounded-rsm border-hair-2 bg-white text-[11px]"
         >
           <Coffee className="h-3 w-3" />
-          {onBreak ? 'Продолжить' : 'Перерыв'}
+          {onBreak ? tr('Davom etish', 'Dawam etiw') : tr('Tanaffus', 'Tanaffus')}
         </Button>
         <Button
           size="sm"
@@ -68,7 +70,7 @@ export function OperatorFooter({ current }: Props) {
           className="h-9 flex-1 gap-1.5 rounded-rsm border-hair-2 bg-white text-[11px]"
         >
           <ArrowRightLeft className="h-3 w-3" />
-          Перевод
+          {tr('O\'tkazish', 'Ótkiziw')}
         </Button>
         <Button
           size="sm"

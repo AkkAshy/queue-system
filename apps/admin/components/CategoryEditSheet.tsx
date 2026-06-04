@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTr } from '@/lib/i18n';
 
 interface Props {
   category: ServiceCategory | null; // null = creating
@@ -33,6 +34,7 @@ const EMPTY: Draft = {
 };
 
 export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
+  const tr = useTr();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(category ?? EMPTY);
 
@@ -54,10 +56,10 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
       qc.invalidateQueries({ queryKey: ['services'] });
-      toast.success(isCreate ? 'Категория создана' : 'Сохранено');
+      toast.success(isCreate ? tr('Kategoriya yaratildi', 'Kategoriya jaratıldı') : tr('Saqlandi', 'Saqlandı'));
       onOpenChange(false);
     },
-    onError: () => toast.error('Не удалось сохранить'),
+    onError: () => toast.error(tr("Saqlab bo'lmadi", 'Saqlap bolmadı')),
   });
 
   const canSave =
@@ -71,17 +73,17 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
       <SheetContent className="w-full max-w-md bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="text-2xl font-bold">
-            {isCreate ? 'Новая категория' : `Категория ${draft.code}`}
+            {isCreate ? tr('Yangi kategoriya', 'Jańa kategoriya') : tr(`Kategoriya ${draft.code}`, `Kategoriya ${draft.code}`)}
           </SheetTitle>
           <SheetDescription className="text-coal-3">
-            {isCreate ? 'Создание категории услуг' : 'Редактирование категории'}
+            {isCreate ? tr('Xizmat kategoriyasini yaratish', 'Xızmet kategoriyasın jaratıw') : tr('Kategoriyani tahrirlash', 'Kategoriyanı redaktorlaw')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="my-8 space-y-5">
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <div className="space-y-2">
-              <Label htmlFor="code">Код (A, B, …)</Label>
+              <Label htmlFor="code">{tr('Kod (A, B, …)', 'Kod (A, B, …)')}</Label>
               <Input
                 id="code"
                 value={draft.code}
@@ -92,7 +94,7 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="order">Порядок</Label>
+              <Label htmlFor="order">{tr('Tartib', 'Tártip')}</Label>
               <Input
                 id="order"
                 type="number"
@@ -106,7 +108,7 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name_ru">Название (ru)</Label>
+            <Label htmlFor="name_ru">{tr('Nomi (ru)', 'Atı (ru)')}</Label>
             <Input
               id="name_ru"
               value={draft.name_ru}
@@ -114,7 +116,7 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name_kaa">Название (kaa)</Label>
+            <Label htmlFor="name_kaa">{tr('Nomi (kaa)', 'Atı (kaa)')}</Label>
             <Input
               id="name_kaa"
               value={draft.name_kaa}
@@ -122,7 +124,7 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="color">Цвет</Label>
+            <Label htmlFor="color">{tr('Rang', 'Reń')}</Label>
             <input
               id="color"
               type="color"
@@ -135,14 +137,14 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
 
         <SheetFooter className="gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {tr('Bekor qilish', 'Biykarlaw')}
           </Button>
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={!canSave}
             className="bg-coral text-cream hover:bg-coral-600"
           >
-            {mutation.isPending ? '…' : isCreate ? 'Создать' : 'Сохранить'}
+            {mutation.isPending ? '…' : isCreate ? tr('Yaratish', 'Jaratıw') : tr('Saqlash', 'Saqlaw')}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -8,6 +8,7 @@ import type { Counter, User, WorkSchedule } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScheduleEditSheet } from '@/components/ScheduleEditSheet';
+import { useTr } from '@/lib/i18n';
 
 async function fetchSchedule(): Promise<WorkSchedule[]> {
   const res = await fetch('/api/schedule');
@@ -26,17 +27,18 @@ async function fetchCounters(): Promise<Counter[]> {
   return res.json();
 }
 
-const WEEKDAYS = [
-  'Понедельник',
-  'Вторник',
-  'Среда',
-  'Четверг',
-  'Пятница',
-  'Суббота',
-  'Воскресенье',
+const WEEKDAYS: { uz: string; kaa: string }[] = [
+  { uz: 'Dushanba',   kaa: 'Dúyshembi' },
+  { uz: 'Seshanba',   kaa: 'Siyshembi' },
+  { uz: 'Chorshanba', kaa: 'Sárshembi' },
+  { uz: 'Payshanba',  kaa: 'Piyshembi' },
+  { uz: 'Juma',       kaa: 'Juma' },
+  { uz: 'Shanba',     kaa: 'Shembi' },
+  { uz: 'Yakshanba',  kaa: 'Ekshembi' },
 ];
 
 export default function SchedulePage() {
+  const tr = useTr();
   const qc = useQueryClient();
   const { data: shifts = [] } = useQuery({ queryKey: ['schedule'], queryFn: fetchSchedule });
   const { data: onDuty = [] } = useQuery({
@@ -58,9 +60,9 @@ export default function SchedulePage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['schedule'] });
       qc.invalidateQueries({ queryKey: ['schedule', 'current'] });
-      toast.success('Смена удалена');
+      toast.success(tr("Smena o'chirildi", 'Smena óshirildi'));
     },
-    onError: () => toast.error('Не удалось удалить'),
+    onError: () => toast.error(tr("O'chirib bo'lmadi", 'Óshirip bolmadı')),
   });
 
   // Group shifts by weekday for a readable table.
@@ -74,24 +76,24 @@ export default function SchedulePage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-coral">Справочник</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Расписание смен</h1>
-          <p className="mt-1 text-sm text-coal-3">{shifts.length} смен в графике</p>
+          <span className="eyebrow text-coral">{tr("Ma'lumotnoma", 'Maǵlıwmatnama')}</span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Smenalar jadvali', 'Smenalar kestesi')}</h1>
+          <p className="mt-1 text-sm text-coal-3">{tr('jadvalda', 'kestede')} {shifts.length} {tr('ta smena', 'smena')}</p>
         </div>
         <Button
           onClick={() => setCreating(true)}
           className="gap-2 bg-coral text-cream hover:bg-coral-600"
         >
           <Plus className="h-4 w-4" />
-          Добавить смену
+          {tr("Smena qo'shish", 'Smena qosıw')}
         </Button>
       </div>
 
       {/* On-duty-now strip */}
       <section className="rounded-2xl border border-hair bg-white/40 px-5 py-4">
-        <div className="eyebrow text-coral">Сейчас по графику</div>
+        <div className="eyebrow text-coral">{tr("Hozir jadval bo'yicha", 'Házir keste boyınsha')}</div>
         {onDuty.length === 0 ? (
-          <p className="mt-2 text-sm text-coal-3">Сейчас никто не запланирован.</p>
+          <p className="mt-2 text-sm text-coal-3">{tr('Hozir hech kim rejalashtirilmagan.', 'Házir heshkim jobalastırılmaǵan.')}</p>
         ) : (
           <div className="mt-3 flex flex-wrap gap-2">
             {onDuty.map((s) => (
@@ -100,7 +102,7 @@ export default function SchedulePage() {
                 variant="outline"
                 className="border-coral/40 bg-coral/5 px-3 py-1 text-coal"
               >
-                {s.user_name} · №{s.counter_number} · до {s.end_time.slice(0, 5)}
+                {s.user_name} · №{s.counter_number} · {s.end_time.slice(0, 5)} {tr('gacha', 'deyin')}
               </Badge>
             ))}
           </div>
@@ -112,11 +114,11 @@ export default function SchedulePage() {
         <table className="admin-table w-full">
           <thead>
             <tr>
-              <th className="w-40">День</th>
-              <th>Оператор</th>
-              <th className="w-24">Окно</th>
-              <th className="w-40">Время</th>
-              <th className="w-28">Статус</th>
+              <th className="w-40">{tr('Kun', 'Kún')}</th>
+              <th>{tr('Operator', 'Operator')}</th>
+              <th className="w-24">{tr('Oyna', 'Áyne')}</th>
+              <th className="w-40">{tr('Vaqt', 'Waqıt')}</th>
+              <th className="w-28">{tr('Holat', 'Halat')}</th>
               <th className="w-32"></th>
             </tr>
           </thead>
@@ -125,7 +127,7 @@ export default function SchedulePage() {
               dayShifts.map((s, i) => (
                 <tr key={s.id}>
                   {/* show the day name only on the first row of each group */}
-                  <td className="text-coal-2">{i === 0 ? WEEKDAYS[wd] : ''}</td>
+                  <td className="text-coal-2">{i === 0 && WEEKDAYS[wd] ? tr(WEEKDAYS[wd].uz, WEEKDAYS[wd].kaa) : ''}</td>
                   <td>{s.user_name}</td>
                   <td className="font-mono text-sm">№{s.counter_number}</td>
                   <td className="font-mono text-sm">
@@ -134,11 +136,11 @@ export default function SchedulePage() {
                   <td>
                     {s.is_active ? (
                       <Badge variant="outline" className="border-hair-2 text-coal">
-                        активна
+                        {tr('faol', 'belsendi')}
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="border-hair text-coal-3">
-                        выкл
+                        {tr("o'chiq", 'óshik')}
                       </Badge>
                     )}
                   </td>
@@ -156,7 +158,7 @@ export default function SchedulePage() {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          if (confirm(`Удалить смену ${s.user_name}?`)) deleteMut.mutate(s.id);
+                          if (confirm(tr(`${s.user_name} smenasini o'chirasizmi?`, `${s.user_name} smenasın óshirewdi qálaysız ba?`))) deleteMut.mutate(s.id);
                         }}
                         className="gap-1.5 border-hair-2 text-red-400 hover:text-red-300"
                       >
@@ -170,7 +172,7 @@ export default function SchedulePage() {
             {shifts.length === 0 && (
               <tr>
                 <td colSpan={6} className="py-10 text-center text-sm text-coal-3">
-                  Смен пока нет. Добавьте первую.
+                  {tr("Hozircha smenalar yo'q. Birinchisini qo'shing.", 'Házirshe smenalar joq. Birinshisin qosıń.')}
                 </td>
               </tr>
             )}

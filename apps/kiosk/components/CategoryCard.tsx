@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useLocale, useTranslations } from 'next-intl';
-import type { ServiceCategory } from '@queue/types';
+import { localizedName, type KioskLocale, type ServiceCategory } from '@queue/types';
 import { categoryVisual } from '@/lib/category-visual';
 
 interface Props {
@@ -11,9 +11,9 @@ interface Props {
 }
 
 export function CategoryCard({ category, count }: Props) {
-  const locale = useLocale();
+  const locale = useLocale() as KioskLocale;
   const t = useTranslations('category');
-  const name = locale === 'ru' ? category.name_ru : category.name_kaa;
+  const name = localizedName(category, locale);
   const { Icon, chip } = categoryVisual(category.code);
 
   return (

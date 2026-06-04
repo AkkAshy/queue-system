@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale, useTranslations } from 'next-intl';
-import type { Service, ServiceCategory } from '@queue/types';
+import { localizedName, type KioskLocale, type Service, type ServiceCategory } from '@queue/types';
 import { categoryVisual } from '@/lib/category-visual';
 import { cn } from '@/lib/utils';
 
@@ -13,9 +13,9 @@ interface Props {
 }
 
 export function ServiceRow({ service, category, onClick }: Props) {
-  const locale = useLocale();
+  const locale = useLocale() as KioskLocale;
   const t = useTranslations('category');
-  const name = locale === 'ru' ? service.name_ru : service.name_kaa;
+  const name = localizedName(service, locale);
   const disabled = !service.requires_visit;
   const { solid, text } = categoryVisual(category.code);
 

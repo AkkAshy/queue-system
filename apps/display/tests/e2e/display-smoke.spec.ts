@@ -8,13 +8,13 @@ test('board shows seeded active calls with a window label', async ({ page }) => 
     timeout: 20_000,
   });
 
-  // …routed to a window (the bottom strip labels every window "Okno №N").
-  await expect(page.locator('text=/Okno\\s+№\\d+/').first()).toBeVisible({
+  // …routed to a window (the bottom strip labels every window "N-oyna").
+  await expect(page.locator('text=/\\d+-oyna/').first()).toBeVisible({
     timeout: 10_000,
   });
 
-  // The "now serving" panel header is present.
+  // The "now serving" panel header is present (board is Uzbek).
   await expect(
-    page.locator('text=/Сейчас обслуживается/').first(),
+    page.locator("text=/Hozir xizmat ko'rsatilmoqda/").first(),
   ).toBeVisible();
 });

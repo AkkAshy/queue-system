@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
+import type { KioskLocale } from '@queue/types';
+import { intlLocale } from '@/lib/locale';
 
 export function Clock() {
-  const locale = useLocale();
+  const locale = useLocale() as KioskLocale;
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -15,13 +17,13 @@ export function Clock() {
 
   if (!now) return <span className="text-base text-coal-3">—:—</span>;
 
-  const time = new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+  const time = new Intl.DateTimeFormat(intlLocale(locale), {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
   }).format(now);
 
-  const date = new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+  const date = new Intl.DateTimeFormat(intlLocale(locale), {
     day: '2-digit',
     month: 'short',
   }).format(now);

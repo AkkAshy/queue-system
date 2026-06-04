@@ -3,7 +3,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import type { Service, ServiceCategory } from '@queue/types';
+import { localizedName, type KioskLocale, type Service, type ServiceCategory } from '@queue/types';
 import { ServiceRow } from '@/components/ServiceRow';
 import { KioskHeader } from '@/components/KioskHeader';
 import { categoryVisual } from '@/lib/category-visual';
@@ -22,7 +22,7 @@ async function fetchServices(categoryId: number): Promise<Service[]> {
 export default function CategoryPage() {
   const params = useParams<{ code: string; locale: string }>();
   const t = useTranslations('category');
-  const locale = useLocale();
+  const locale = useLocale() as KioskLocale;
   const router = useRouter();
   const { setCategory, setService } = useKioskStore();
 
@@ -36,7 +36,7 @@ export default function CategoryPage() {
   });
 
   if (!category) return null;
-  const categoryName = locale === 'ru' ? category.name_ru : category.name_kaa;
+  const categoryName = localizedName(category, locale);
   const { Icon, chip } = categoryVisual(category.code);
 
   return (

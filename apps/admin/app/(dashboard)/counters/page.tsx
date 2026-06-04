@@ -8,6 +8,7 @@ import type { Counter, Service } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CounterEditSheet } from '@/components/CounterEditSheet';
+import { useTr } from '@/lib/i18n';
 
 async function fetchCounters(): Promise<Counter[]> {
   const res = await fetch('/api/counters');
@@ -19,6 +20,7 @@ async function fetchServices(): Promise<Service[]> {
 }
 
 export default function CountersPage() {
+  const tr = useTr();
   const qc = useQueryClient();
   const { data: counters = [] } = useQuery({
     queryKey: ['counters'],
@@ -39,25 +41,25 @@ export default function CountersPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['counters'] });
-      toast.success('Окно удалено');
+      toast.success(tr("Oyna o'chirildi", 'Áyne óshirildi'));
     },
-    onError: () => toast.error('Не удалось удалить'),
+    onError: () => toast.error(tr("O'chirib bo'lmadi", 'Óshirip bolmadı')),
   });
 
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-coral">Справочник</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Окна</h1>
-          <p className="mt-1 text-sm text-coal-3">{counters.length} рабочих мест</p>
+          <span className="eyebrow text-coral">{tr("Ma'lumotnoma", 'Maǵlıwmatnama')}</span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Oynalar', 'Áyneler')}</h1>
+          <p className="mt-1 text-sm text-coal-3">{counters.length} {tr("ta ish o'rni", 'jumıs ornı')}</p>
         </div>
         <Button
           onClick={() => setCreating(true)}
           className="gap-2 bg-coral text-cream hover:bg-coral-600"
         >
           <Plus className="h-4 w-4" />
-          Создать окно
+          {tr('Oyna yaratish', 'Áyne jaratıw')}
         </Button>
       </div>
 
@@ -66,9 +68,9 @@ export default function CountersPage() {
           <thead>
             <tr>
               <th className="w-20">№</th>
-              <th>Название</th>
-              <th className="w-32">Услуг</th>
-              <th className="w-28">Статус</th>
+              <th>{tr('Nomi', 'Atı')}</th>
+              <th className="w-32">{tr('Xizmatlar', 'Xızmetler')}</th>
+              <th className="w-28">{tr('Holat', 'Halat')}</th>
               <th className="w-32"></th>
             </tr>
           </thead>
@@ -85,11 +87,11 @@ export default function CountersPage() {
                 <td>
                   {c.is_active ? (
                     <Badge variant="outline" className="border-hair-2 text-coal">
-                      активно
+                      {tr('faol', 'belsendi')}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="border-hair text-coal-3">
-                      выкл
+                      {tr("o'chiq", 'óshik')}
                     </Badge>
                   )}
                 </td>
@@ -107,7 +109,7 @@ export default function CountersPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        if (confirm(`Удалить окно №${c.number}?`)) {
+                        if (confirm(tr(`№${c.number} oynani o'chirasizmi?`, `№${c.number} áynedi óshirewdi qálaysız ba?`))) {
                           deleteMut.mutate(c.id);
                         }
                       }}

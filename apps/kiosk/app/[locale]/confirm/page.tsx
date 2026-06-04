@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import type { Hall, Ticket } from '@queue/types';
+import { localizedName, type Hall, type KioskLocale, type Ticket } from '@queue/types';
 import { useKioskStore } from '@/store/kiosk-store';
 import { printTicket } from '@/lib/printer';
 import { KioskHeader } from '@/components/KioskHeader';
@@ -31,7 +31,7 @@ async function createTicket(body: {
 
 export default function ConfirmPage() {
   const t = useTranslations('confirm');
-  const locale = useLocale();
+  const locale = useLocale() as KioskLocale;
   const router = useRouter();
   const { category, service, prepareIdempotencyKey, setTicket, setHall, setPrintFailed } =
     useKioskStore();
@@ -63,8 +63,8 @@ export default function ConfirmPage() {
     return null;
   }
 
-  const serviceName = locale === 'ru' ? service.name_ru : service.name_kaa;
-  const categoryName = locale === 'ru' ? category.name_ru : category.name_kaa;
+  const serviceName = localizedName(service, locale);
+  const categoryName = localizedName(category, locale);
   const { Icon, chip } = categoryVisual(category.code);
 
   const confirm = () => {

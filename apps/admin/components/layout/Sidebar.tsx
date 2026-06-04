@@ -13,20 +13,22 @@ import {
   ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTr } from '@/lib/i18n';
 
 const items = [
-  { href: '/dashboard',  label: 'Обзор',      Icon: LayoutDashboard },
-  { href: '/services',   label: 'Услуги',     Icon: FileText },
-  { href: '/categories', label: 'Категории',  Icon: Layers },
-  { href: '/counters',   label: 'Окна',       Icon: Building2 },
-  { href: '/operators',  label: 'Операторы',  Icon: Users },
-  { href: '/schedule',   label: 'Расписание', Icon: CalendarClock },
-  { href: '/settings',   label: 'Табло',      Icon: Monitor },
-  { href: '/audit',      label: 'Аудит',      Icon: ScrollText },
+  { href: '/dashboard',  uz: 'Boshqaruv paneli', kaa: 'Basqarıw paneli', Icon: LayoutDashboard },
+  { href: '/services',   uz: 'Xizmatlar',        kaa: 'Xızmetler',       Icon: FileText },
+  { href: '/categories', uz: 'Kategoriyalar',    kaa: 'Kategoriyalar',   Icon: Layers },
+  { href: '/counters',   uz: 'Oynalar',          kaa: 'Áyneler',         Icon: Building2 },
+  { href: '/operators',  uz: 'Operatorlar',      kaa: 'Operatorlar',     Icon: Users },
+  { href: '/schedule',   uz: 'Jadval',           kaa: 'Keste',           Icon: CalendarClock },
+  { href: '/settings',   uz: 'Tablo',            kaa: 'Tablo',           Icon: Monitor },
+  { href: '/audit',      uz: 'Audit',            kaa: 'Audit',           Icon: ScrollText },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const tr = useTr();
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-hair bg-cream/80">
@@ -41,7 +43,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-5">
-        {items.map(({ href, label, Icon }) => {
+        {items.map(({ href, uz, kaa, Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/');
           return (
             <Link
@@ -60,7 +62,7 @@ export function Sidebar() {
                   active ? 'text-coral-600' : 'text-coal-3 group-hover:text-coral',
                 )}
               />
-              {label}
+              {tr(uz, kaa)}
             </Link>
           );
         })}

@@ -8,6 +8,7 @@ import type { Counter, User } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OperatorEditSheet } from '@/components/OperatorEditSheet';
+import { useTr } from '@/lib/i18n';
 
 async function fetchUsers(): Promise<User[]> {
   const res = await fetch('/api/users');
@@ -18,13 +19,14 @@ async function fetchCounters(): Promise<Counter[]> {
   return res.json();
 }
 
-const ROLE_LABEL: Record<string, string> = {
-  admin: 'админ',
-  operator: 'оператор',
-  viewer: 'наблюдатель',
+const ROLE_LABEL: Record<string, { uz: string; kaa: string }> = {
+  admin: { uz: 'administrator', kaa: 'administrator' },
+  operator: { uz: 'operator', kaa: 'operator' },
+  viewer: { uz: 'kuzatuvchi', kaa: 'baqlawshı' },
 };
 
 export default function OperatorsPage() {
+  const tr = useTr();
   const qc = useQueryClient();
   const { data: users = [] } = useQuery({ queryKey: ['users'], queryFn: fetchUsers });
   const { data: counters = [] } = useQuery({
@@ -42,9 +44,9 @@ export default function OperatorsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Удалено');
+      toast.success(tr("O'chirildi", 'Óshirildi'));
     },
-    onError: () => toast.error('Не удалось удалить'),
+    onError: () => toast.error(tr("O'chirib bo'lmadi", 'Óshirip bolmadı')),
   });
 
   function counterLabel(id: number | null) {
@@ -57,16 +59,16 @@ export default function OperatorsPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-coral">Справочник</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Операторы</h1>
-          <p className="mt-1 text-sm text-coal-3">{users.length} учётных записей</p>
+          <span className="eyebrow text-coral">{tr("Ma'lumotnoma", 'Maǵlıwmatnama')}</span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Operatorlar', 'Operatorlar')}</h1>
+          <p className="mt-1 text-sm text-coal-3">{users.length} {tr('ta hisob', 'esap')}</p>
         </div>
         <Button
           onClick={() => setCreating(true)}
           className="gap-2 bg-coral text-cream hover:bg-coral-600"
         >
           <Plus className="h-4 w-4" />
-          Создать оператора
+          {tr('Operator yaratish', 'Operator jaratıw')}
         </Button>
       </div>
 
@@ -74,11 +76,11 @@ export default function OperatorsPage() {
         <table className="admin-table w-full">
           <thead>
             <tr>
-              <th className="w-32">Логин</th>
-              <th>Имя</th>
-              <th className="w-36">Роль</th>
-              <th className="w-24">Окно</th>
-              <th className="w-28">Статус</th>
+              <th className="w-32">{tr('Login', 'Login')}</th>
+              <th>{tr('Ism', 'Atı')}</th>
+              <th className="w-36">{tr('Rol', 'Lawazım')}</th>
+              <th className="w-24">{tr('Oyna', 'Áyne')}</th>
+              <th className="w-28">{tr('Holat', 'Halat')}</th>
               <th className="w-32"></th>
             </tr>
           </thead>
@@ -87,16 +89,19 @@ export default function OperatorsPage() {
               <tr key={u.id}>
                 <td className="font-mono text-sm">{u.username}</td>
                 <td>{u.name}</td>
-                <td className="text-coal-2">{ROLE_LABEL[u.role]}</td>
+                <td className="text-coal-2">{(() => {
+                  const lbl = ROLE_LABEL[u.role];
+                  return lbl ? tr(lbl.uz, lbl.kaa) : u.role;
+                })()}</td>
                 <td className="font-mono text-sm">{counterLabel(u.counter_id)}</td>
                 <td>
                   {u.is_active ? (
                     <Badge variant="outline" className="border-hair-2 text-coal">
-                      активен
+                      {tr('faol', 'belsendi')}
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="border-hair text-coal-3">
-                      выкл
+                      {tr("o'chiq", 'óshik')}
                     </Badge>
                   )}
                 </td>
@@ -114,7 +119,7 @@ export default function OperatorsPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => {
-                        if (confirm(`Удалить ${u.username}?`)) deleteMut.mutate(u.id);
+                        if (confirm(tr(`${u.username} o'chirilsinmi?`, `${u.username} óshirilsin be?`))) deleteMut.mutate(u.id);
                       }}
                       className="gap-1.5 border-hair-2 text-red-400 hover:text-red-300"
                     >

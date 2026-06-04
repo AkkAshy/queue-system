@@ -4,13 +4,15 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Printer } from 'lucide-react';
+import { localizedName, type KioskLocale } from '@queue/types';
 import { useKioskStore } from '@/store/kiosk-store';
 import { KioskHeader } from '@/components/KioskHeader';
 import { categoryVisual } from '@/lib/category-visual';
+import { intlLocale } from '@/lib/locale';
 
 export default function TicketPage() {
   const t = useTranslations('ticket');
-  const locale = useLocale();
+  const locale = useLocale() as KioskLocale;
   const router = useRouter();
   const { ticket, category, service, hall, printFailed, reset } = useKioskStore();
 
@@ -25,11 +27,11 @@ export default function TicketPage() {
     router.push(`/${locale}`);
   };
 
-  const serviceName = service ? (locale === 'ru' ? service.name_ru : service.name_kaa) : null;
-  const categoryName = locale === 'ru' ? category.name_ru : category.name_kaa;
+  const serviceName = service ? localizedName(service, locale) : null;
+  const categoryName = localizedName(category, locale);
   const { text } = categoryVisual(category.code);
   const issuedAt = new Date(ticket.created_at);
-  const issuedText = new Intl.DateTimeFormat(locale === 'ru' ? 'ru-RU' : 'en-GB', {
+  const issuedText = new Intl.DateTimeFormat(intlLocale(locale), {
     day: '2-digit',
     month: 'long',
     hour: '2-digit',
@@ -63,14 +65,14 @@ export default function TicketPage() {
             <div className="grid grid-cols-2 gap-y-5">
               {hall && (
                 <div className="col-span-2">
-                  <span className="eyebrow">{locale === 'ru' ? 'Зал' : 'Zal'}</span>
+                  <span className="eyebrow">{t('hall')}</span>
                   <div className="mt-1.5 font-semibold text-coal">
-                    {locale === 'ru' ? hall.name_ru : hall.name_kaa}
+                    {localizedName(hall, locale)}
                   </div>
                 </div>
               )}
               <div>
-                <span className="eyebrow">{locale === 'ru' ? 'Категория' : 'Kategoriya'}</span>
+                <span className="eyebrow">{t('category')}</span>
                 <div className="mt-1.5 font-semibold text-coal">{categoryName}</div>
               </div>
               <div className="text-right">
@@ -79,7 +81,7 @@ export default function TicketPage() {
               </div>
               {serviceName && (
                 <div className="col-span-2">
-                  <span className="eyebrow">{locale === 'ru' ? 'Услуга' : 'Xızmet'}</span>
+                  <span className="eyebrow">{t('service')}</span>
                   <div className="mt-1.5 leading-snug text-coal">{serviceName}</div>
                 </div>
               )}

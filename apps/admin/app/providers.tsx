@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { getQueryClient } from '@/lib/query-client';
 import { startMsw } from '@/lib/msw';
 import { installAuthFetch } from '@/lib/auth-fetch';
+import { LangProvider } from '@/lib/i18n';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mswReady, setMswReady] = useState(process.env.NODE_ENV !== 'development');
@@ -28,7 +29,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const client = getQueryClient();
   return (
     <QueryClientProvider client={client}>
-      {children}
+      <LangProvider>{children}</LangProvider>
       <Toaster theme="dark" position="bottom-right" />
     </QueryClientProvider>
   );

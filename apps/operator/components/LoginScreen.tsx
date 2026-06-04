@@ -10,8 +10,11 @@ import {
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import { useOperatorStore } from '@/store/operator-store';
+import { LangSwitcher } from '@/components/LangSwitcher';
+import { useTr } from '@/lib/i18n';
 
 export function LoginScreen() {
+  const tr = useTr();
   const startShift = useOperatorStore((s) => s.startShift);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +37,7 @@ export function LoginScreen() {
     onSuccess: ({ auth, session }) => {
       const counter = activeCounters.find((c) => c.id === session.counter_id);
       if (!counter) {
-        toast.error('Окно не найдено');
+        toast.error(tr('Oyna topilmadi', 'Áyne tabılmadı'));
         return;
       }
       startShift({
@@ -47,7 +50,7 @@ export function LoginScreen() {
         sessionId: session.id,
       });
     },
-    onError: () => toast.error('Неверный логин или пароль'),
+    onError: () => toast.error(tr('Login yoki parol noto\'g\'ri', 'Login yamasa parol qáte')),
   });
 
   const canStart = !!(username.trim() && password && counterId && !start.isPending);
@@ -57,8 +60,11 @@ export function LoginScreen() {
   return (
     <main className="flex h-screen w-screen flex-col justify-between p-6">
       <div>
-        <span className="eyebrow text-coral">NDPI · Пульт</span>
-        <h1 className="mt-3 text-2xl font-bold leading-tight text-coal">Вход</h1>
+        <div className="flex items-start justify-between">
+          <span className="eyebrow text-coral">NDPI · Pult</span>
+          <LangSwitcher />
+        </div>
+        <h1 className="mt-3 text-2xl font-bold leading-tight text-coal">{tr('Kirish', 'Kiriw')}</h1>
       </div>
 
       <form
@@ -69,7 +75,7 @@ export function LoginScreen() {
         }}
       >
         <div className="space-y-2">
-          <Label className="text-xs">Логин</Label>
+          <Label className="text-xs">Login</Label>
           <input
             className={inputCls}
             value={username}
@@ -79,7 +85,7 @@ export function LoginScreen() {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs">Пароль</Label>
+          <Label className="text-xs">{tr('Parol', 'Parol')}</Label>
           <input
             type="password"
             className={inputCls}
@@ -90,10 +96,10 @@ export function LoginScreen() {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs">Окно</Label>
+          <Label className="text-xs">{tr('Oyna', 'Áyne')}</Label>
           <Select value={counterId} onValueChange={setCounterId}>
             <SelectTrigger className="h-11 text-sm">
-              <SelectValue placeholder="Выбрать…" />
+              <SelectValue placeholder={tr('Tanlash…', 'Saylaw…')} />
             </SelectTrigger>
             <SelectContent>
               {activeCounters.map((c) => (
@@ -110,7 +116,7 @@ export function LoginScreen() {
           disabled={!canStart}
           className="h-12 w-full rounded-r bg-coral font-bold text-white shadow-coral hover:bg-coral-600"
         >
-          {start.isPending ? '…' : 'Начать смену'}
+          {start.isPending ? '…' : tr('Smenani boshlash', 'Smenanı baslaw')}
         </Button>
       </form>
     </main>

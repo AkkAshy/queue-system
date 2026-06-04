@@ -24,7 +24,7 @@ export function NowServing({
       <div className="bg-coral px-5 py-3 text-center text-white">
         <div className="text-xl font-extrabold leading-tight">Házir qabıllanbaqta</div>
         <div className="text-xs font-bold uppercase tracking-[0.16em] opacity-90">
-          Сейчас обслуживается
+          Hozir xizmat ko'rsatilmoqda
         </div>
       </div>
 

@@ -22,6 +22,8 @@ export interface Hall {
   code: string;         // '1', '2'
   name_kaa: string;
   name_ru: string;
+  name_uz?: string;     // Uzbek (Latin)
+  name_en?: string;     // English
   is_active: boolean;
   order: number;
 }
@@ -32,6 +34,8 @@ export interface ServiceCategory {
   code: string;         // 'A', 'B', ...
   name_kaa: string;
   name_ru: string;
+  name_uz?: string;     // Uzbek (Latin)
+  name_en?: string;     // English
   color: string;        // hex
   order: number;
 }
@@ -41,11 +45,30 @@ export interface Service {
   category_id: number;
   name_kaa: string;
   name_ru: string;
+  name_uz?: string;     // Uzbek (Latin)
+  name_en?: string;     // English
   sla_days: number;     // 0 = immediate
   delivery_type: DeliveryType;
   requires_visit: boolean;
   is_active: boolean;
   is_popular?: boolean;   // surfaced in the kiosk "popular" shortcut block
+}
+
+// Kiosk locales (UI + catalog name selection). Staff apps are Uzbek-only.
+export type KioskLocale = 'kaa' | 'ru' | 'uz' | 'en';
+
+/** Pick the catalog name for a locale with graceful fallback (uz/en may be
+ * missing on older rows → fall back to ru, then kaa). */
+export function localizedName(
+  obj: { name_kaa: string; name_ru: string; name_uz?: string; name_en?: string },
+  locale: KioskLocale,
+): string {
+  switch (locale) {
+    case 'ru': return obj.name_ru || obj.name_kaa;
+    case 'uz': return obj.name_uz || obj.name_ru || obj.name_kaa;
+    case 'en': return obj.name_en || obj.name_ru || obj.name_kaa;
+    default:   return obj.name_kaa || obj.name_ru;
+  }
 }
 
 export interface Ticket {

@@ -1,0 +1,34 @@
+'use client';
+
+import { useLang, type StaffLocale } from '@/lib/i18n';
+
+const LANGS: { code: StaffLocale; label: string }[] = [
+  { code: 'kaa', label: 'Qaraqalpaqsha' },
+  { code: 'uz', label: "O'zbekcha" },
+];
+
+export function LangSwitcher() {
+  const { lang, setLang } = useLang();
+
+  return (
+    <div className="flex items-center gap-1 rounded-full border border-ink-200/40 p-0.5">
+      {LANGS.map(({ code, label }) => {
+        const active = code === lang;
+        return (
+          <button
+            key={code}
+            onClick={() => setLang(code)}
+            aria-current={active ? 'true' : undefined}
+            className={
+              active
+                ? 'rounded-full bg-coral px-2.5 py-1 text-[11px] font-medium text-white'
+                : 'rounded-full px-2.5 py-1 text-[11px] font-medium text-ink-400 transition-colors hover:text-coral'
+            }
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}

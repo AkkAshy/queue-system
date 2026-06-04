@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
+import { useTr } from '@/lib/i18n';
 
 interface AuditEntry {
   id: number;
@@ -14,21 +15,21 @@ interface AuditEntry {
   created_at: string;
 }
 
-const ACTIONS = [
-  { value: '', label: 'Все действия' },
-  { value: 'ticket.called', label: 'Вызов' },
-  { value: 'ticket.recalled', label: 'Повтор' },
-  { value: 'ticket.finished', label: 'Завершение' },
-  { value: 'ticket.skipped', label: 'Пропуск' },
-  { value: 'ticket.transferred', label: 'Перевод' },
-  { value: 'counter.created', label: 'Окно создано' },
-  { value: 'counter.updated', label: 'Окно изменено' },
-  { value: 'counter.deleted', label: 'Окно удалено' },
-  { value: 'auth.login', label: 'Вход' },
+const ACTIONS: { value: string; uz: string; kaa: string }[] = [
+  { value: '', uz: 'Barcha amallar', kaa: 'Barlıq ámeller' },
+  { value: 'ticket.called', uz: 'Chaqiruv', kaa: 'Shaqırıw' },
+  { value: 'ticket.recalled', uz: 'Qayta chaqiruv', kaa: 'Qayta shaqırıw' },
+  { value: 'ticket.finished', uz: 'Yakunlash', kaa: 'Tamamlaw' },
+  { value: 'ticket.skipped', uz: "O'tkazib yuborish", kaa: 'Ótkizip jiberiw' },
+  { value: 'ticket.transferred', uz: 'Boshqa oynaga', kaa: 'Basqa áynege' },
+  { value: 'counter.created', uz: 'Oyna yaratildi', kaa: 'Áyne jaratıldı' },
+  { value: 'counter.updated', uz: "Oyna o'zgartirildi", kaa: 'Áyne ózgertildi' },
+  { value: 'counter.deleted', uz: "Oyna o'chirildi", kaa: 'Áyne óshirildi' },
+  { value: 'auth.login', uz: 'Kirish', kaa: 'Kiriw' },
 ];
 
-const ACTION_LABEL: Record<string, string> = Object.fromEntries(
-  ACTIONS.filter((a) => a.value).map((a) => [a.value, a.label]),
+const ACTION_LABEL: Record<string, { uz: string; kaa: string }> = Object.fromEntries(
+  ACTIONS.filter((a) => a.value).map((a) => [a.value, { uz: a.uz, kaa: a.kaa }]),
 );
 
 async function fetchAudit(action: string): Promise<AuditEntry[]> {
@@ -38,6 +39,7 @@ async function fetchAudit(action: string): Promise<AuditEntry[]> {
 }
 
 export default function AuditPage() {
+  const tr = useTr();
   const [action, setAction] = useState('');
   const { data = [], isLoading } = useQuery({
     queryKey: ['audit', action],
@@ -48,9 +50,9 @@ export default function AuditPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-coral">Журнал</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Аудит действий</h1>
-          <p className="mt-1 text-sm text-coal-3">{data.length} записей</p>
+          <span className="eyebrow text-coral">{tr('Jurnal', 'Jurnal')}</span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Amallar auditi', 'Ámeller auditi')}</h1>
+          <p className="mt-1 text-sm text-coal-3">{data.length} {tr('ta yozuv', 'jazıw')}</p>
         </div>
         <select
           value={action}
@@ -59,7 +61,7 @@ export default function AuditPage() {
         >
           {ACTIONS.map((a) => (
             <option key={a.value} value={a.value}>
-              {a.label}
+              {tr(a.uz, a.kaa)}
             </option>
           ))}
         </select>
@@ -67,18 +69,18 @@ export default function AuditPage() {
 
       <section className="rounded-2xl border border-hair bg-white/40 p-6">
         {isLoading ? (
-          <div className="text-sm text-coal-3">Загрузка…</div>
+          <div className="text-sm text-coal-3">{tr('Yuklanmoqda…', 'Júklenbekte…')}</div>
         ) : data.length === 0 ? (
-          <div className="text-sm text-coal-3">Записей нет</div>
+          <div className="text-sm text-coal-3">{tr("Yozuvlar yo'q", 'Jazıwlar joq')}</div>
         ) : (
           <table className="admin-table w-full">
             <thead>
               <tr>
-                <th>Время</th>
-                <th>Действие</th>
-                <th>Объект</th>
-                <th>Кто</th>
-                <th>Детали</th>
+                <th>{tr('Vaqt', 'Waqıt')}</th>
+                <th>{tr('Amal', 'Ámel')}</th>
+                <th>{tr('Obyekt', 'Obyekt')}</th>
+                <th>{tr('Kim', 'Kim')}</th>
+                <th>{tr('Tafsilotlar', 'Tápsilatlar')}</th>
               </tr>
             </thead>
             <tbody>
@@ -94,7 +96,10 @@ export default function AuditPage() {
                   </td>
                   <td>
                     <Badge variant="outline" className="border-hair-2 text-coal-2">
-                      {ACTION_LABEL[e.action] ?? e.action}
+                      {(() => {
+                        const lbl = ACTION_LABEL[e.action];
+                        return lbl ? tr(lbl.uz, lbl.kaa) : e.action;
+                      })()}
                     </Badge>
                   </td>
                   <td className="font-mono font-semibold text-coral-600">{e.target || '—'}</td>

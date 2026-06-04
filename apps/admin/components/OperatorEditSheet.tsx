@@ -23,11 +23,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTr } from '@/lib/i18n';
 
-const ROLES: { value: UserRole; label: string }[] = [
-  { value: 'admin',    label: 'Администратор' },
-  { value: 'operator', label: 'Оператор' },
-  { value: 'viewer',   label: 'Наблюдатель' },
+const ROLES: { value: UserRole; uz: string; kaa: string }[] = [
+  { value: 'admin',    uz: 'Administrator', kaa: 'Administrator' },
+  { value: 'operator', uz: 'Operator',      kaa: 'Operator' },
+  { value: 'viewer',   uz: 'Kuzatuvchi',    kaa: 'Baqlawshı' },
 ];
 
 interface Props {
@@ -49,6 +50,7 @@ const EMPTY: Draft = {
 };
 
 export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props) {
+  const tr = useTr();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(user ?? EMPTY);
 
@@ -73,10 +75,10 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users'] });
-      toast.success(draft.id ? 'Оператор обновлён' : 'Оператор создан');
+      toast.success(draft.id ? tr('Operator yangilandi', 'Operator jańalandı') : tr('Operator yaratildi', 'Operator jaratıldı'));
       onOpenChange(false);
     },
-    onError: () => toast.error('Не удалось сохранить'),
+    onError: () => toast.error(tr("Saqlab bo'lmadi", 'Saqlap bolmadı')),
   });
 
   return (
@@ -84,16 +86,16 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
       <SheetContent className="w-full max-w-md bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl font-normal">
-            {user ? `Пользователь #${user.id}` : 'Новый оператор'}
+            {user ? tr(`Foydalanuvchi #${user.id}`, `Paydalanıwshı #${user.id}`) : tr('Yangi operator', 'Jańa operator')}
           </SheetTitle>
           <SheetDescription className="text-coal-3">
-            Учётная запись для работы в системе
+            {tr('Tizimda ishlash uchun hisob', 'Sistemada islew ushın esap')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="my-8 space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="username">Логин</Label>
+            <Label htmlFor="username">{tr('Login', 'Login')}</Label>
             <Input
               id="username"
               value={draft.username}
@@ -103,7 +105,7 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="name">Имя</Label>
+            <Label htmlFor="name">{tr('Ism', 'Atı')}</Label>
             <Input
               id="name"
               value={draft.name}
@@ -111,7 +113,7 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
             />
           </div>
           <div className="space-y-2">
-            <Label>Роль</Label>
+            <Label>{tr('Rol', 'Lawazım')}</Label>
             <Select
               value={draft.role}
               onValueChange={(v) => setDraft({ ...draft, role: v as UserRole })}
@@ -122,7 +124,7 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
               <SelectContent>
                 {ROLES.map((r) => (
                   <SelectItem key={r.value} value={r.value}>
-                    {r.label}
+                    {tr(r.uz, r.kaa)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -131,7 +133,7 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
           {/* Counter select shown only for operators */}
           {draft.role === 'operator' && (
             <div className="space-y-2">
-              <Label>Окно</Label>
+              <Label>{tr('Oyna', 'Áyne')}</Label>
               <Select
                 value={draft.counter_id ? String(draft.counter_id) : 'none'}
                 onValueChange={(v) =>
@@ -142,7 +144,7 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">— не назначено —</SelectItem>
+                  <SelectItem value="none">{tr('— tayinlanmagan —', '— tayınlanbaǵan —')}</SelectItem>
                   {counters.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       №{c.number} · {c.name}
@@ -154,9 +156,9 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
           )}
           <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
-              <div className="text-sm font-medium">Активен</div>
+              <div className="text-sm font-medium">{tr('Faol', 'Belsendi')}</div>
               <div className="text-xs text-coal-3">
-                Может входить в систему
+                {tr('Tizimga kira oladi', 'Sistemaǵa kire aladı')}
               </div>
             </div>
             <Switch
@@ -166,34 +168,34 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">
-              {user ? 'Новый пароль' : 'Пароль'}
+              {user ? tr('Yangi parol', 'Jańa parol') : tr('Parol', 'Parol')}
             </Label>
             <Input
               id="password"
               type="password"
               autoComplete="new-password"
-              placeholder={user ? 'оставьте пустым — без изменений' : 'по умолчанию: operator'}
+              placeholder={user ? tr("bo'sh qoldiring — o'zgartirilmaydi", 'bos qaldırıń — ózgermeydi') : tr('standart: operator', 'standart: operator')}
               value={draft.password ?? ''}
               onChange={(e) => setDraft({ ...draft, password: e.target.value })}
             />
             <p className="text-xs text-coal-3">
               {user
-                ? 'Заполните, чтобы сбросить пароль этой учётной записи.'
-                : 'Можно оставить пустым — тогда пароль будет «operator».'}
+                ? tr("Ushbu hisob parolini tiklash uchun to'ldiring.", 'Usı esap parolın tiklew ushın toltırıń.')
+                : tr("Bo'sh qoldirish mumkin — u holda parol «operator» bo'ladi.", 'Bos qaldırıw múmkin — onda parol «operator» boladı.')}
             </p>
           </div>
         </div>
 
         <SheetFooter className="gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {tr('Bekor qilish', 'Biykarlaw')}
           </Button>
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={mutation.isPending}
             className="bg-coral text-cream hover:bg-coral-600"
           >
-            {mutation.isPending ? '…' : 'Сохранить'}
+            {mutation.isPending ? '…' : tr('Saqlash', 'Saqlaw')}
           </Button>
         </SheetFooter>
       </SheetContent>

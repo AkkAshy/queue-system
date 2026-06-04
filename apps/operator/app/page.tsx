@@ -10,6 +10,7 @@ import { OperatorFooter } from '@/components/OperatorFooter';
 import { api } from '@/lib/api';
 import { useRealtime } from '@/lib/useRealtime';
 import { useOperatorStore } from '@/store/operator-store';
+import { useTr } from '@/lib/i18n';
 
 async function fetchServices(): Promise<Service[]> {
   const res = await fetch('/api/services');
@@ -18,6 +19,7 @@ async function fetchServices(): Promise<Service[]> {
 }
 
 export default function Page() {
+  const tr = useTr();
   const signedIn = useOperatorStore((s) => s.isSignedIn());
   const counterId = useOperatorStore((s) => s.counterId);
   const counterNumber = useOperatorStore((s) => s.counterNumber);
@@ -58,7 +60,7 @@ export default function Page() {
           <span className="text-[11px] text-coal-3">· {userName}</span>
           {onBreak && (
             <span className="rounded-full bg-coral-soft px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-coral">
-              перерыв
+              {tr('tanaffus', 'tanaffus')}
             </span>
           )}
         </div>

@@ -27,7 +27,7 @@ export function WindowStrip({
             }`}
           >
             <span className="whitespace-nowrap text-[0.62rem] font-bold uppercase tracking-wide text-coal-3">
-              Okno №{w.counter_number}
+              {w.counter_number}-oyna
             </span>
             <span
               className={`text-[clamp(1.1rem,2.2vw,1.7rem)] font-extrabold tabular-nums ${

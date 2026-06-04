@@ -1,0 +1,73 @@
+{
+  "institution": {
+    "short": "NSPI",
+    "full": "Ajiniyaz Nukus State Pedagogical Institute",
+    "office": "Registrar's office",
+    "name": "Ájiniyaz atındaǵı NMPI"
+  },
+  "hall": {
+    "eyebrow": "Electronic queue",
+    "title": "Select a hall",
+    "change": "Change hall"
+  },
+  "welcome": {
+    "eyebrow": "Electronic queue",
+    "title": "What do you need?",
+    "subtitle": "Choose a service category",
+    "popular": "Popular",
+    "byCategory": "Or by category"
+  },
+  "category": {
+    "eyebrow": "Category",
+    "back": "Back",
+    "selectService": "Select a service",
+    "serviceCount": "{count} services",
+    "onlineHint": "Available online via HEMIS"
+  },
+  "confirm": {
+    "eyebrow": "Confirmation",
+    "title": "Confirm",
+    "service": "Service",
+    "category": "Category",
+    "getTicket": "Get ticket",
+    "cancel": "Cancel",
+    "printing": "Printing…"
+  },
+  "ticket": {
+    "eyebrow": "Ticket",
+    "title": "Your number",
+    "goTo": "Wait for your call on the board",
+    "issued": "Issued",
+    "hall": "Hall",
+    "category": "Category",
+    "service": "Service",
+    "new": "New ticket",
+    "notPrinted": "The ticket didn't print, but your number is already in the queue — remember it and wait for your call on the board."
+  },
+  "error": {
+    "eyebrow": "Error",
+    "title": "Printer not responding",
+    "retry": "Retry",
+    "contact": "Please contact an operator"
+  },
+  "settings": {
+    "eyebrow": "Maintenance",
+    "title": "Printer selection",
+    "subtitle": "Where to print tickets on this kiosk",
+    "loading": "Searching for printers…",
+    "empty": "No printers found",
+    "agentDefault": "Default",
+    "agentDown": "Print agent unavailable",
+    "retry": "Retry",
+    "test": "Test print",
+    "testing": "Printing test…",
+    "testOk": "Test sent to printer ✓",
+    "testFail": "Test failed",
+    "save": "Save",
+    "saved": "Saved ✓",
+    "back": "Back to kiosk"
+  },
+  "locale": {
+    "switch": "English"
+  }
+}

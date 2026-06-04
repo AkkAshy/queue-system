@@ -65,8 +65,8 @@ let displaySettings = {
 
 // Halls (zaly). Seeded catalog all belongs to hall 1; hall 2 is empty for now.
 const HALLS = [
-  { id: 1, code: '1', name_kaa: '1-zal', name_ru: 'Зал 1 — услуги', is_active: true, order: 1 },
-  { id: 2, code: '2', name_kaa: '2-zal', name_ru: 'Зал 2 — справки', is_active: true, order: 2 },
+  { id: 1, code: '1', name_kaa: '1-zal', name_ru: 'Зал 1 — услуги', name_uz: '1-zal — xizmatlar', name_en: 'Hall 1 — services', is_active: true, order: 1 },
+  { id: 2, code: '2', name_kaa: '2-zal', name_ru: 'Зал 2 — справки', name_uz: '2-zal — ma\'lumotnomalar', name_en: 'Hall 2 — certificates', is_active: true, order: 2 },
 ];
 
 export const handlers = [

@@ -43,10 +43,16 @@ class Command(BaseCommand):
         # Halls: 1-zal (student services) holds the current catalog; 2-zal
         # (references) is created empty — its catalog is added later via admin.
         Hall.objects.update_or_create(
-            id=1, defaults={"code": "1", "name_kaa": "1-zal", "name_ru": "Зал 1 — услуги", "order": 1}
+            id=1, defaults={
+                "code": "1", "name_kaa": "1-zal", "name_ru": "Зал 1 — услуги",
+                "name_uz": "1-zal — xizmatlar", "name_en": "Hall 1 — services", "order": 1,
+            }
         )
         Hall.objects.update_or_create(
-            id=2, defaults={"code": "2", "name_kaa": "2-zal", "name_ru": "Зал 2 — справки", "order": 2}
+            id=2, defaults={
+                "code": "2", "name_kaa": "2-zal", "name_ru": "Зал 2 — справки",
+                "name_uz": "2-zal — ma'lumotnomalar", "name_en": "Hall 2 — certificates", "order": 2,
+            }
         )
 
         cats = self._load("categories.json")
@@ -58,6 +64,8 @@ class Command(BaseCommand):
                     "code": c["code"],
                     "name_kaa": c["name_kaa"],
                     "name_ru": c["name_ru"],
+                    "name_uz": c.get("name_uz", ""),
+                    "name_en": c.get("name_en", ""),
                     "color": c["color"],
                     "order": c["order"],
                 },
@@ -71,6 +79,8 @@ class Command(BaseCommand):
                     "category_id": s["category_id"],
                     "name_kaa": s["name_kaa"],
                     "name_ru": s["name_ru"],
+                    "name_uz": s.get("name_uz", ""),
+                    "name_en": s.get("name_en", ""),
                     "sla_days": s["sla_days"],
                     "delivery_type": s["delivery_type"],
                     "requires_visit": s["requires_visit"],

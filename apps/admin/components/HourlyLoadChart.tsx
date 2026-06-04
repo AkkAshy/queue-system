@@ -1,22 +1,26 @@
+'use client';
+
 import type { HourlyLoadPoint } from '@queue/types';
+import { useTr } from '@/lib/i18n';
 
 interface Props {
   data: HourlyLoadPoint[];
 }
 
 export function HourlyLoadChart({ data }: Props) {
+  const tr = useTr();
   const max = Math.max(...data.map((d) => Math.max(d.issued, d.served)));
 
   return (
     <div className="rounded-2xl border border-hair bg-white/40 p-6">
       <div className="mb-6 flex items-center justify-between">
-        <span className="eyebrow">Загрузка по часам</span>
+        <span className="eyebrow">{tr("Soatlar bo'yicha yuklama", 'Saatlar boyınsha júklem')}</span>
         <div className="flex items-center gap-4 text-xs text-coal-3">
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-coral" /> выдано
+            <span className="h-2 w-2 rounded-full bg-coral" /> {tr('berilgan', 'berilgen')}
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-coal-3" /> обслужено
+            <span className="h-2 w-2 rounded-full bg-coal-3" /> {tr("xizmat ko'rsatilgan", 'xızmet kórsetilgen')}
           </span>
         </div>
       </div>
@@ -28,12 +32,12 @@ export function HourlyLoadChart({ data }: Props) {
               <div
                 className="w-1/2 rounded-t bg-coral/80"
                 style={{ height: `${(d.issued / max) * 100}%` }}
-                title={`Выдано: ${d.issued}`}
+                title={tr(`Berilgan: ${d.issued}`, `Berilgen: ${d.issued}`)}
               />
               <div
                 className="w-1/2 rounded-t bg-coal-3/70"
                 style={{ height: `${(d.served / max) * 100}%` }}
-                title={`Обслужено: ${d.served}`}
+                title={tr(`Xizmat ko'rsatilgan: ${d.served}`, `Xızmet kórsetilgen: ${d.served}`)}
               />
             </div>
             <span className="font-mono text-[11px] text-coal-3">

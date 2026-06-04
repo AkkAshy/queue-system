@@ -7,6 +7,7 @@ import type { Ticket } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { useOperatorStore } from '@/store/operator-store';
+import { useTr } from '@/lib/i18n';
 
 interface Props {
   nextTicket: Ticket | null;   // oldest waiting, or null
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export function CallNextButton({ nextTicket, current, onBreak }: Props) {
+  const tr = useTr();
   const qc = useQueryClient();
   const counterId = useOperatorStore((s) => s.counterId);
   const userId = useOperatorStore((s) => s.userId);
@@ -28,23 +30,23 @@ export function CallNextButton({ nextTicket, current, onBreak }: Props) {
       qc.invalidateQueries({ queryKey: ['current'] });
       qc.invalidateQueries({ queryKey: ['queue'] });
     },
-    onError: () => toast.error('Не удалось вызвать'),
+    onError: () => toast.error(tr('Chaqirib bo\'lmadi', 'Shaqıra almadı')),
   });
 
   let label: string;
   let disabled = false;
 
   if (onBreak) {
-    label = 'На перерыве';
+    label = tr('Tanaffusda', 'Tanaffusta');
     disabled = true;
   } else if (current) {
-    label = 'Завершите текущий';
+    label = tr('Joriyni tugating', 'Ágımdaǵını tamamlań');
     disabled = true;
   } else if (!nextTicket) {
-    label = 'Очередь пуста';
+    label = tr('Navbat bo\'sh', 'Nóbet bos');
     disabled = true;
   } else {
-    label = `ВЫЗВАТЬ ${nextTicket.number}`;
+    label = `${tr('CHAQIRISH', 'SHAQIRIW')} ${nextTicket.number}`;
   }
 
   return (

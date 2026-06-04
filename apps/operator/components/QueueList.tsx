@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import type { Service, Ticket } from '@queue/types';
+import { useTr } from '@/lib/i18n';
 
 interface Props {
   queue: Ticket[];
@@ -14,6 +15,7 @@ function waitMinutes(iso: string) {
 }
 
 export function QueueList({ queue, services }: Props) {
+  const tr = useTr();
   const byId = useMemo(() => {
     const m = new Map<number, Service>();
     for (const s of services) m.set(s.id, s);
@@ -25,12 +27,12 @@ export function QueueList({ queue, services }: Props) {
   return (
     <section className="flex min-h-0 flex-1 flex-col">
       <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="eyebrow">Очередь</span>
+        <span className="eyebrow">{tr('Navbat', 'Nóbet')}</span>
         <span className="text-[11px] text-coal-3">{queue.length}</span>
       </div>
       <ul className="flex-1 space-y-1 overflow-y-auto">
         {first.length === 0 ? (
-          <li className="text-xs text-coal-3">Пусто.</li>
+          <li className="text-xs text-coal-3">{tr('Bo\'sh.', 'Bos.')}</li>
         ) : (
           first.map((t, i) => {
             const svc = t.service_id != null ? byId.get(t.service_id) : null;

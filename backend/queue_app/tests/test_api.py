@@ -42,12 +42,15 @@ def test_login_rejects_bad_credentials(seeded, client):
 def test_categories_and_services(seeded, client):
     cats = client.get("/api/categories").json()
     assert len(cats) == 9
-    assert set(cats[0]) == {"id", "hall_id", "code", "name_kaa", "name_ru", "color", "order"}
+    assert set(cats[0]) == {
+        "id", "hall_id", "code", "name_kaa", "name_ru", "name_uz", "name_en",
+        "color", "order",
+    }
 
     svcs = client.get("/api/services?category_id=1").json()
     assert all(s["category_id"] == 1 for s in svcs)
-    assert {"id", "category_id", "name_kaa", "name_ru", "sla_days",
-            "delivery_type", "requires_visit", "is_active", "is_popular"} == set(svcs[0])
+    assert {"id", "category_id", "name_kaa", "name_ru", "name_uz", "name_en",
+            "sla_days", "delivery_type", "requires_visit", "is_active", "is_popular"} == set(svcs[0])
 
 
 def test_category_create_and_delete(auth_client):

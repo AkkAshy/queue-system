@@ -23,15 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useTr } from '@/lib/i18n';
 
-const WEEKDAYS: { value: Weekday; label: string }[] = [
-  { value: 0, label: 'Понедельник' },
-  { value: 1, label: 'Вторник' },
-  { value: 2, label: 'Среда' },
-  { value: 3, label: 'Четверг' },
-  { value: 4, label: 'Пятница' },
-  { value: 5, label: 'Суббота' },
-  { value: 6, label: 'Воскресенье' },
+const WEEKDAYS: { value: Weekday; uz: string; kaa: string }[] = [
+  { value: 0, uz: 'Dushanba',   kaa: 'Dúyshembi' },
+  { value: 1, uz: 'Seshanba',   kaa: 'Siyshembi' },
+  { value: 2, uz: 'Chorshanba', kaa: 'Sárshembi' },
+  { value: 3, uz: 'Payshanba',  kaa: 'Piyshembi' },
+  { value: 4, uz: 'Juma',       kaa: 'Juma' },
+  { value: 5, uz: 'Shanba',     kaa: 'Shembi' },
+  { value: 6, uz: 'Yakshanba',  kaa: 'Ekshembi' },
 ];
 
 interface Props {
@@ -76,6 +77,7 @@ function toDraft(s: WorkSchedule | null): Draft {
 }
 
 export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }: Props) {
+  const tr = useTr();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(toDraft(shift));
 
@@ -100,10 +102,10 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['schedule'] });
       qc.invalidateQueries({ queryKey: ['schedule', 'current'] });
-      toast.success(draft.id ? 'Смена обновлена' : 'Смена добавлена');
+      toast.success(draft.id ? tr('Smena yangilandi', 'Smena jańalandı') : tr("Smena qo'shildi", 'Smena qosıldı'));
       onOpenChange(false);
     },
-    onError: (e: Error) => toast.error(e.message || 'Не удалось сохранить'),
+    onError: (e: Error) => toast.error(e.message || tr("Saqlab bo'lmadi", 'Saqlap bolmadı')),
   });
 
   const operators = users.filter((u) => u.role === 'operator' || u.role === 'admin');
@@ -114,22 +116,22 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
       <SheetContent className="w-full max-w-md bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="font-serif text-2xl font-normal">
-            {shift ? `Смена #${shift.id}` : 'Новая смена'}
+            {shift ? tr(`Smena #${shift.id}`, `Smena #${shift.id}`) : tr('Yangi smena', 'Jańa smena')}
           </SheetTitle>
           <SheetDescription className="text-coal-3">
-            Повторяющийся график работы оператора за окном
+            {tr('Operatorning oyna ortidagi takrorlanuvchi ish jadvali', 'Operatordıń áyne artındaǵı qaytalanatuǵın jumıs kestesi')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="my-8 space-y-5">
           <div className="space-y-2">
-            <Label>Оператор</Label>
+            <Label>{tr('Operator', 'Operator')}</Label>
             <Select
               value={draft.user_id ? String(draft.user_id) : ''}
               onValueChange={(v) => setDraft({ ...draft, user_id: Number(v) })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="— выберите —" />
+                <SelectValue placeholder={tr('— tanlang —', '— saylań —')} />
               </SelectTrigger>
               <SelectContent>
                 {operators.map((u) => (
@@ -142,13 +144,13 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
           </div>
 
           <div className="space-y-2">
-            <Label>Окно</Label>
+            <Label>{tr('Oyna', 'Áyne')}</Label>
             <Select
               value={draft.counter_id ? String(draft.counter_id) : ''}
               onValueChange={(v) => setDraft({ ...draft, counter_id: Number(v) })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="— выберите —" />
+                <SelectValue placeholder={tr('— tanlang —', '— saylań —')} />
               </SelectTrigger>
               <SelectContent>
                 {counters.map((c) => (
@@ -161,7 +163,7 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
           </div>
 
           <div className="space-y-2">
-            <Label>День недели</Label>
+            <Label>{tr('Hafta kuni', 'Hápte kúni')}</Label>
             <Select
               value={String(draft.weekday)}
               onValueChange={(v) => setDraft({ ...draft, weekday: Number(v) as Weekday })}
@@ -172,7 +174,7 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
               <SelectContent>
                 {WEEKDAYS.map((w) => (
                   <SelectItem key={w.value} value={String(w.value)}>
-                    {w.label}
+                    {tr(w.uz, w.kaa)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -181,7 +183,7 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <Label htmlFor="start">Начало</Label>
+              <Label htmlFor="start">{tr('Boshlanishi', 'Baslanıwı')}</Label>
               <Input
                 id="start"
                 type="time"
@@ -190,7 +192,7 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="end">Конец</Label>
+              <Label htmlFor="end">{tr('Tugashi', 'Tamamlanıwı')}</Label>
               <Input
                 id="end"
                 type="time"
@@ -200,13 +202,13 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
             </div>
           </div>
           {draft.start_time >= draft.end_time && (
-            <p className="text-xs text-red-400">Конец смены должен быть позже начала.</p>
+            <p className="text-xs text-red-400">{tr("Smena tugashi boshlanishidan kechroq bo'lishi kerak.", 'Smena tamamlanıwı baslanıwınan keshirek bolıwı kerek.')}</p>
           )}
 
           <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
             <div>
-              <div className="text-sm font-medium">Активна</div>
-              <div className="text-xs text-coal-3">Учитывается в графике</div>
+              <div className="text-sm font-medium">{tr('Faol', 'Belsendi')}</div>
+              <div className="text-xs text-coal-3">{tr('Jadvalda hisobga olinadi', 'Kestede esapqa alınadı')}</div>
             </div>
             <Switch
               checked={draft.is_active}
@@ -217,14 +219,14 @@ export function ScheduleEditSheet({ shift, users, counters, open, onOpenChange }
 
         <SheetFooter className="gap-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Отмена
+            {tr('Bekor qilish', 'Biykarlaw')}
           </Button>
           <Button
             onClick={() => mutation.mutate(draft)}
             disabled={mutation.isPending || !valid}
             className="bg-coral text-cream hover:bg-coral-600"
           >
-            {mutation.isPending ? '…' : 'Сохранить'}
+            {mutation.isPending ? '…' : tr('Saqlash', 'Saqlaw')}
           </Button>
         </SheetFooter>
       </SheetContent>

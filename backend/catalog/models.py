@@ -9,6 +9,8 @@ class Hall(models.Model):
     code = models.CharField(max_length=8, unique=True)  # '1', '2'
     name_kaa = models.CharField(max_length=255)
     name_ru = models.CharField(max_length=255)
+    name_uz = models.CharField(max_length=255, blank=True, default="")  # Uzbek (Latin)
+    name_en = models.CharField(max_length=255, blank=True, default="")  # English
     is_active = models.BooleanField(default=True)
     order = models.PositiveIntegerField(default=0)
 
@@ -30,6 +32,8 @@ class ServiceCategory(models.Model):
     code = models.CharField(max_length=4)  # 'A', 'B', ... unique within a hall
     name_kaa = models.CharField(max_length=255)
     name_ru = models.CharField(max_length=255)
+    name_uz = models.CharField(max_length=255, blank=True, default="")  # Uzbek (Latin)
+    name_en = models.CharField(max_length=255, blank=True, default="")  # English
     color = models.CharField(max_length=9)  # hex
     order = models.PositiveIntegerField(default=0)
 
@@ -63,6 +67,8 @@ class Service(models.Model):
     )
     name_kaa = models.CharField(max_length=512)
     name_ru = models.CharField(max_length=512)
+    name_uz = models.CharField(max_length=512, blank=True, default="")  # Uzbek (Latin)
+    name_en = models.CharField(max_length=512, blank=True, default="")  # English
     sla_days = models.PositiveIntegerField(default=0)  # 0 = immediate
     delivery_type = models.CharField(
         max_length=32, choices=DeliveryType.choices

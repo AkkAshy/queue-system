@@ -1,0 +1,73 @@
+{
+  "institution": {
+    "short": "NDPI",
+    "full": "Ajiniyoz nomidagi Nukus davlat pedagogika instituti",
+    "office": "Registrator ofisi",
+    "name": "Ájiniyaz atındaǵı NMPI"
+  },
+  "hall": {
+    "eyebrow": "Elektron navbat",
+    "title": "Zalni tanlang",
+    "change": "Zalni o'zgartirish"
+  },
+  "welcome": {
+    "eyebrow": "Elektron navbat",
+    "title": "Sizga nima kerak?",
+    "subtitle": "Xizmat turkumini tanlang",
+    "popular": "Ommabop",
+    "byCategory": "Yoki turkum bo'yicha"
+  },
+  "category": {
+    "eyebrow": "Turkum",
+    "back": "Orqaga",
+    "selectService": "Xizmatni tanlang",
+    "serviceCount": "{count} ta xizmat",
+    "onlineHint": "HEMIS orqali onlayn mavjud"
+  },
+  "confirm": {
+    "eyebrow": "Tasdiqlash",
+    "title": "Tasdiqlang",
+    "service": "Xizmat",
+    "category": "Turkum",
+    "getTicket": "Talon olish",
+    "cancel": "Bekor qilish",
+    "printing": "Chop etilmoqda…"
+  },
+  "ticket": {
+    "eyebrow": "Talon",
+    "title": "Sizning raqamingiz",
+    "goTo": "Tabloda chaqiruvni kuting",
+    "issued": "Berildi",
+    "hall": "Zal",
+    "category": "Turkum",
+    "service": "Xizmat",
+    "new": "Yangi talon",
+    "notPrinted": "Talon chop etilmadi, ammo raqamingiz allaqachon navbatda — uni eslab qoling va tabloda chaqiruvni kuting."
+  },
+  "error": {
+    "eyebrow": "Xato",
+    "title": "Printer javob bermayapti",
+    "retry": "Qayta urinish",
+    "contact": "Operatorga murojaat qiling"
+  },
+  "settings": {
+    "eyebrow": "Texnik xizmat",
+    "title": "Printerni tanlash",
+    "subtitle": "Bu kioskda talonlar qayerga chop etilsin",
+    "loading": "Printerlar qidirilmoqda…",
+    "empty": "Printerlar topilmadi",
+    "agentDefault": "Standart",
+    "agentDown": "Chop etish agenti mavjud emas",
+    "retry": "Qayta urinish",
+    "test": "Sinov chopi",
+    "testing": "Sinov chop etilmoqda…",
+    "testOk": "Sinov printerga yuborildi ✓",
+    "testFail": "Sinov xatosi",
+    "save": "Saqlash",
+    "saved": "Saqlandi ✓",
+    "back": "Kioskka qaytish"
+  },
+  "locale": {
+    "switch": "O'zbekcha"
+  }
+}

@@ -7,6 +7,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import type { Service, ServiceCategory } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { CategoryEditSheet } from '@/components/CategoryEditSheet';
+import { useTr } from '@/lib/i18n';
 
 async function fetchCategories(): Promise<ServiceCategory[]> {
   const res = await fetch('/api/categories');
@@ -18,6 +19,7 @@ async function fetchServices(): Promise<Service[]> {
 }
 
 export default function CategoriesPage() {
+  const tr = useTr();
   const qc = useQueryClient();
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -37,19 +39,19 @@ export default function CategoriesPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['categories'] });
-      toast.success('Категория удалена');
+      toast.success(tr("Kategoriya o'chirildi", 'Kategoriya óshirildi'));
     },
-    onError: () => toast.error('Не удалось удалить'),
+    onError: () => toast.error(tr("O'chirib bo'lmadi", 'Óshirip bolmadı')),
   });
 
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between">
         <div>
-          <span className="eyebrow text-coral">Справочник</span>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight">Категории</h1>
+          <span className="eyebrow text-coral">{tr("Ma'lumotnoma", 'Maǵlıwmatnama')}</span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Kategoriyalar', 'Kategoriyalar')}</h1>
           <p className="mt-1 text-sm text-coal-3">
-            {categories.length} категорий · {services.length} услуг всего
+            {categories.length} {tr('ta kategoriya · jami', 'kategoriya · jámi')} {services.length} {tr('ta xizmat', 'xızmet')}
           </p>
         </div>
         <Button
@@ -57,7 +59,7 @@ export default function CategoriesPage() {
           className="gap-2 bg-coral text-cream hover:bg-coral-600"
         >
           <Plus className="h-4 w-4" />
-          Создать категорию
+          {tr('Kategoriya yaratish', 'Kategoriya jaratıw')}
         </Button>
       </div>
 
@@ -85,12 +87,12 @@ export default function CategoriesPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm(`Удалить категорию «${c.name_ru}»?`)) {
+                      if (confirm(tr(`«${c.name_ru}» kategoriyasini o'chirasizmi?`, `«${c.name_ru}» kategoriyasın óshirewdi qálaysız ba?`))) {
                         deleteMut.mutate(c.id);
                       }
                     }}
                     className="rounded-md p-1.5 text-coal-3 opacity-0 transition hover:bg-coral-soft hover:text-coral group-hover:opacity-100"
-                    aria-label="Удалить"
+                    aria-label={tr("O'chirish", 'Óshiriw')}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -106,7 +108,7 @@ export default function CategoriesPage() {
                 <div className="text-sm font-semibold text-coal">{c.name_ru}</div>
                 <div className="mt-1 text-xs text-coal-3">{c.name_kaa}</div>
                 <div className="mt-5 border-t border-hair pt-4 text-xs text-coal-3">
-                  {count} услуг
+                  {count} {tr('ta xizmat', 'xızmet')}
                 </div>
               </div>
             );

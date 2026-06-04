@@ -8,6 +8,7 @@ import type { DisplaySettings } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useTr } from '@/lib/i18n';
 
 async function fetchSettings(): Promise<DisplaySettings> {
   const res = await fetch('/api/display/settings');
@@ -46,6 +47,7 @@ const EMPTY: Form = {
 };
 
 export default function DisplaySettingsPage() {
+  const tr = useTr();
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['display-settings'], queryFn: fetchSettings });
   const [form, setForm] = useState<Form>(EMPTY);
@@ -77,9 +79,9 @@ export default function DisplaySettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['display-settings'] });
-      toast.success('Сохранено — табло обновится автоматически');
+      toast.success(tr('Saqlandi — tablo avtomatik yangilanadi', 'Saqlandı — tablo avtomat túrde jańalanadı'));
     },
-    onError: () => toast.error('Не удалось сохранить'),
+    onError: () => toast.error(tr("Saqlab bo'lmadi", 'Saqlap bolmadı')),
   });
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
@@ -89,14 +91,14 @@ export default function DisplaySettingsPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <span className="eyebrow text-coral">Табло</span>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Настройки системы</h1>
-        <p className="mt-1 text-sm text-coal-3">Название, видео, голос, бегущая строка</p>
+        <span className="eyebrow text-coral">{tr('Tablo', 'Tablo')}</span>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Tizim sozlamalari', 'Sistema sazlawları')}</h1>
+        <p className="mt-1 text-sm text-coal-3">{tr('Nomi, video, ovoz, yuguruvchi satr', 'Atı, video, dawıs, juwırıwshı qatar')}</p>
       </div>
 
       <div className="space-y-5 rounded-xl border border-hair bg-white p-6">
         <div className="space-y-2">
-          <Label htmlFor="org">Название учреждения</Label>
+          <Label htmlFor="org">{tr('Muassasa nomi', 'Mákeme atı')}</Label>
           <Input
             id="org"
             value={form.org_name}
@@ -106,12 +108,12 @@ export default function DisplaySettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="yt">Видео на табло (YouTube)</Label>
+          <Label htmlFor="yt">{tr('Tablodagi video (YouTube)', 'Tablodaǵı video (YouTube)')}</Label>
           <Input
             id="yt"
             value={form.youtube_url}
             onChange={(e) => set('youtube_url', e.target.value)}
-            placeholder="https://youtu.be/… (пусто — логотип)"
+            placeholder={tr("https://youtu.be/… (bo'sh — logotip)", 'https://youtu.be/… (bos — logotip)')}
           />
           {id && (
             <div className="mt-2 overflow-hidden rounded-lg border border-hair">
@@ -121,7 +123,7 @@ export default function DisplaySettingsPage() {
                   className="h-full w-full"
                   src={`https://www.youtube-nocookie.com/embed/${id}?mute=1&modestbranding=1&rel=0`}
                   allow="encrypted-media"
-                  title="Предпросмотр"
+                  title={tr("Oldindan ko'rish", 'Aldın ala kóriw')}
                 />
               </div>
             </div>
@@ -130,8 +132,8 @@ export default function DisplaySettingsPage() {
 
         <div className="flex items-center justify-between rounded-lg border border-hair-2 px-4 py-3">
           <div>
-            <Label htmlFor="voice">Голосовое объявление</Label>
-            <p className="text-xs text-coal-3">Озвучивать вызовы на табло</p>
+            <Label htmlFor="voice">{tr("Ovozli e'lon", 'Dawıslı járiyalaw')}</Label>
+            <p className="text-xs text-coal-3">{tr('Tablodagi chaqiruvlarni ovoz bilan', 'Tablodaǵı shaqırıwlardı dawıs penen')}</p>
           </div>
           <input
             id="voice"
@@ -143,7 +145,7 @@ export default function DisplaySettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="lang">Язык голоса</Label>
+          <Label htmlFor="lang">{tr('Ovoz tili', 'Dawıs tili')}</Label>
           <Input
             id="lang"
             value={form.voice_lang}
@@ -153,13 +155,13 @@ export default function DisplaySettingsPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="ticker">Бегущая строка (по строке на сообщение)</Label>
+          <Label htmlFor="ticker">{tr('Yuguruvchi satr (har bir xabar alohida qatorda)', 'Juwırıwshı qatar (hár bir xabar ayrıqsha qatarda)')}</Label>
           <textarea
             id="ticker"
             rows={3}
             value={form.ticker_text}
             onChange={(e) => set('ticker_text', e.target.value)}
-            placeholder="Сохраняйте талон до вызова&#10;Ожидайте вызова на табло"
+            placeholder={tr('Chaqiruvgacha talonni saqlang\nTablodan chaqiruvni kuting', 'Shaqırıwǵa deyin talondı saqlań\nTablodan shaqırıwdı kútiń')}
             className="w-full rounded-lg border border-hair-2 bg-white px-3 py-2 text-sm text-coal outline-none focus:border-coral"
           />
         </div>
@@ -171,9 +173,9 @@ export default function DisplaySettingsPage() {
             className="gap-2 bg-coral text-cream hover:bg-coral-600"
           >
             <Save className="h-4 w-4" />
-            {save.isPending ? 'Сохранение…' : 'Сохранить'}
+            {save.isPending ? tr('Saqlanmoqda…', 'Saqlanbaqta…') : tr('Saqlash', 'Saqlaw')}
           </Button>
-          {dirty && <span className="text-xs text-coal-3">Есть несохранённые изменения</span>}
+          {dirty && <span className="text-xs text-coal-3">{tr("Saqlanmagan o'zgarishlar bor", 'Saqlanbaǵan ózgerisler bar')}</span>}
         </div>
       </div>
     </div>

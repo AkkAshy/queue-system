@@ -16,7 +16,7 @@ import { MuteButton } from '@/components/MuteButton';
 
 const TICKER_ITEMS = [
   'Talonıńızdı joǵaltpań — nómer ekranda kórsetiledi',
-  'Сохраняйте талон до вызова',
+  'Talonni chaqiruvgacha saqlang',
   'Shaqırıw boyınsha kórsetilgen aynaǵa barıń',
   'NDPI · Registrator ofisi',
 ];

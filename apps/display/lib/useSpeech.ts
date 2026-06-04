@@ -25,12 +25,12 @@ export function useSpeech() {
 
     const synth = window.speechSynthesis;
     const u = new SpeechSynthesisUtterance(
-      `Номер ${spokenNumber(number)}, пройдите к окну ${windowNo}`,
+      `${spokenNumber(number)}-raqam, ${windowNo}-oynaga o'ting`,
     );
-    u.lang = 'ru-RU';
+    u.lang = 'uz-UZ';
     u.rate = 0.95;
-    const ru = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith('ru'));
-    if (ru) u.voice = ru;
+    const uz = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith('uz'));
+    if (uz) u.voice = uz;
     synth.speak(u); // native queue serialises overlapping announcements
   }, []);
 }
