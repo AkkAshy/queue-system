@@ -1,13 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
-import type { Ticket } from '@queue/types';
+import type { Hall, Ticket } from '@queue/types';
 import { useKioskStore } from '@/store/kiosk-store';
 import { printTicket } from '@/lib/printer';
 import { KioskHeader } from '@/components/KioskHeader';
 import { categoryVisual } from '@/lib/category-visual';
+
+async function fetchHalls(): Promise<Hall[]> {
+  const res = await fetch('/api/halls');
+  if (!res.ok) return [];
+  return res.json();
+}
 
 async function createTicket(body: {
   category_id: number;
@@ -27,8 +33,12 @@ export default function ConfirmPage() {
   const t = useTranslations('confirm');
   const locale = useLocale();
   const router = useRouter();
-  const { category, service, prepareIdempotencyKey, setTicket, setPrintFailed } =
+  const { category, service, prepareIdempotencyKey, setTicket, setHall, setPrintFailed } =
     useKioskStore();
+
+  const { data: halls } = useQuery({ queryKey: ['halls'], queryFn: fetchHalls });
+  // The hall is derived from the chosen category — the student never picks it.
+  const hall = (halls ?? []).find((h) => h.id === category?.hall_id) ?? null;
 
   const mutation = useMutation({
     mutationFn: createTicket,
@@ -38,7 +48,8 @@ export default function ConfirmPage() {
       // stop the student from getting their number — we just flag it so the
       // ticket page tells them to remember it.
       setTicket(ticket);
-      const result = await printTicket({ ticket, category: category!, service });
+      setHall(hall); // so the ticket screen + print show which hall
+      const result = await printTicket({ ticket, category: category!, service, hall });
       setPrintFailed(!result.ok);
       router.push(`/${locale}/ticket`);
     },

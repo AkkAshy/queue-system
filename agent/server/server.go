@@ -116,6 +116,8 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 // printRequest is the JSON schema accepted by POST /print.
 type printRequest struct {
 	Number          string    `json:"number"`
+	HallNameKaa     string    `json:"hall_name_kaa"`
+	HallNameRu      string    `json:"hall_name_ru"`
 	CategoryCode    string    `json:"category_code"`
 	CategoryNameKaa string    `json:"category_name_kaa"`
 	CategoryNameRu  string    `json:"category_name_ru"`
@@ -176,6 +178,8 @@ func (s *Server) handlePrint(w http.ResponseWriter, r *http.Request) {
 
 	bytesOut, err := printer.Render(printer.PrintRequest{
 		Number:          req.Number,
+		HallNameKaa:     req.HallNameKaa,
+		HallNameRu:      req.HallNameRu,
 		CategoryCode:    req.CategoryCode,
 		CategoryNameKaa: req.CategoryNameKaa,
 		CategoryNameRu:  req.CategoryNameRu,

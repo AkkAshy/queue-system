@@ -1,4 +1,4 @@
-import type { Ticket, Service, ServiceCategory } from '@queue/types';
+import type { Hall, Ticket, Service, ServiceCategory } from '@queue/types';
 
 export interface PrintResult {
   ok: boolean;
@@ -9,6 +9,7 @@ export interface PrintContext {
   ticket: Ticket;
   category: ServiceCategory;
   service: Service | null;
+  hall?: Hall | null;
 }
 
 /** localStorage key holding the operator-selected printer (hidden settings). */
@@ -114,6 +115,8 @@ export async function printTicket(
 
   return sendPrint({
     number: ctx.ticket.number,
+    hall_name_kaa: ctx.hall?.name_kaa ?? '',
+    hall_name_ru: ctx.hall?.name_ru ?? '',
     category_code: ctx.category?.code ?? '',
     category_name_kaa: ctx.category?.name_kaa ?? '',
     category_name_ru: ctx.category?.name_ru ?? '',

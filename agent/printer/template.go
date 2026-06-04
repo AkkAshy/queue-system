@@ -11,6 +11,8 @@ import (
 // tags on server.PrintRequest, which embeds this).
 type PrintRequest struct {
 	Number          string    // e.g. "A042"
+	HallNameKaa     string    // hall (zal) Karakalpak name
+	HallNameRu      string    // hall (zal) Russian name
 	CategoryCode    string    // "A".."I"
 	CategoryNameKaa string    // Karakalpak name
 	CategoryNameRu  string    // Russian name
@@ -76,8 +78,21 @@ func Render(req PrintRequest) ([]byte, error) {
 
 	e.Text([]byte(dashLine())).Feed(1)
 
-	// Category + service — bilingual
+	// Hall (zal) — so the student knows which hall to wait in.
 	e.Align(AlignLeft)
+	if req.HallNameRu != "" || req.HallNameKaa != "" {
+		e.Bold(true).Text([]byte("ZAL  ")).Bold(false)
+		e.Text(EncodeKAA(req.HallNameKaa)).Feed(1)
+		if req.HallNameRu != "" {
+			hall, err := EncodeRU("     " + req.HallNameRu)
+			if err != nil {
+				return nil, err
+			}
+			e.Text(hall).Feed(1)
+		}
+	}
+
+	// Category + service — bilingual
 	e.Bold(true).Text([]byte("KAT  ")).Bold(false)
 	e.Text(EncodeKAA(req.CategoryNameKaa)).Feed(1)
 	cat, err := EncodeRU("     " + req.CategoryNameRu)
