@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useChime } from '@/lib/useChime';
+import { useSpeech, cancelSpeech } from '@/lib/useSpeech';
 import { useRealtime } from '@/lib/useRealtime';
 import { MediaZone } from '@/components/MediaZone';
 import { NowServing } from '@/components/NowServing';
@@ -25,6 +26,7 @@ const FLASH_MS = 4000;
 
 export default function Page() {
   const playChime = useChime();
+  const speak = useSpeech();
   const [muted, setMuted] = useState(false);
   const seenIds = useRef<Set<string> | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
@@ -40,6 +42,7 @@ export default function Page() {
     setMuted((m) => {
       const next = !m;
       localStorage.setItem('display-muted', next ? '1' : '0');
+      if (next) cancelSpeech(); // stop any in-progress announcement
       return next;
     });
   };
@@ -92,8 +95,11 @@ export default function Page() {
     seenIds.current = ids;
     if (fresh.length === 0) return;
 
-    // Visuals flash in parallel; audio is queued one-by-one inside useChime.
-    fresh.forEach(() => playChime(muted));
+    // Visuals flash in parallel; audio (chime + voice) is queued one-by-one.
+    fresh.forEach((c) => {
+      playChime(muted);
+      speak(c.number, c.counter_number, muted);
+    });
     setFreshIds((prev) => {
       const next = new Set(prev);
       fresh.forEach((c) => next.add(c.id));
@@ -108,7 +114,7 @@ export default function Page() {
       });
     }, FLASH_MS);
     return () => clearTimeout(timer);
-  }, [active.data, muted, playChime]);
+  }, [active.data, muted, playChime, speak]);
 
   return (
     <main className="flex h-screen w-screen flex-col bg-cream">
