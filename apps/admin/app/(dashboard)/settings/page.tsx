@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Save, Youtube } from 'lucide-react';
+import { Save } from 'lucide-react';
 import type { DisplaySettings } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,6 @@ async function fetchSettings(): Promise<DisplaySettings> {
   return res.json();
 }
 
-/** Resolve a YouTube URL to its video id for the live preview. */
 function youtubeId(url: string): string | null {
   if (!url) return null;
   try {
@@ -30,21 +29,48 @@ function youtubeId(url: string): string | null {
   }
 }
 
+type Form = {
+  org_name: string;
+  youtube_url: string;
+  ticker_text: string;
+  voice_enabled: boolean;
+  voice_lang: string;
+};
+
+const EMPTY: Form = {
+  org_name: '',
+  youtube_url: '',
+  ticker_text: '',
+  voice_enabled: true,
+  voice_lang: 'ru-RU',
+};
+
 export default function DisplaySettingsPage() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ['display-settings'], queryFn: fetchSettings });
-  const [url, setUrl] = useState('');
+  const [form, setForm] = useState<Form>(EMPTY);
+  const [loaded, setLoaded] = useState<Form>(EMPTY);
 
   useEffect(() => {
-    if (data) setUrl(data.youtube_url ?? '');
+    if (data) {
+      const f: Form = {
+        org_name: data.org_name ?? '',
+        youtube_url: data.youtube_url ?? '',
+        ticker_text: data.ticker_text ?? '',
+        voice_enabled: data.voice_enabled ?? true,
+        voice_lang: data.voice_lang ?? 'ru-RU',
+      };
+      setForm(f);
+      setLoaded(f);
+    }
   }, [data]);
 
   const save = useMutation({
-    mutationFn: async (youtube_url: string) => {
+    mutationFn: async (body: Form) => {
       const res = await fetch('/api/display/settings', {
         method: 'PATCH',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ youtube_url }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('failed');
       return res.json();
@@ -56,54 +82,91 @@ export default function DisplaySettingsPage() {
     onError: () => toast.error('Не удалось сохранить'),
   });
 
-  const id = youtubeId(url);
-  const dirty = (data?.youtube_url ?? '') !== url;
+  const set = <K extends keyof Form>(k: K, v: Form[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const dirty = JSON.stringify(form) !== JSON.stringify(loaded);
+  const id = youtubeId(form.youtube_url);
 
   return (
     <div className="max-w-2xl space-y-6">
       <div>
         <span className="eyebrow text-coral">Табло</span>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Настройки табло</h1>
-        <p className="mt-1 text-sm text-coal-3">
-          Видео в левой части табло (зала ожидания)
-        </p>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight">Настройки системы</h1>
+        <p className="mt-1 text-sm text-coal-3">Название, видео, голос, бегущая строка</p>
       </div>
 
-      <div className="space-y-4 rounded-xl border border-hair bg-white p-6">
+      <div className="space-y-5 rounded-xl border border-hair bg-white p-6">
         <div className="space-y-2">
-          <Label htmlFor="yt" className="flex items-center gap-2">
-            <Youtube className="h-4 w-4 text-coral" />
-            Ссылка на YouTube
-          </Label>
+          <Label htmlFor="org">Название учреждения</Label>
           <Input
-            id="yt"
-            placeholder="https://youtu.be/… или https://www.youtube.com/watch?v=…"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            id="org"
+            value={form.org_name}
+            onChange={(e) => set('org_name', e.target.value)}
+            placeholder="Ájiniyaz atındaǵı NMPI"
           />
-          <p className="text-xs text-coal-3">
-            Поддерживаются ссылки youtu.be, watch?v= и /embed/. Пусто — на табло
-            покажется логотип института.
-          </p>
         </div>
 
-        {id && (
-          <div className="overflow-hidden rounded-lg border border-hair">
-            <div className="aspect-video">
-              <iframe
-                key={id}
-                className="h-full w-full"
-                src={`https://www.youtube-nocookie.com/embed/${id}?mute=1&modestbranding=1&rel=0`}
-                allow="encrypted-media"
-                title="Предпросмотр"
-              />
+        <div className="space-y-2">
+          <Label htmlFor="yt">Видео на табло (YouTube)</Label>
+          <Input
+            id="yt"
+            value={form.youtube_url}
+            onChange={(e) => set('youtube_url', e.target.value)}
+            placeholder="https://youtu.be/… (пусто — логотип)"
+          />
+          {id && (
+            <div className="mt-2 overflow-hidden rounded-lg border border-hair">
+              <div className="aspect-video">
+                <iframe
+                  key={id}
+                  className="h-full w-full"
+                  src={`https://www.youtube-nocookie.com/embed/${id}?mute=1&modestbranding=1&rel=0`}
+                  allow="encrypted-media"
+                  title="Предпросмотр"
+                />
+              </div>
             </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between rounded-lg border border-hair-2 px-4 py-3">
+          <div>
+            <Label htmlFor="voice">Голосовое объявление</Label>
+            <p className="text-xs text-coal-3">Озвучивать вызовы на табло</p>
           </div>
-        )}
+          <input
+            id="voice"
+            type="checkbox"
+            checked={form.voice_enabled}
+            onChange={(e) => set('voice_enabled', e.target.checked)}
+            className="h-5 w-5 accent-coral"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="lang">Язык голоса</Label>
+          <Input
+            id="lang"
+            value={form.voice_lang}
+            onChange={(e) => set('voice_lang', e.target.value)}
+            placeholder="ru-RU"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="ticker">Бегущая строка (по строке на сообщение)</Label>
+          <textarea
+            id="ticker"
+            rows={3}
+            value={form.ticker_text}
+            onChange={(e) => set('ticker_text', e.target.value)}
+            placeholder="Сохраняйте талон до вызова&#10;Ожидайте вызова на табло"
+            className="w-full rounded-lg border border-hair-2 bg-white px-3 py-2 text-sm text-coal outline-none focus:border-coral"
+          />
+        </div>
 
         <div className="flex items-center gap-3">
           <Button
-            onClick={() => save.mutate(url)}
+            onClick={() => save.mutate(form)}
             disabled={!dirty || save.isPending}
             className="gap-2 bg-coral text-cream hover:bg-coral-600"
           >

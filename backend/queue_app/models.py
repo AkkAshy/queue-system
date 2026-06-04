@@ -57,6 +57,10 @@ class DisplaySettings(models.Model):
     """
 
     youtube_url = models.URLField(blank=True, default="")
+    org_name = models.CharField(max_length=255, blank=True, default="Ájiniyaz atındaǵı NMPI")
+    ticker_text = models.TextField(blank=True, default="")
+    voice_enabled = models.BooleanField(default=True)   # board TTS on/off
+    voice_lang = models.CharField(max_length=8, default="ru-RU")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:

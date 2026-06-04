@@ -40,7 +40,13 @@ tickets.seedWaiting(queueSeed as unknown as Parameters<typeof tickets.seedWaitin
 tickets.seedCalled(displaySeed as unknown as Parameters<typeof tickets.seedCalled>[0]);
 
 // Board settings (YouTube URL set from the admin app). Sample clip for demos.
-let displaySettings = { youtube_url: 'https://youtu.be/aqz-KE-bpKQ' };
+let displaySettings = {
+  youtube_url: 'https://youtu.be/aqz-KE-bpKQ',
+  org_name: 'Ájiniyaz atındaǵı NMPI',
+  ticker_text: '',
+  voice_enabled: true,
+  voice_lang: 'ru-RU',
+};
 
 // Halls (zaly). Seeded catalog all belongs to hall 1; hall 2 is empty for now.
 const HALLS = [

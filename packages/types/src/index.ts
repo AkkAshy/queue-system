@@ -189,7 +189,11 @@ export interface DisplayWaiting {
   category_id: number;
 }
 
-// Board configuration, editable from the admin app.
+// Board / system configuration, editable from the admin app.
 export interface DisplaySettings {
   youtube_url: string;
+  org_name?: string;
+  ticker_text?: string;
+  voice_enabled?: boolean;
+  voice_lang?: string;
 }

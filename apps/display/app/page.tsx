@@ -99,9 +99,10 @@ export default function Page() {
     if (fresh.length === 0) return;
 
     // Visuals flash in parallel; audio (chime + voice) is queued one-by-one.
+    const voiceOff = settings.data?.voice_enabled === false;
     fresh.forEach((c) => {
       playChime(muted);
-      speak(c.number, c.counter_number, muted);
+      speak(c.number, c.counter_number, muted || voiceOff);
     });
     setFreshIds((prev) => {
       const next = new Set(prev);
@@ -117,7 +118,7 @@ export default function Page() {
       });
     }, FLASH_MS);
     return () => clearTimeout(timer);
-  }, [active.data, muted, playChime, speak]);
+  }, [active.data, muted, playChime, speak, settings.data?.voice_enabled]);
 
   return (
     <main className="flex h-screen w-screen flex-col bg-cream">
@@ -127,7 +128,9 @@ export default function Page() {
             NP
           </div>
           <div className="flex flex-col leading-tight">
-            <span className="text-xl font-bold text-coal">Ájiniyaz atındaǵı NMPI</span>
+            <span className="text-xl font-bold text-coal">
+              {settings.data?.org_name || 'Ájiniyaz atındaǵı NMPI'}
+            </span>
             <span className="text-base text-coal-2">Registrator ofisi · Gezek tablosı</span>
           </div>
         </div>
@@ -153,7 +156,13 @@ export default function Page() {
         <WindowStrip windows={board.data ?? []} freshIds={freshIds} />
       </div>
 
-      <Ticker items={TICKER_ITEMS} />
+      <Ticker
+        items={
+          settings.data?.ticker_text
+            ? settings.data.ticker_text.split('\n').filter(Boolean)
+            : TICKER_ITEMS
+        }
+      />
     </main>
   );
 }

@@ -80,7 +80,9 @@ class DisplayWaitingSerializer(serializers.Serializer):
 class DisplaySettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DisplaySettings
-        fields = ["youtube_url"]
+        fields = [
+            "youtube_url", "org_name", "ticker_text", "voice_enabled", "voice_lang",
+        ]
 
 
 class AuditLogSerializer(serializers.ModelSerializer):
