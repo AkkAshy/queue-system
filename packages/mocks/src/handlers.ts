@@ -190,6 +190,25 @@ export const handlers = [
   // ---------- dashboard ----------
   http.get('/api/dashboard', () => HttpResponse.json(dashboardSeed)),
 
+  // ---------- stats (Phase E) ----------
+  http.get('/api/stats', () => {
+    const all = tickets.list();
+    return HttpResponse.json({
+      issued: all.length,
+      served: all.filter((t) => t.status === 'served').length,
+      skipped: all.filter((t) => t.status === 'skipped').length,
+      avg_wait_minutes: 3,
+      avg_service_minutes: 5,
+      peak_hour: 11,
+      hourly: [],
+    });
+  }),
+  http.get('/api/stats/export', () =>
+    new HttpResponse('number,hall,category,status\nA-001,Зал 1,A,served\n', {
+      headers: { 'content-type': 'text/csv; charset=utf-8' },
+    }),
+  ),
+
   // ---------- tickets (unchanged from Phase 1) ----------
   http.post('/api/tickets', async ({ request }) => {
     const body = (await request.json()) as CreateTicketRequest;
