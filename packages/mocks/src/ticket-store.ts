@@ -118,6 +118,11 @@ export class TicketStore {
     })!;
   }
 
+  recall(id: string): Ticket | null {
+    // Bump called_at so the board re-announces the current call.
+    return this.update(id, { called_at: new Date().toISOString() });
+  }
+
   finish(id: string): Ticket | null {
     return this.update(id, { status: 'served' });
   }

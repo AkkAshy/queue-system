@@ -84,6 +84,14 @@ def call_next(*, counter: Counter, operator_id=None) -> Ticket | None:
     return ticket
 
 
+def recall(ticket: Ticket) -> Ticket:
+    """Re-announce a current call: bump called_at so it resurfaces on the board
+    (the display re-flashes + re-speaks). Status/counter unchanged."""
+    ticket.called_at = timezone.now()
+    ticket.save(update_fields=["called_at"])
+    return ticket
+
+
 def finish(ticket: Ticket) -> Ticket:
     ticket.status = TicketStatus.SERVED
     ticket.save(update_fields=["status"])

@@ -205,3 +205,12 @@ def test_audit_logs_call_and_lists(seeded, client):
     # filter by action
     only = client.get("/api/audit?action=ticket.called").json()
     assert all(l["action"] == "ticket.called" for l in only)
+
+
+def test_ticket_recall(seeded, client):
+    client.post("/api/tickets", {"category_id": 1, "service_id": 1, "idempotency_key": "rc1"}, format="json")
+    called = client.post("/api/tickets/call-next", {"counter_id": 1}, format="json").json()
+    r = client.post(f"/api/tickets/{called['id']}/recall")
+    assert r.status_code == 200
+    logs = client.get("/api/audit?action=ticket.recalled").json()
+    assert any(l["target"] == called["number"] for l in logs)

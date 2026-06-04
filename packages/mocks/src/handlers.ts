@@ -260,6 +260,12 @@ export const handlers = [
     return HttpResponse.json(t);
   }),
 
+  http.post('/api/tickets/:id/recall', ({ params }) => {
+    const t = tickets.recall(String(params.id));
+    if (!t) return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    return HttpResponse.json(t);
+  }),
+
   http.post('/api/tickets/:id/finish', ({ params }) => {
     const t = tickets.finish(String(params.id));
     if (!t) return HttpResponse.json({ error: 'not found' }, { status: 404 });

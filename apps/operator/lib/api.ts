@@ -47,6 +47,9 @@ export const api = {
       body: JSON.stringify(body),
     }).then(json<Ticket>),
 
+  recallTicket: (id: string) =>
+    fetch(`/api/tickets/${id}/recall`, { method: 'POST' }).then(json<Ticket>),
+
   finishTicket: (id: string) =>
     fetch(`/api/tickets/${id}/finish`, { method: 'POST' }).then(json<Ticket>),
 

@@ -27,6 +27,7 @@ from queue_app.views import (
     QueueView,
     TicketActionView,
     TicketCreateView,
+    TicketRecallView,
     TicketTransferView,
 )
 
@@ -56,6 +57,7 @@ urlpatterns = [
     path("api/tickets/call-next", CallNextView.as_view()),
     path("api/tickets/<uuid:pk>/finish", TicketActionView.as_view(action="finish")),
     path("api/tickets/<uuid:pk>/skip", TicketActionView.as_view(action="skip")),
+    path("api/tickets/<uuid:pk>/recall", TicketRecallView.as_view()),
     path("api/tickets/<uuid:pk>/transfer", TicketTransferView.as_view()),
     # operator sessions
     path("api/operator-sessions", OperatorSessionCreateView.as_view()),

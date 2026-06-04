@@ -28,7 +28,7 @@ export default function Page() {
   const playChime = useChime();
   const speak = useSpeech();
   const [muted, setMuted] = useState(false);
-  const seenIds = useRef<Set<string> | null>(null);
+  const seenCalledAt = useRef<Map<string, string> | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
   // Which hall this board shows — from ?hall= on the URL (null = all halls).
   const [hallId, setHallId] = useState<string | null>(null);
@@ -86,13 +86,16 @@ export default function Page() {
   // First load only seeds the baseline (no chime/flash for pre-existing calls).
   useEffect(() => {
     if (!active.data) return;
-    const ids = new Set(active.data.map((c) => c.id));
-    if (seenIds.current === null) {
-      seenIds.current = ids;
+    // Track id → called_at so a *recall* (same id, bumped called_at) also counts
+    // as fresh and re-announces, not just brand-new calls.
+    const seen = seenCalledAt.current;
+    const snapshot = new Map(active.data.map((c) => [c.id, c.called_at]));
+    if (seen === null) {
+      seenCalledAt.current = snapshot;
       return;
     }
-    const fresh = active.data.filter((c) => !seenIds.current!.has(c.id));
-    seenIds.current = ids;
+    const fresh = active.data.filter((c) => seen.get(c.id) !== c.called_at);
+    seenCalledAt.current = snapshot;
     if (fresh.length === 0) return;
 
     // Visuals flash in parallel; audio (chime + voice) is queued one-by-one.

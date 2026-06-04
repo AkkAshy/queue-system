@@ -200,6 +200,21 @@ class TicketActionView(APIView):
         return Response(TicketSerializer(ticket).data)
 
 
+class TicketRecallView(APIView):
+    """Repeat the announcement for a current call (operator 'Repeat' button)."""
+
+    def post(self, request, pk):
+        ticket = Ticket.objects.filter(id=pk).first()
+        if not ticket:
+            return Response({"error": "not found"}, status=404)
+        services.recall(ticket)
+        audit.log(request, "ticket.recalled", target=ticket.number)
+        realtime.broadcast(
+            [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "ticket.called"
+        )
+        return Response(TicketSerializer(ticket).data)
+
+
 class TicketTransferView(APIView):
     def post(self, request, pk):
         ticket = Ticket.objects.filter(id=pk).first()

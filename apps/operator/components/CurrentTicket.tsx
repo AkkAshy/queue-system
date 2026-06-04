@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { CheckCircle2, SkipForward } from 'lucide-react';
+import { CheckCircle2, SkipForward, Volume2 } from 'lucide-react';
 import type { Ticket } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -32,6 +32,12 @@ export function CurrentTicket({ current }: Props) {
       toast('Пропущено');
     },
     onError: () => toast.error('Не удалось пропустить'),
+  });
+
+  const recall = useMutation({
+    mutationFn: (id: string) => api.recallTicket(id),
+    onSuccess: () => toast('Повторный вызов'),
+    onError: () => toast.error('Не удалось повторить'),
   });
 
   return (
@@ -67,6 +73,15 @@ export function CurrentTicket({ current }: Props) {
               Пропустить
             </Button>
           </div>
+          <Button
+            onClick={() => recall.mutate(current.id)}
+            disabled={recall.isPending}
+            variant="outline"
+            className="mt-2 h-9 w-full gap-1.5 rounded-rsm border-hair-2 text-xs"
+          >
+            <Volume2 className="h-3.5 w-3.5" />
+            Повторить вызов
+          </Button>
         </>
       ) : (
         <div className="mt-3 text-sm text-coal-3">Нет активного талона</div>
