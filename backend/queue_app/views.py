@@ -111,6 +111,88 @@ class DashboardView(APIView):
         )
 
 
+# ---------- statistics ----------
+def _stats_qs(params):
+    qs = Ticket.objects.all()
+    if params.get("hall"):
+        qs = qs.filter(hall_id=params["hall"])
+    if params.get("from"):
+        qs = qs.filter(created_at__date__gte=params["from"])
+    if params.get("to"):
+        qs = qs.filter(created_at__date__lte=params["to"])
+    return qs
+
+
+def _compute_stats(qs):
+    served = qs.filter(status=TicketStatus.SERVED)
+    wait = (
+        qs.filter(called_at__isnull=False)
+        .annotate(w=F("called_at") - F("created_at"))
+        .aggregate(a=Avg("w"))["a"]
+    )
+    svc = (
+        served.filter(finished_at__isnull=False, called_at__isnull=False)
+        .annotate(s=F("finished_at") - F("called_at"))
+        .aggregate(a=Avg("s"))["a"]
+    )
+    hourly = []
+    peak_hour, peak_count = None, -1
+    for hour in range(8, 19):
+        cnt = qs.filter(created_at__hour=hour).count()
+        hourly.append({"hour": hour, "issued": cnt})
+        if cnt > peak_count:
+            peak_hour, peak_count = hour, cnt
+    return {
+        "issued": qs.count(),
+        "served": served.count(),
+        "skipped": qs.filter(status=TicketStatus.SKIPPED).count(),
+        "avg_wait_minutes": int(wait.total_seconds() // 60) if wait else 0,
+        "avg_service_minutes": int(svc.total_seconds() // 60) if svc else 0,
+        "peak_hour": peak_hour if peak_count > 0 else None,
+        "hourly": hourly,
+    }
+
+
+class StatsView(APIView):
+    """Aggregated stats: served / avg wait / avg service / skipped / peak hour.
+    Filters: ?hall=&from=YYYY-MM-DD&to=YYYY-MM-DD."""
+
+    def get(self, request):
+        return Response(_compute_stats(_stats_qs(request.query_params)))
+
+
+class StatsExportView(APIView):
+    """CSV export of per-ticket records for the range (opens in Excel)."""
+
+    def get(self, request):
+        import csv
+
+        from django.http import HttpResponse
+
+        qs = _stats_qs(request.query_params).select_related(
+            "hall", "category", "counter", "operator"
+        ).order_by("created_at")
+        resp = HttpResponse(content_type="text/csv; charset=utf-8")
+        resp["Content-Disposition"] = 'attachment; filename="stats.csv"'
+        resp.write("﻿")  # BOM so Excel reads UTF-8 (Cyrillic)
+        w = csv.writer(resp)
+        w.writerow(["number", "hall", "category", "status", "counter",
+                    "operator", "created_at", "called_at", "finished_at"])
+        for t in qs:
+            w.writerow([
+                t.number,
+                t.hall.name_ru if t.hall_id else "",
+                t.category.code if t.category_id else "",
+                t.status,
+                t.counter.number if t.counter_id else "",
+                t.operator.username if t.operator_id else "",
+                t.created_at.isoformat(),
+                t.called_at.isoformat() if t.called_at else "",
+                t.finished_at.isoformat() if t.finished_at else "",
+            ])
+        return resp
+
+
 # ---------- operator sessions ----------
 class OperatorSessionCreateView(APIView):
     def post(self, request):

@@ -94,7 +94,8 @@ def recall(ticket: Ticket) -> Ticket:
 
 def finish(ticket: Ticket) -> Ticket:
     ticket.status = TicketStatus.SERVED
-    ticket.save(update_fields=["status"])
+    ticket.finished_at = timezone.now()
+    ticket.save(update_fields=["status", "finished_at"])
     return ticket
 
 

@@ -114,6 +114,7 @@ class Ticket(models.Model):
     )
     created_at = models.DateTimeField(default=timezone.now)
     called_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)  # for service-time stats
     # Phase-1 idempotency for kiosk double-taps; not part of the API response.
     idempotency_key = models.CharField(max_length=128, unique=True, null=True, blank=True)
 

@@ -214,3 +214,16 @@ def test_ticket_recall(seeded, client):
     assert r.status_code == 200
     logs = client.get("/api/audit?action=ticket.recalled").json()
     assert any(l["target"] == called["number"] for l in logs)
+
+
+def test_stats_and_export(seeded, client):
+    client.post("/api/tickets", {"category_id": 1, "service_id": 1, "idempotency_key": "st1"}, format="json")
+    called = client.post("/api/tickets/call-next", {"counter_id": 1}, format="json").json()
+    client.post(f"/api/tickets/{called['id']}/finish")
+    s = client.get("/api/stats").json()
+    assert s["served"] >= 1
+    assert {"issued", "served", "skipped", "avg_wait_minutes",
+            "avg_service_minutes", "peak_hour", "hourly"} <= set(s)
+    r = client.get("/api/stats/export")
+    assert r.status_code == 200
+    assert "number" in r.content.decode("utf-8")

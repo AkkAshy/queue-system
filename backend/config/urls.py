@@ -22,6 +22,8 @@ from queue_app.views import (
     DisplayBoardView,
     DisplaySettingsView,
     DisplayWaitingView,
+    StatsExportView,
+    StatsView,
     OperatorSessionCreateView,
     OperatorSessionDetailView,
     QueueView,
@@ -50,6 +52,8 @@ urlpatterns = [
     # dashboard
     path("api/dashboard", DashboardView.as_view()),
     path("api/audit", AuditListView.as_view()),
+    path("api/stats", StatsView.as_view()),
+    path("api/stats/export", StatsExportView.as_view()),
     # tickets (kiosk) + operator transitions.
     # specific paths MUST precede the <uuid:pk> patterns.
     path("api/tickets", TicketCreateView.as_view()),
