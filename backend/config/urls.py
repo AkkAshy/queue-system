@@ -6,6 +6,8 @@ from accounts.views import LoginView, UserDetailView, UserListCreateView
 from catalog.views import (
     CategoryDetailView,
     CategoryListView,
+    HallDetailView,
+    HallListView,
     ServiceDetailView,
     ServiceListView,
 )
@@ -32,6 +34,8 @@ urlpatterns = [
     # auth
     path("api/auth/login", LoginView.as_view()),
     # catalog
+    path("api/halls", HallListView.as_view()),
+    path("api/halls/<int:pk>", HallDetailView.as_view()),
     path("api/categories", CategoryListView.as_view()),
     path("api/categories/<int:pk>", CategoryDetailView.as_view()),
     path("api/services", ServiceListView.as_view()),

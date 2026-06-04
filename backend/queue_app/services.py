@@ -17,10 +17,10 @@ from .models import Counter, DailyCounter, OperatorSession, Ticket, TicketStatus
 @transaction.atomic
 def next_number(category: ServiceCategory) -> str:
     """Next ticket number for a category, e.g. 'A042'. Daily reset per code,
-    concurrency-safe via a row lock on the (code, today) counter."""
+    per hall; concurrency-safe via a row lock on the (hall, code, today) counter."""
     today = timezone.localdate()
     row, _ = DailyCounter.objects.select_for_update().get_or_create(
-        code=category.code, date=today
+        hall=category.hall, code=category.code, date=today
     )
     row.last_seq += 1
     row.save(update_fields=["last_seq"])
@@ -39,6 +39,7 @@ def create_ticket(
         return existing
     return Ticket.objects.create(
         number=next_number(category),
+        hall=category.hall,
         category=category,
         service=service,
         status=TicketStatus.WAITING,
@@ -105,24 +106,24 @@ def transfer(ticket: Ticket, new_counter: Counter) -> Ticket:
     return ticket
 
 
-def active_calls(limit: int = 12) -> list[Ticket]:
-    """All called/serving tickets across counters, newest call first."""
-    return list(
-        Ticket.objects.filter(
-            status__in=[TicketStatus.CALLED, TicketStatus.SERVING],
-            counter__isnull=False,
-        ).order_by("-called_at")[:limit]
+def active_calls(limit: int = 12, hall_id=None) -> list[Ticket]:
+    """Called/serving tickets, newest call first. Scoped to a hall when given."""
+    qs = Ticket.objects.filter(
+        status__in=[TicketStatus.CALLED, TicketStatus.SERVING],
+        counter__isnull=False,
     )
+    if hall_id:
+        qs = qs.filter(hall_id=hall_id)
+    return list(qs.order_by("-called_at")[:limit])
 
 
-def waiting_list(limit: int = 20) -> list[Ticket]:
-    """All waiting (issued but not yet called) tickets, oldest first —
-    the queue shown on the board so visitors see their number."""
-    return list(
-        Ticket.objects.filter(status=TicketStatus.WAITING).order_by("created_at")[
-            :limit
-        ]
-    )
+def waiting_list(limit: int = 20, hall_id=None) -> list[Ticket]:
+    """Waiting (issued, not yet called) tickets, oldest first — the queue shown
+    on the board. Scoped to a hall when given."""
+    qs = Ticket.objects.filter(status=TicketStatus.WAITING)
+    if hall_id:
+        qs = qs.filter(hall_id=hall_id)
+    return list(qs.order_by("created_at")[:limit])
 
 
 def start_session(*, user, counter: Counter) -> OperatorSession:

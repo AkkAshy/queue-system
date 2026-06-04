@@ -1,10 +1,33 @@
 from django.db import models
 
 
+class Hall(models.Model):
+    """A service hall (zal). The registrar office has two: 1-zal (student
+    services) and 2-zal (references). Each hall has its own independent queue,
+    counters, categories, staff and information board."""
+
+    code = models.CharField(max_length=8, unique=True)  # '1', '2'
+    name_kaa = models.CharField(max_length=255)
+    name_ru = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "code"]
+
+    def __str__(self) -> str:
+        return f"{self.code}-zal · {self.name_ru}"
+
+
 class ServiceCategory(models.Model):
     """A top-level service category (A..I). Matches the `ServiceCategory` contract."""
 
-    code = models.CharField(max_length=4, unique=True)  # 'A', 'B', ...
+    # Hall the category belongs to. Nullable for migration; the seed assigns it.
+    hall = models.ForeignKey(
+        Hall, on_delete=models.CASCADE, related_name="categories",
+        null=True, blank=True,
+    )
+    code = models.CharField(max_length=4)  # 'A', 'B', ... unique within a hall
     name_kaa = models.CharField(max_length=255)
     name_ru = models.CharField(max_length=255)
     color = models.CharField(max_length=9)  # hex
@@ -13,6 +36,12 @@ class ServiceCategory(models.Model):
     class Meta:
         ordering = ["order", "code"]
         verbose_name_plural = "service categories"
+        # Code is unique per hall (hall 1 and hall 2 may both use 'A').
+        constraints = [
+            models.UniqueConstraint(
+                fields=["hall", "code"], name="uniq_category_code_per_hall"
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.code} · {self.name_ru}"

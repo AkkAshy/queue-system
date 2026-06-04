@@ -208,16 +208,21 @@ class TicketTransferView(APIView):
 # ---------- display ----------
 class DisplayActiveView(APIView):
     def get(self, request):
-        calls = services.active_calls(limit=12)
+        hall_id = request.query_params.get("hall_id")
+        calls = services.active_calls(limit=12, hall_id=hall_id)
         return Response(DisplayCallSerializer(calls, many=True).data)
 
 
 class DisplayBoardView(APIView):
     """All active windows + the current call on each (null when idle).
-    Powers the board's window strip — scales to any number of counters."""
+    Powers the board's window strip — scoped to a hall when ?hall_id= given."""
 
     def get(self, request):
-        counters = list(Counter.objects.filter(is_active=True))
+        counters = Counter.objects.filter(is_active=True)
+        hall_id = request.query_params.get("hall_id")
+        if hall_id:
+            counters = counters.filter(hall_id=hall_id)
+        counters = list(counters)
         for c in counters:
             c.current = services.current_for_counter(c)
         return Response(DisplayBoardCounterSerializer(counters, many=True).data)
@@ -225,10 +230,15 @@ class DisplayBoardView(APIView):
 
 class DisplayWaitingView(APIView):
     """The waiting queue (issued, not yet called) shown on the board so a
-    visitor sees their number before it's called."""
+    visitor sees their number before it's called. Scoped to a hall when given."""
 
     def get(self, request):
-        return Response(DisplayWaitingSerializer(services.waiting_list(20), many=True).data)
+        hall_id = request.query_params.get("hall_id")
+        return Response(
+            DisplayWaitingSerializer(
+                services.waiting_list(20, hall_id=hall_id), many=True
+            ).data
+        )
 
 
 class DisplaySettingsView(APIView):

@@ -1,13 +1,30 @@
 from rest_framework import generics
 
-from .models import Service, ServiceCategory
-from .serializers import ServiceCategorySerializer, ServiceSerializer
+from .models import Hall, Service, ServiceCategory
+from .serializers import HallSerializer, ServiceCategorySerializer, ServiceSerializer
+
+
+class HallListView(generics.ListCreateAPIView):
+    queryset = Hall.objects.filter(is_active=True)
+    serializer_class = HallSerializer
+    pagination_class = None
+
+
+class HallDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Hall.objects.all()
+    serializer_class = HallSerializer
 
 
 class CategoryListView(generics.ListCreateAPIView):
-    queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
     pagination_class = None
+
+    def get_queryset(self):
+        qs = ServiceCategory.objects.all()
+        hall_id = self.request.query_params.get("hall_id")
+        if hall_id:
+            qs = qs.filter(hall_id=hall_id)
+        return qs
 
 
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):

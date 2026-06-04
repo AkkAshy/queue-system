@@ -31,7 +31,7 @@ def test_login_rejects_bad_credentials(seeded, client):
 def test_categories_and_services(seeded, client):
     cats = client.get("/api/categories").json()
     assert len(cats) == 9
-    assert set(cats[0]) == {"id", "code", "name_kaa", "name_ru", "color", "order"}
+    assert set(cats[0]) == {"id", "hall_id", "code", "name_kaa", "name_ru", "color", "order"}
 
     svcs = client.get("/api/services?category_id=1").json()
     assert all(s["category_id"] == 1 for s in svcs)
@@ -165,3 +165,31 @@ def test_display_waiting_lists_uncalled_tickets(seeded, client):
     assert isinstance(waiting, list)
     if waiting:
         assert set(waiting[0]) == {"id", "number", "category_id"}
+
+
+def test_halls_endpoint(seeded, client):
+    halls = client.get("/api/halls").json()
+    assert len(halls) == 2
+    assert {h["code"] for h in halls} == {"1", "2"}
+
+
+def test_categories_filtered_by_hall(seeded, client):
+    # All seeded categories belong to hall 1; hall 2 has none yet.
+    h1 = client.get("/api/categories?hall_id=1").json()
+    h2 = client.get("/api/categories?hall_id=2").json()
+    assert len(h1) == 9
+    assert len(h2) == 0
+    assert all(c["hall_id"] == 1 for c in h1)
+
+
+def test_display_active_scoped_by_hall(seeded, client):
+    # Issue + call a ticket in hall 1, then check hall scoping on the board.
+    t = client.post("/api/tickets", {
+        "category_id": 1, "service_id": 1, "idempotency_key": "hall-test-1",
+    }, format="json").json()
+    assert t["hall_id"] == 1
+    # counter 1 is in hall 1
+    called = client.post("/api/tickets/call-next", {"counter_id": 1}, format="json")
+    assert called.status_code == 200
+    assert len(client.get("/api/display/active?hall_id=1").json()) >= 1
+    assert len(client.get("/api/display/active?hall_id=2").json()) == 0

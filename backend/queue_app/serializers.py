@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from catalog.models import Service
+from catalog.models import Hall, Service
 
 from .models import Counter, DisplaySettings, OperatorSession, Ticket
 
@@ -9,10 +9,13 @@ class CounterSerializer(serializers.ModelSerializer):
     service_ids = serializers.PrimaryKeyRelatedField(
         source="services", many=True, queryset=Service.objects.all(), required=False
     )
+    hall_id = serializers.PrimaryKeyRelatedField(
+        source="hall", queryset=Hall.objects.all(), required=False, allow_null=True
+    )
 
     class Meta:
         model = Counter
-        fields = ["id", "number", "name", "service_ids", "is_active"]
+        fields = ["id", "hall_id", "number", "name", "service_ids", "is_active"]
 
 
 class TicketSerializer(serializers.ModelSerializer):
@@ -26,11 +29,14 @@ class TicketSerializer(serializers.ModelSerializer):
     operator_id = serializers.PrimaryKeyRelatedField(
         source="operator", read_only=True, allow_null=True
     )
+    hall_id = serializers.PrimaryKeyRelatedField(
+        source="hall", read_only=True, allow_null=True
+    )
 
     class Meta:
         model = Ticket
         fields = [
-            "id", "number", "category_id", "service_id", "status",
+            "id", "number", "hall_id", "category_id", "service_id", "status",
             "counter_id", "operator_id", "created_at", "called_at",
         ]
 

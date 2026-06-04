@@ -15,7 +15,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from catalog.models import Service, ServiceCategory
+from catalog.models import Hall, Service, ServiceCategory
 from queue_app.models import Counter
 
 # Dev reads the monorepo single source; prod (Docker) vendors a copy and sets
@@ -40,11 +40,21 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         User = get_user_model()
 
+        # Halls: 1-zal (student services) holds the current catalog; 2-zal
+        # (references) is created empty — its catalog is added later via admin.
+        Hall.objects.update_or_create(
+            id=1, defaults={"code": "1", "name_kaa": "1-zal", "name_ru": "Зал 1 — услуги", "order": 1}
+        )
+        Hall.objects.update_or_create(
+            id=2, defaults={"code": "2", "name_kaa": "2-zal", "name_ru": "Зал 2 — справки", "order": 2}
+        )
+
         cats = self._load("categories.json")
         for c in cats:
             ServiceCategory.objects.update_or_create(
                 id=c["id"],
                 defaults={
+                    "hall_id": 1,  # current categories belong to hall 1
                     "code": c["code"],
                     "name_kaa": c["name_kaa"],
                     "name_ru": c["name_ru"],
@@ -74,6 +84,7 @@ class Command(BaseCommand):
             counter, _ = Counter.objects.update_or_create(
                 id=c["id"],
                 defaults={
+                    "hall_id": 1,  # current windows belong to hall 1
                     "number": c["number"],
                     "name": c["name"],
                     "is_active": c["is_active"],
@@ -102,7 +113,7 @@ class Command(BaseCommand):
         # We inserted rows with explicit PKs, which leaves Postgres' auto-increment
         # sequences behind — the next plain INSERT (e.g. admin "Create") would
         # collide on the PK. Reset every affected sequence to MAX(id)+1.
-        self._reset_sequences([ServiceCategory, Service, Counter, User])
+        self._reset_sequences([Hall, ServiceCategory, Service, Counter, User])
 
         self.stdout.write(
             self.style.SUCCESS(

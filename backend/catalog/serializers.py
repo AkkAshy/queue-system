@@ -1,12 +1,25 @@
 from rest_framework import serializers
 
-from .models import Service, ServiceCategory
+from .models import Hall, Service, ServiceCategory
+
+
+class HallSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hall
+        fields = ["id", "code", "name_kaa", "name_ru", "is_active", "order"]
 
 
 class ServiceCategorySerializer(serializers.ModelSerializer):
+    hall_id = serializers.PrimaryKeyRelatedField(
+        source="hall", queryset=Hall.objects.all(), required=False, allow_null=True
+    )
+
     class Meta:
         model = ServiceCategory
-        fields = ["id", "code", "name_kaa", "name_ru", "color", "order"]
+        fields = ["id", "hall_id", "code", "name_kaa", "name_ru", "color", "order"]
+        # Drop DRF's auto unique-together validator (it would require `hall` in
+        # every payload). The DB UniqueConstraint(hall, code) still guards integrity.
+        validators = []
 
 
 class ServiceSerializer(serializers.ModelSerializer):

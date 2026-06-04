@@ -9,6 +9,11 @@ class Counter(models.Model):
     """A service window. Matches the `Counter` contract; `service_ids` is the
     M2M serialized as a flat id list."""
 
+    # Hall this window belongs to. Nullable for migration; the seed assigns it.
+    hall = models.ForeignKey(
+        "catalog.Hall", on_delete=models.CASCADE, related_name="counters",
+        null=True, blank=True,
+    )
     number = models.CharField(max_length=8)  # display label, e.g. "1", "2A"
     name = models.CharField(max_length=255)
     services = models.ManyToManyField("catalog.Service", related_name="counters", blank=True)
@@ -62,6 +67,10 @@ class Ticket(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     number = models.CharField(max_length=8)  # 'A042'
+    hall = models.ForeignKey(
+        "catalog.Hall", on_delete=models.PROTECT, related_name="tickets",
+        null=True, blank=True,
+    )
     category = models.ForeignKey(
         "catalog.ServiceCategory", on_delete=models.PROTECT, related_name="tickets"
     )
@@ -117,15 +126,21 @@ class OperatorSession(models.Model):
 
 
 class DailyCounter(models.Model):
-    """Per-category-code daily sequence for ticket numbers. Reset implicitly by
-    keying on the date; concurrency-safe via select_for_update in services."""
+    """Per-hall-per-category-code daily sequence for ticket numbers. Reset
+    implicitly by keying on the date; concurrency-safe via select_for_update.
+    Keyed by hall too so each hall numbers independently (A-001 in hall 1 is
+    separate from A-001 in hall 2)."""
 
+    hall = models.ForeignKey(
+        "catalog.Hall", on_delete=models.CASCADE, related_name="daily_counters",
+        null=True, blank=True,
+    )
     code = models.CharField(max_length=4)
     date = models.DateField()
     last_seq = models.PositiveIntegerField(default=0)
 
     class Meta:
-        unique_together = ("code", "date")
+        unique_together = ("hall", "code", "date")
 
     def __str__(self) -> str:
         return f"{self.code}@{self.date}={self.last_seq}"
