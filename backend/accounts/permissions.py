@@ -41,3 +41,28 @@ def hall_scope_ok(user, hall_id) -> bool:
     if getattr(user, "is_hall_admin", False):
         return user.hall_id is not None and str(user.hall_id) == str(hall_id)
     return False
+
+
+class IsCatalogManager(BasePermission):
+    """Reads public (kiosk/board); writes for chief OR hall_admin. Per-hall
+    scoping is enforced by the view's queryset (hall_admin sees only their hall →
+    can't fetch/modify another hall's object → 404)."""
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True
+        u = request.user
+        return bool(
+            u
+            and u.is_authenticated
+            and (getattr(u, "is_chief", False) or getattr(u, "is_hall_admin", False))
+        )
+
+
+def scope_to_hall(qs, request, field: str = "hall_id"):
+    """Limit a queryset to the hall_admin's hall. Chief / anonymous (public
+    kiosk reads) see everything."""
+    u = getattr(request, "user", None)
+    if u and u.is_authenticated and getattr(u, "is_hall_admin", False) and u.hall_id:
+        return qs.filter(**{field: u.hall_id})
+    return qs

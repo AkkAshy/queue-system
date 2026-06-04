@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.permissions import IsChief, IsChiefOrReadOnly
+from accounts.permissions import IsCatalogManager, IsChief, IsChiefOrReadOnly, scope_to_hall
 
 from catalog.models import Service, ServiceCategory
 
@@ -29,17 +29,29 @@ from .serializers import (
 # ---------- counters ----------
 class CounterListCreateView(AuditCRUDMixin, generics.ListCreateAPIView):
     audit_entity = "counter"
-    queryset = Counter.objects.all()
     serializer_class = CounterSerializer
     pagination_class = None
-    permission_classes = [IsChiefOrReadOnly]
+    permission_classes = [IsCatalogManager]
+
+    def get_queryset(self):
+        return scope_to_hall(Counter.objects.all(), self.request)
+
+    def perform_create(self, serializer):
+        u = self.request.user
+        if getattr(u, "is_hall_admin", False) and u.hall_id:
+            obj = serializer.save(hall_id=u.hall_id)
+        else:
+            obj = serializer.save()
+        audit.log(self.request, "counter.created", target=obj.id)
 
 
 class CounterDetailView(AuditCRUDMixin, generics.RetrieveUpdateDestroyAPIView):
     audit_entity = "counter"
-    queryset = Counter.objects.all()
     serializer_class = CounterSerializer
-    permission_classes = [IsChiefOrReadOnly]
+    permission_classes = [IsCatalogManager]
+
+    def get_queryset(self):
+        return scope_to_hall(Counter.objects.all(), self.request)
 
 
 # ---------- tickets (kiosk) ----------
@@ -117,7 +129,8 @@ class DashboardView(APIView):
 
 
 # ---------- statistics ----------
-def _stats_qs(params):
+def _stats_qs(request):
+    params = request.query_params
     qs = Ticket.objects.all()
     if params.get("hall"):
         qs = qs.filter(hall_id=params["hall"])
@@ -125,7 +138,7 @@ def _stats_qs(params):
         qs = qs.filter(created_at__date__gte=params["from"])
     if params.get("to"):
         qs = qs.filter(created_at__date__lte=params["to"])
-    return qs
+    return scope_to_hall(qs, request)  # hall_admin sees only their hall
 
 
 def _compute_stats(qs):
@@ -163,7 +176,7 @@ class StatsView(APIView):
     Filters: ?hall=&from=YYYY-MM-DD&to=YYYY-MM-DD."""
 
     def get(self, request):
-        return Response(_compute_stats(_stats_qs(request.query_params)))
+        return Response(_compute_stats(_stats_qs(request)))
 
 
 class StatsExportView(APIView):
@@ -174,7 +187,7 @@ class StatsExportView(APIView):
 
         from django.http import HttpResponse
 
-        qs = _stats_qs(request.query_params).select_related(
+        qs = _stats_qs(request).select_related(
             "hall", "category", "counter", "operator"
         ).order_by("created_at")
         resp = HttpResponse(content_type="text/csv; charset=utf-8")

@@ -273,3 +273,21 @@ def test_sync_events_ingest_idempotent(seeded, client):
     assert r2.json()["tickets"] == 1
     from queue_app.models import Ticket
     assert Ticket.objects.filter(id=tid, number="A-999", status="served").count() == 1
+
+
+def test_hall_admin_scoping(seeded, client):
+    from accounts.models import User
+    u = User.objects.create(username="ha2", role="hall_admin", hall_id=2, is_active=True)
+    u.set_password("pw")
+    u.save()
+    tok = client.post("/api/auth/login", {"username": "ha2", "password": "pw"}, format="json").json()["token"]
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {tok}")
+    # hall_admin of hall 2 sees none of hall-1's seeded categories
+    assert len(client.get("/api/categories").json()) == 0
+    # creating a category is forced into their hall
+    r = client.post("/api/categories", {
+        "code": "X", "name_kaa": "x", "name_ru": "х", "color": "#000000", "order": 1,
+    }, format="json")
+    assert r.status_code == 201
+    assert r.json()["hall_id"] == 2
+    assert len(client.get("/api/categories").json()) == 1
