@@ -23,9 +23,9 @@ def _service(category, name="svc"):
 def test_next_number_increments_per_code():
     a = _category("A")
     b = _category("B", order=2)
-    assert services.next_number(a) == "A001"
-    assert services.next_number(a) == "A002"
-    assert services.next_number(b) == "B001"
+    assert services.next_number(a) == "A-001"
+    assert services.next_number(a) == "A-002"
+    assert services.next_number(b) == "B-001"
 
 
 def test_create_ticket_is_idempotent():
@@ -34,7 +34,7 @@ def test_create_ticket_is_idempotent():
     t1 = services.create_ticket(category=a, service=s, idempotency_key="k1")
     t2 = services.create_ticket(category=a, service=s, idempotency_key="k1")
     assert t1.id == t2.id
-    assert t1.number == "A001"
+    assert t1.number == "A-001"
 
 
 def test_call_next_picks_oldest_eligible():

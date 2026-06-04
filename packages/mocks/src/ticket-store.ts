@@ -44,7 +44,7 @@ export class TicketStore {
     const next = last + 1;
     this.counters.set(args.code, next);
 
-    const number = `${args.code}${next.toString().padStart(3, '0')}`;
+    const number = `${args.code}-${next.toString().padStart(3, '0')}`; // "A-042" (TZ §5)
     const ticket: Ticket = {
       id: crypto.randomUUID(),
       number,

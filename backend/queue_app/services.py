@@ -24,7 +24,7 @@ def next_number(category: ServiceCategory) -> str:
     )
     row.last_seq += 1
     row.save(update_fields=["last_seq"])
-    return f"{category.code}{row.last_seq:03d}"
+    return f"{category.code}-{row.last_seq:03d}"  # e.g. "A-042" (TZ §5)
 
 
 def create_ticket(
