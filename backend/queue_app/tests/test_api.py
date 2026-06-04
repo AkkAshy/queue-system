@@ -227,3 +227,26 @@ def test_stats_and_export(seeded, client):
     r = client.get("/api/stats/export")
     assert r.status_code == 200
     assert "number" in r.content.decode("utf-8")
+
+
+def test_sync_catalog_snapshot(seeded, client):
+    snap = client.get("/api/sync/catalog").json()
+    assert {"halls", "categories", "services", "counters", "users", "settings"} <= set(snap)
+    assert len(snap["categories"]) == 9
+    assert len(snap["halls"]) == 2
+
+
+def test_sync_events_ingest_idempotent(seeded, client):
+    import uuid
+    tid = str(uuid.uuid4())
+    payload = {"tickets": [{
+        "id": tid, "number": "A-999", "hall_id": 1, "category_id": 1,
+        "status": "served", "created_at": "2026-06-04T10:00:00Z",
+    }]}
+    r = client.post("/api/sync/events", payload, format="json")
+    assert r.status_code == 200 and r.json()["tickets"] == 1
+    # re-push is idempotent (upsert by id)
+    r2 = client.post("/api/sync/events", payload, format="json")
+    assert r2.json()["tickets"] == 1
+    from queue_app.models import Ticket
+    assert Ticket.objects.filter(id=tid, number="A-999", status="served").count() == 1

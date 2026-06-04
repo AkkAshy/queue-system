@@ -115,6 +115,7 @@ class Ticket(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     called_at = models.DateTimeField(null=True, blank=True)
     finished_at = models.DateTimeField(null=True, blank=True)  # for service-time stats
+    updated_at = models.DateTimeField(auto_now=True)  # local→cloud sync watermark
     # Phase-1 idempotency for kiosk double-taps; not part of the API response.
     idempotency_key = models.CharField(max_length=128, unique=True, null=True, blank=True)
 
@@ -144,6 +145,7 @@ class OperatorSession(models.Model):
     )
     started_at = models.DateTimeField(default=timezone.now)
     ended_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)  # sync watermark
 
     def __str__(self) -> str:
         return f"session#{self.pk} user={self.user_id} counter={self.counter_id}"

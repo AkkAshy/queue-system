@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 
 from catalog.models import Service, ServiceCategory
 
-from . import audit, realtime, services
+from . import audit, realtime, services, sync
 from .audit import AuditCRUDMixin
 from .models import AuditLog, Counter, DisplaySettings, OperatorSession, Ticket, TicketStatus
 from .serializers import (
@@ -350,6 +350,22 @@ class DisplayWaitingView(APIView):
                 services.waiting_list(20, hall_id=hall_id), many=True
             ).data
         )
+
+
+# ---------- sync (local-first) ----------
+class SyncCatalogView(APIView):
+    """cloud → local: full catalog snapshot the local box mirrors."""
+
+    def get(self, request):
+        return Response(sync.catalog_snapshot())
+
+
+class SyncEventsView(APIView):
+    """local → cloud: upsert tickets / sessions / audit pushed from a box."""
+
+    def post(self, request):
+        counts = sync.ingest_events(request.data or {})
+        return Response({"ok": True, **counts})
 
 
 # ---------- audit ----------
