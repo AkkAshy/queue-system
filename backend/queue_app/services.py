@@ -126,6 +126,19 @@ def active_calls(limit: int = 12, hall_id=None) -> list[Ticket]:
     return list(qs.order_by("-called_at")[:limit])
 
 
+@transaction.atomic
+def reset_queue(hall_id) -> int:
+    """Clear a hall's live queue: cancel all waiting tickets and reset the day's
+    numbering so it starts from 1 again. Returns how many were cancelled.
+    Served/finished tickets are kept (for stats)."""
+    today = timezone.localdate()
+    n = Ticket.objects.filter(hall_id=hall_id, status=TicketStatus.WAITING).update(
+        status=TicketStatus.CANCELLED
+    )
+    DailyCounter.objects.filter(hall_id=hall_id, date=today).delete()
+    return n
+
+
 def waiting_list(limit: int = 20, hall_id=None) -> list[Ticket]:
     """Waiting (issued, not yet called) tickets, oldest first — the queue shown
     on the board. Scoped to a hall when given."""

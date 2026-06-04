@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Download } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { Download, RotateCcw } from 'lucide-react';
 import type {
   DashboardMetrics,
   HourlyLoadPoint,
@@ -79,6 +80,21 @@ export default function DashboardPage() {
   });
   const exportHref = `/api/stats/export${hall ? `?hall=${hall}` : ''}`;
 
+  const qc = useQueryClient();
+  const reset = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/halls/${hall}/reset`, { method: 'POST' });
+      if (!res.ok) throw new Error('failed');
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      qc.invalidateQueries({ queryKey: ['stats'] });
+      toast.success('Очередь сброшена');
+    },
+    onError: () => toast.error('Не удалось сбросить'),
+  });
+
   return (
     <div className="space-y-8">
       <div>
@@ -112,6 +128,16 @@ export default function DashboardPage() {
               <Download className="h-4 w-4" />
               CSV
             </a>
+            <button
+              onClick={() => {
+                if (hall && window.confirm('Сбросить очередь этого зала?')) reset.mutate();
+              }}
+              disabled={!hall || reset.isPending}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-hair-2 bg-white px-3 py-1.5 text-sm font-semibold text-coal-2 hover:text-coral disabled:opacity-40"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Сбросить
+            </button>
           </div>
         </div>
         <div className="grid grid-cols-5 gap-5">

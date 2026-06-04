@@ -74,6 +74,9 @@ export const handlers = [
 
   // ---------- halls ----------
   http.get('/api/halls', () => HttpResponse.json(HALLS)),
+  http.post('/api/halls/:id/reset', () =>
+    HttpResponse.json({ ok: true, cancelled: 0 }),
+  ),
 
   // ---------- categories ----------
   http.get('/api/categories', ({ request }) => {

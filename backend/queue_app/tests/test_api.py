@@ -291,3 +291,25 @@ def test_hall_admin_scoping(seeded, client):
     assert r.status_code == 201
     assert r.json()["hall_id"] == 2
     assert len(client.get("/api/categories").json()) == 1
+
+
+def test_hall_reset_clears_waiting(auth_client):
+    client = auth_client
+    client.post("/api/tickets", {"category_id": 1, "service_id": 1, "idempotency_key": "rs1"}, format="json")
+    assert len(client.get("/api/display/waiting?hall_id=1").json()) > 0
+    r = client.post("/api/halls/1/reset")
+    assert r.status_code == 200 and r.json()["ok"] is True
+    assert client.get("/api/display/waiting?hall_id=1").json() == []
+    # reset is audited
+    logs = client.get("/api/audit?action=queue.reset").json()
+    assert any(l["target"] == "hall:1" for l in logs)
+
+
+def test_catalog_changes_audited(auth_client):
+    client = auth_client
+    r = client.post("/api/categories", {
+        "code": "Q", "name_kaa": "q", "name_ru": "к", "color": "#000000", "order": 50,
+    }, format="json")
+    assert r.status_code == 201
+    logs = client.get("/api/audit?action=category.created").json()
+    assert any(str(l["target"]) == str(r.json()["id"]) for l in logs)

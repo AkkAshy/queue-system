@@ -18,6 +18,7 @@ from queue_app.views import (
     CounterListCreateView,
     CurrentTicketView,
     DashboardView,
+    HallResetView,
     DisplayActiveView,
     DisplayBoardView,
     DisplaySettingsView,
@@ -42,6 +43,7 @@ urlpatterns = [
     # catalog
     path("api/halls", HallListView.as_view()),
     path("api/halls/<int:pk>", HallDetailView.as_view()),
+    path("api/halls/<int:pk>/reset", HallResetView.as_view()),
     path("api/categories", CategoryListView.as_view()),
     path("api/categories/<int:pk>", CategoryDetailView.as_view()),
     path("api/services", ServiceListView.as_view()),

@@ -6,7 +6,14 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from accounts.permissions import IsCatalogManager, IsChief, IsChiefOrReadOnly, scope_to_hall
+from accounts.permissions import (
+    IsCatalogManager,
+    IsChief,
+    IsChiefOrReadOnly,
+    IsStaff,
+    hall_scope_ok,
+    scope_to_hall,
+)
 
 from catalog.models import Service, ServiceCategory
 
@@ -52,6 +59,22 @@ class CounterDetailView(AuditCRUDMixin, generics.RetrieveUpdateDestroyAPIView):
 
     def get_queryset(self):
         return scope_to_hall(Counter.objects.all(), self.request)
+
+
+class HallResetView(APIView):
+    """Clear a hall's queue (chief, or that hall's admin). TZ §4.4."""
+
+    permission_classes = [IsStaff]
+
+    def post(self, request, pk):
+        if not hall_scope_ok(request.user, pk):
+            return Response({"error": "forbidden"}, status=403)
+        n = services.reset_queue(pk)
+        audit.log(request, "queue.reset", target=f"hall:{pk}", cancelled=n)
+        realtime.broadcast(
+            [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "queue.reset"
+        )
+        return Response({"ok": True, "cancelled": n})
 
 
 # ---------- tickets (kiosk) ----------
