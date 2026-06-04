@@ -5,6 +5,7 @@ import type { Ticket, ServiceCategory, Service } from '@queue/types';
 const sampleTicket: Ticket = {
   id: 't1',
   number: 'A042',
+  hall_id: 1,
   category_id: 1,
   service_id: 5,
   status: 'waiting',
@@ -16,6 +17,7 @@ const sampleTicket: Ticket = {
 
 const sampleCategory: ServiceCategory = {
   id: 1,
+  hall_id: 1,
   code: 'A',
   name_kaa: 'Akademiyalıq iskerlik',
   name_ru: 'Академическая деятельность',
@@ -113,7 +115,12 @@ describe('printTicket', () => {
     const result = await printTicket(ctx);
     expect(result).toEqual({ ok: true });
     expect(globalThis.fetch).not.toHaveBeenCalled();
-    expect(logSpy).toHaveBeenCalledWith('[mock-printer]', 'A042');
+    expect(logSpy).toHaveBeenCalledWith(
+      '[mock-printer]',
+      'A042',
+      '→',
+      expect.any(String),
+    );
   });
 
   it('still works when called with a bare Ticket (backward compat)', async () => {

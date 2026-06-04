@@ -28,9 +28,12 @@ export default function Page() {
   const [muted, setMuted] = useState(false);
   const seenIds = useRef<Set<string> | null>(null);
   const [freshIds, setFreshIds] = useState<Set<string>>(() => new Set());
+  // Which hall this board shows — from ?hall= on the URL (null = all halls).
+  const [hallId, setHallId] = useState<string | null>(null);
 
   useEffect(() => {
     setMuted(localStorage.getItem('display-muted') === '1');
+    setHallId(new URLSearchParams(window.location.search).get('hall'));
   }, []);
 
   const toggleMute = () => {
@@ -51,20 +54,20 @@ export default function Page() {
   ]);
 
   const active = useQuery({
-    queryKey: ['display-active'],
-    queryFn: api.getActiveCalls,
+    queryKey: ['display-active', hallId],
+    queryFn: () => api.getActiveCalls(hallId),
     refetchInterval: 2000,
     refetchIntervalInBackground: true,
   });
   const board = useQuery({
-    queryKey: ['display-board'],
-    queryFn: api.getBoard,
+    queryKey: ['display-board', hallId],
+    queryFn: () => api.getBoard(hallId),
     refetchInterval: 2000,
     refetchIntervalInBackground: true,
   });
   const waiting = useQuery({
-    queryKey: ['display-waiting'],
-    queryFn: api.getWaiting,
+    queryKey: ['display-waiting', hallId],
+    queryFn: () => api.getWaiting(hallId),
     refetchInterval: 2000,
     refetchIntervalInBackground: true,
   });

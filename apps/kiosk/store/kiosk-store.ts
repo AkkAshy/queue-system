@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { ServiceCategory, Service, Ticket } from '@queue/types';
+import type { Hall, ServiceCategory, Service, Ticket } from '@queue/types';
 
 interface KioskState {
+  hall: Hall | null;
   category: ServiceCategory | null;
   service: Service | null;
   ticket: Ticket | null;
@@ -11,6 +12,7 @@ interface KioskState {
   // the ticket page then asks the student to remember their number.
   printFailed: boolean;
 
+  setHall: (h: Hall | null) => void;
   setCategory: (c: ServiceCategory | null) => void;
   setService: (s: Service | null) => void;
   setTicket: (t: Ticket | null) => void;
@@ -25,12 +27,14 @@ interface KioskState {
 export const useKioskStore = create<KioskState>()(
   persist(
     (set, get) => ({
+      hall: null,
       category: null,
       service: null,
       ticket: null,
       idempotencyKey: null,
       printFailed: false,
 
+      setHall: (hall) => set({ hall }),
       setCategory: (category) => set({ category }),
       setService: (service) => set({ service }),
       setTicket: (ticket) => set({ ticket }),
@@ -46,6 +50,7 @@ export const useKioskStore = create<KioskState>()(
 
       reset: () =>
         set({
+          hall: null,
           category: null,
           service: null,
           ticket: null,

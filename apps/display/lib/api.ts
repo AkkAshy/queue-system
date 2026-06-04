@@ -11,10 +11,16 @@ async function json<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
+// hall query suffix — scopes the board to one hall when ?hall= is set on the URL.
+const hq = (hallId?: string | null) => (hallId ? `?hall_id=${hallId}` : '');
+
 export const api = {
-  getActiveCalls: () => fetch('/api/display/active').then(json<DisplayCall[]>),
-  getBoard: () => fetch('/api/display/board').then(json<DisplayBoardWindow[]>),
-  getWaiting: () => fetch('/api/display/waiting').then(json<DisplayWaiting[]>),
+  getActiveCalls: (hallId?: string | null) =>
+    fetch(`/api/display/active${hq(hallId)}`).then(json<DisplayCall[]>),
+  getBoard: (hallId?: string | null) =>
+    fetch(`/api/display/board${hq(hallId)}`).then(json<DisplayBoardWindow[]>),
+  getWaiting: (hallId?: string | null) =>
+    fetch(`/api/display/waiting${hq(hallId)}`).then(json<DisplayWaiting[]>),
   getSettings: () => fetch('/api/display/settings').then(json<DisplaySettings>),
   listCounters: () => fetch('/api/counters').then(json<Counter[]>),
 };

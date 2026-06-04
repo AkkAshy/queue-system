@@ -16,8 +16,19 @@ export type TicketStatus =
 
 export type UserRole = 'admin' | 'operator' | 'viewer';
 
+// A service hall (zal). The office has two, each with its own queue/board.
+export interface Hall {
+  id: number;
+  code: string;         // '1', '2'
+  name_kaa: string;
+  name_ru: string;
+  is_active: boolean;
+  order: number;
+}
+
 export interface ServiceCategory {
   id: number;
+  hall_id?: number | null;
   code: string;         // 'A', 'B', ...
   name_kaa: string;
   name_ru: string;
@@ -40,6 +51,7 @@ export interface Service {
 export interface Ticket {
   id: string;           // uuid
   number: string;       // 'A042'
+  hall_id?: number | null;
   category_id: number;
   service_id: number | null;
   status: TicketStatus;
@@ -59,6 +71,7 @@ export interface CreateTicketRequest {
 
 export interface Counter {
   id: number;
+  hall_id?: number | null;
   number: string;         // display label, e.g. "1", "2A"
   name: string;           // e.g. "Окно 1 · Акад. справки"
   service_ids: number[];  // which services this counter serves

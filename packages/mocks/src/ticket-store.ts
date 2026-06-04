@@ -48,6 +48,7 @@ export class TicketStore {
     const ticket: Ticket = {
       id: crypto.randomUUID(),
       number,
+      hall_id: 1, // mock catalog all belongs to hall 1
       category_id: args.category_id,
       service_id: args.service_id ?? null,
       status: 'waiting',
@@ -143,6 +144,7 @@ export class TicketStore {
       const ticket: Ticket = {
         id: crypto.randomUUID(),
         number: s.number,
+        hall_id: 1,
         category_id: s.category_id,
         service_id: s.service_id,
         status: 'waiting',
@@ -161,6 +163,7 @@ export class TicketStore {
       const ticket: Ticket = {
         id: crypto.randomUUID(),
         number: s.number,
+        hall_id: 1,
         category_id: s.category_id,
         service_id: s.service_id,
         status: 'called',

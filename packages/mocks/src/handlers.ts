@@ -42,6 +42,12 @@ tickets.seedCalled(displaySeed as unknown as Parameters<typeof tickets.seedCalle
 // Board settings (YouTube URL set from the admin app). Sample clip for demos.
 let displaySettings = { youtube_url: 'https://youtu.be/aqz-KE-bpKQ' };
 
+// Halls (zaly). Seeded catalog all belongs to hall 1; hall 2 is empty for now.
+const HALLS = [
+  { id: 1, code: '1', name_kaa: '1-zal', name_ru: 'Зал 1 — услуги', is_active: true, order: 1 },
+  { id: 2, code: '2', name_kaa: '2-zal', name_ru: 'Зал 2 — справки', is_active: true, order: 2 },
+];
+
 export const handlers = [
   // ---------- auth ----------
   http.post('/api/auth/login', async ({ request }) => {
@@ -62,8 +68,16 @@ export const handlers = [
     });
   }),
 
+  // ---------- halls ----------
+  http.get('/api/halls', () => HttpResponse.json(HALLS)),
+
   // ---------- categories ----------
-  http.get('/api/categories', () => HttpResponse.json(categories.list())),
+  http.get('/api/categories', ({ request }) => {
+    const hallId = new URL(request.url).searchParams.get('hall_id');
+    let list = categories.list().map((c) => ({ ...c, hall_id: c.hall_id ?? 1 }));
+    if (hallId) list = list.filter((c) => c.hall_id === Number(hallId));
+    return HttpResponse.json(list);
+  }),
 
   http.post('/api/categories', async ({ request }) => {
     const body = (await request.json()) as Omit<ServiceCategory, 'id'>;

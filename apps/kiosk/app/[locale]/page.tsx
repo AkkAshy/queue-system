@@ -3,14 +3,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
-import type { Service, ServiceCategory } from '@queue/types';
+import type { Hall, Service, ServiceCategory } from '@queue/types';
 import { CategoryCard } from '@/components/CategoryCard';
 import { KioskHeader } from '@/components/KioskHeader';
 import { categoryVisual } from '@/lib/category-visual';
 import { useKioskStore } from '@/store/kiosk-store';
 
-async function fetchCategories(): Promise<ServiceCategory[]> {
-  const res = await fetch('/api/categories');
+async function fetchHalls(): Promise<Hall[]> {
+  const res = await fetch('/api/halls');
+  if (!res.ok) throw new Error('Failed to load halls');
+  return res.json();
+}
+
+async function fetchCategories(hallId: number): Promise<ServiceCategory[]> {
+  const res = await fetch(`/api/categories?hall_id=${hallId}`);
   if (!res.ok) throw new Error('Failed to load categories');
   return res.json();
 }
@@ -23,19 +29,67 @@ async function fetchServices(): Promise<Service[]> {
 
 export default function HomePage() {
   const t = useTranslations('welcome');
+  const th = useTranslations('hall');
   const locale = useLocale();
   const router = useRouter();
-  const { reset, setCategory, setService } = useKioskStore();
+  const { hall, setHall, reset, setCategory, setService } = useKioskStore();
 
-  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: fetchCategories });
-  const { data: services } = useQuery({ queryKey: ['services'], queryFn: fetchServices });
+  const { data: halls } = useQuery({ queryKey: ['halls'], queryFn: fetchHalls });
+  const { data: categories } = useQuery({
+    queryKey: ['categories', hall?.id],
+    queryFn: () => fetchCategories(hall!.id),
+    enabled: !!hall,
+  });
+  const { data: services } = useQuery({
+    queryKey: ['services'],
+    queryFn: fetchServices,
+    enabled: !!hall,
+  });
 
+  // ── Step 1: hall selection ──────────────────────────────────────────────
+  if (!hall) {
+    return (
+      <main className="min-h-screen bg-cream" onMouseEnter={reset}>
+        <KioskHeader />
+        <section className="mx-auto max-w-4xl px-10 pb-16 pt-16 text-center">
+          <span className="eyebrow text-coral">{th('eyebrow')}</span>
+          <h1 className="mt-3 text-5xl font-extrabold tracking-tight text-coal">
+            {th('title')}
+          </h1>
+          <div className="mt-12 grid grid-cols-2 gap-6">
+            {(halls ?? [])
+              .slice()
+              .sort((a, b) => a.order - b.order)
+              .map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => setHall(h)}
+                  className="paper paper-interactive flex flex-col items-center rounded-rxl px-8 py-12"
+                >
+                  <span className="flex h-24 w-24 items-center justify-center rounded-rlg bg-coral text-5xl font-extrabold text-white shadow-coral">
+                    {h.code}
+                  </span>
+                  <span className="mt-5 text-3xl font-extrabold text-coal">
+                    {locale === 'ru' ? h.name_ru : h.name_kaa}
+                  </span>
+                </button>
+              ))}
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // ── Step 2: categories of the chosen hall ───────────────────────────────
   const catById = new Map((categories ?? []).map((c) => [c.id, c]));
+  const hallCatIds = new Set((categories ?? []).map((c) => c.id));
+  const hallServices = (services ?? []).filter((s) => hallCatIds.has(s.category_id));
+
   const countByCat = new Map<number, number>();
-  for (const s of services ?? []) {
+  for (const s of hallServices) {
     countByCat.set(s.category_id, (countByCat.get(s.category_id) ?? 0) + 1);
   }
-  const popular = (services ?? []).filter((s) => s.is_popular).slice(0, 6);
+  const popular = hallServices.filter((s) => s.is_popular).slice(0, 6);
 
   const pickService = (s: Service) => {
     const cat = catById.get(s.category_id);
@@ -45,13 +99,21 @@ export default function HomePage() {
     router.push(`/${locale}/confirm`);
   };
 
+  const hallName = locale === 'ru' ? hall.name_ru : hall.name_kaa;
+
   return (
     <main className="min-h-screen bg-cream" onMouseEnter={reset}>
       <KioskHeader />
 
       <section className="mx-auto max-w-5xl px-10 pb-16 pt-10">
-        <span className="eyebrow text-coral">{t('eyebrow')}</span>
-        <h1 className="mt-3 text-5xl font-extrabold tracking-tight text-coal">
+        <button
+          onClick={() => setHall(null)}
+          className="text-sm font-semibold text-coal-2 underline-offset-4 hover:text-coral hover:underline"
+        >
+          ← {th('change')}
+        </button>
+        <span className="eyebrow mt-4 block text-coral">{hallName}</span>
+        <h1 className="mt-2 text-5xl font-extrabold tracking-tight text-coal">
           {t('title')}
         </h1>
 
