@@ -2,8 +2,11 @@ from django.db.models import Avg, F
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import generics
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from accounts.permissions import IsChief, IsChiefOrReadOnly
 
 from catalog.models import Service, ServiceCategory
 
@@ -29,12 +32,14 @@ class CounterListCreateView(AuditCRUDMixin, generics.ListCreateAPIView):
     queryset = Counter.objects.all()
     serializer_class = CounterSerializer
     pagination_class = None
+    permission_classes = [IsChiefOrReadOnly]
 
 
 class CounterDetailView(AuditCRUDMixin, generics.RetrieveUpdateDestroyAPIView):
     audit_entity = "counter"
     queryset = Counter.objects.all()
     serializer_class = CounterSerializer
+    permission_classes = [IsChiefOrReadOnly]
 
 
 # ---------- tickets (kiosk) ----------
@@ -375,6 +380,7 @@ class AuditListView(generics.ListAPIView):
 
     serializer_class = AuditLogSerializer
     pagination_class = None
+    permission_classes = [IsChief]
 
     def get_queryset(self):
         qs = AuditLog.objects.select_related("actor").all()
@@ -391,7 +397,10 @@ class AuditListView(generics.ListAPIView):
 
 
 class DisplaySettingsView(APIView):
-    """Board config (YouTube URL). GET for the board, PATCH from the admin app."""
+    """Board config (YouTube URL). GET public (the board reads it), PATCH chief."""
+
+    def get_permissions(self):
+        return [AllowAny()] if self.request.method == "GET" else [IsChief()]
 
     def get(self, request):
         return Response(DisplaySettingsSerializer(DisplaySettings.load()).data)

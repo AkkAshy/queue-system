@@ -15,6 +15,17 @@ def client():
     return APIClient()
 
 
+@pytest.fixture
+def auth_client(seeded):
+    """APIClient authenticated as the chief admin (for protected endpoints)."""
+    c = APIClient()
+    tok = c.post(
+        "/api/auth/login", {"username": "admin", "password": "admin"}, format="json"
+    ).json()["token"]
+    c.credentials(HTTP_AUTHORIZATION=f"Bearer {tok}")
+    return c
+
+
 def test_login_returns_contract_shape(seeded, client):
     r = client.post("/api/auth/login", {"username": "admin", "password": "admin"}, format="json")
     assert r.status_code == 200
@@ -39,7 +50,8 @@ def test_categories_and_services(seeded, client):
             "delivery_type", "requires_visit", "is_active", "is_popular"} == set(svcs[0])
 
 
-def test_category_create_and_delete(seeded, client):
+def test_category_create_and_delete(auth_client):
+    client = auth_client
     before = len(client.get("/api/categories").json())
     r = client.post("/api/categories", {
         "code": "Z", "name_kaa": "Test", "name_ru": "Тест", "color": "#000000", "order": 99,
@@ -52,7 +64,15 @@ def test_category_create_and_delete(seeded, client):
     assert len(client.get("/api/categories").json()) == before
 
 
-def test_service_create_update_delete(seeded, client):
+def test_category_create_requires_auth(seeded, client):
+    r = client.post("/api/categories", {
+        "code": "Z", "name_kaa": "T", "name_ru": "Т", "color": "#000000", "order": 99,
+    }, format="json")
+    assert r.status_code in (401, 403)
+
+
+def test_service_create_update_delete(auth_client):
+    client = auth_client
     r = client.post("/api/services", {
         "category_id": 1, "name_kaa": "Jańa xızmet", "name_ru": "Новая услуга",
         "sla_days": 1, "delivery_type": "electron", "requires_visit": True,
@@ -134,7 +154,8 @@ def test_dashboard_shape(seeded, client):
     assert body["metrics"]["activeCounters"] == 5
 
 
-def test_display_settings_get_and_patch(seeded, client):
+def test_display_settings_get_and_patch(auth_client):
+    client = auth_client
     r = client.get("/api/display/settings")
     assert r.status_code == 200
     assert "youtube_url" in r.json()
@@ -195,7 +216,8 @@ def test_display_active_scoped_by_hall(seeded, client):
     assert len(client.get("/api/display/active?hall_id=2").json()) == 0
 
 
-def test_audit_logs_call_and_lists(seeded, client):
+def test_audit_logs_call_and_lists(auth_client):
+    client = auth_client
     client.post("/api/tickets", {"category_id": 1, "service_id": 1, "idempotency_key": "au1"}, format="json")
     client.post("/api/tickets/call-next", {"counter_id": 1, "operator_id": 2}, format="json")
     logs = client.get("/api/audit").json()
@@ -207,7 +229,8 @@ def test_audit_logs_call_and_lists(seeded, client):
     assert all(l["action"] == "ticket.called" for l in only)
 
 
-def test_ticket_recall(seeded, client):
+def test_ticket_recall(auth_client):
+    client = auth_client
     client.post("/api/tickets", {"category_id": 1, "service_id": 1, "idempotency_key": "rc1"}, format="json")
     called = client.post("/api/tickets/call-next", {"counter_id": 1}, format="json").json()
     r = client.post(f"/api/tickets/{called['id']}/recall")

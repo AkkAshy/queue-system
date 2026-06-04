@@ -1,5 +1,7 @@
 from rest_framework import generics
 
+from accounts.permissions import IsChiefOrReadOnly
+
 from .models import Hall, Service, ServiceCategory
 from .serializers import HallSerializer, ServiceCategorySerializer, ServiceSerializer
 
@@ -8,16 +10,19 @@ class HallListView(generics.ListCreateAPIView):
     queryset = Hall.objects.filter(is_active=True)
     serializer_class = HallSerializer
     pagination_class = None
+    permission_classes = [IsChiefOrReadOnly]
 
 
 class HallDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Hall.objects.all()
     serializer_class = HallSerializer
+    permission_classes = [IsChiefOrReadOnly]
 
 
 class CategoryListView(generics.ListCreateAPIView):
     serializer_class = ServiceCategorySerializer
     pagination_class = None
+    permission_classes = [IsChiefOrReadOnly]
 
     def get_queryset(self):
         qs = ServiceCategory.objects.all()
@@ -30,11 +35,13 @@ class CategoryListView(generics.ListCreateAPIView):
 class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = ServiceCategory.objects.all()
     serializer_class = ServiceCategorySerializer
+    permission_classes = [IsChiefOrReadOnly]
 
 
 class ServiceListView(generics.ListCreateAPIView):
     serializer_class = ServiceSerializer
     pagination_class = None
+    permission_classes = [IsChiefOrReadOnly]
 
     def get_queryset(self):
         qs = Service.objects.all()
@@ -47,3 +54,4 @@ class ServiceListView(generics.ListCreateAPIView):
 class ServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Service.objects.all()
     serializer_class = ServiceSerializer
+    permission_classes = [IsChiefOrReadOnly]

@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .models import User
+from .permissions import IsChief
 from .serializers import LoginSerializer, UserSerializer, UserWriteSerializer
 
 
@@ -45,6 +46,7 @@ class LoginView(APIView):
 
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.all().order_by("id")
+    permission_classes = [IsChief]  # accounts are chief-only
 
     def get_serializer_class(self):
         return UserWriteSerializer if self.request.method == "POST" else UserSerializer
@@ -53,3 +55,4 @@ class UserListCreateView(generics.ListCreateAPIView):
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserWriteSerializer
+    permission_classes = [IsChief]
