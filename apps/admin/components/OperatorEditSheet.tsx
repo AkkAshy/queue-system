@@ -37,7 +37,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-type Draft = Omit<User, 'id'> & { id?: number };
+type Draft = Omit<User, 'id'> & { id?: number; password?: string };
 
 const EMPTY: Draft = {
   username: '',
@@ -45,6 +45,7 @@ const EMPTY: Draft = {
   role: 'operator',
   counter_id: null,
   is_active: true,
+  password: '',
 };
 
 export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props) {
@@ -58,10 +59,14 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
       const isCreate = !d.id;
       const url = isCreate ? '/api/users' : `/api/users/${d.id}`;
       const method = isCreate ? 'POST' : 'PATCH';
+      // Send `password` only when the chief actually typed one — an empty field
+      // on edit means "leave the password untouched".
+      const { password, ...rest } = d;
+      const body = password ? { ...rest, password } : rest;
       const res = await fetch(url, {
         method,
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(d),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error('save failed');
       return (await res.json()) as User;
@@ -158,6 +163,24 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
               checked={draft.is_active}
               onCheckedChange={(v) => setDraft({ ...draft, is_active: v })}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">
+              {user ? 'Новый пароль' : 'Пароль'}
+            </Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete="new-password"
+              placeholder={user ? 'оставьте пустым — без изменений' : 'по умолчанию: operator'}
+              value={draft.password ?? ''}
+              onChange={(e) => setDraft({ ...draft, password: e.target.value })}
+            />
+            <p className="text-xs text-coal-3">
+              {user
+                ? 'Заполните, чтобы сбросить пароль этой учётной записи.'
+                : 'Можно оставить пустым — тогда пароль будет «operator».'}
+            </p>
           </div>
         </div>
 

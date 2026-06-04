@@ -145,3 +145,14 @@ CORS_ALLOWED_ORIGINS = env.list(
         "http://localhost:3004",  # display
     ],
 )
+
+# ---- Local-first sync (Phase D) ----
+# SYNC_ROLE: "cloud" (authoritative catalog + ingest endpoint) or "local" (the
+# on-site box that pulls catalog and pushes events). CLOUD_URL/SYNC_TOKEN are
+# only needed on a local box. SYNC_TOKEN also guards the cloud's /api/sync/*.
+SYNC_ROLE = env("SYNC_ROLE", default="cloud")
+CLOUD_URL = env("CLOUD_URL", default="").rstrip("/")
+SYNC_TOKEN = env("SYNC_TOKEN", default="")
+# Worker cadence + offline backoff (seconds).
+SYNC_INTERVAL = env.int("SYNC_INTERVAL", default=15)
+SYNC_BACKOFF_MAX = env.int("SYNC_BACKOFF_MAX", default=300)

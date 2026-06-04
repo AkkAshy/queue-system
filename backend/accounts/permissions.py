@@ -5,7 +5,20 @@ step that also requires the admin/operator frontends to send the JWT. These are
 ready to attach per-view when we flip from AllowAny.
 """
 
+from django.conf import settings
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+
+
+class HasSyncToken(BasePermission):
+    """Guards the cloud's /api/sync/* with a shared secret. The local box sends
+    it as `X-Sync-Token`. If SYNC_TOKEN is unset (dev/tests), the check is a
+    no-op — production MUST set it. Mismatched token → 403."""
+
+    def has_permission(self, request, view):
+        expected = getattr(settings, "SYNC_TOKEN", "")
+        if not expected:
+            return True  # not configured → open (dev only; set it in prod)
+        return request.headers.get("X-Sync-Token") == expected
 
 
 class IsChief(BasePermission):

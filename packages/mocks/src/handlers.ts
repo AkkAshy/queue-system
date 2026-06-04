@@ -12,6 +12,7 @@ import { ServiceStore } from './service-store';
 import { CounterStore } from './counter-store';
 import { UserStore } from './user-store';
 import { OperatorSessionStore } from './operator-session-store';
+import { ScheduleStore, WEEKDAY_LABELS, type ScheduleRow } from './schedule-store';
 import type {
   CreateTicketRequest,
   ServiceCategory,
@@ -31,6 +32,20 @@ const counters = new CounterStore(countersSeed as unknown as Counter[]);
 const users = new UserStore(usersSeed as unknown as User[]);
 const tickets = new TicketStore();
 const sessions = new OperatorSessionStore();
+const schedules = new ScheduleStore();
+
+/** Enrich a raw shift row with the denormalised labels the API returns. */
+function enrichSchedule(row: ScheduleRow) {
+  const u = users.list().find((x) => x.id === row.user_id);
+  const c = counters.list().find((x) => x.id === row.counter_id);
+  return {
+    ...row,
+    user_name: u ? u.name || u.username : `#${row.user_id}`,
+    counter_number: c ? c.number : String(row.counter_id),
+    hall_id: c?.hall_id ?? null,
+    weekday_label: WEEKDAY_LABELS[row.weekday],
+  };
+}
 
 // Pre-populate the queue so operators have something to call in demos.
 // Cast through unknown because JSON types look structurally compatible but
@@ -266,6 +281,66 @@ export const handlers = [
       return HttpResponse.json({ error: 'not found' }, { status: 404 });
     }
     return HttpResponse.json(updated);
+  }),
+
+  // ---------- work schedule (recurring shifts) ----------
+  http.get('/api/schedule/current', () => {
+    const now = new Date();
+    // JS getDay(): 0=Sun..6=Sat → convert to Python weekday (0=Mon..6=Sun).
+    const weekday = (now.getDay() + 6) % 7;
+    const hhmm = `${String(now.getHours()).padStart(2, '0')}:${String(
+      now.getMinutes(),
+    ).padStart(2, '0')}`;
+    const onDuty = schedules
+      .list()
+      .filter(
+        (r) =>
+          r.is_active &&
+          r.weekday === weekday &&
+          r.start_time <= hhmm &&
+          hhmm < r.end_time,
+      )
+      .map(enrichSchedule);
+    return HttpResponse.json(onDuty);
+  }),
+
+  http.get('/api/schedule', ({ request }) => {
+    const url = new URL(request.url);
+    const weekday = url.searchParams.get('weekday');
+    let rows = schedules.list();
+    if (weekday !== null && weekday !== '') {
+      rows = rows.filter((r) => r.weekday === Number(weekday));
+    }
+    return HttpResponse.json(rows.map(enrichSchedule));
+  }),
+
+  http.post('/api/schedule', async ({ request }) => {
+    const body = (await request.json()) as Omit<ScheduleRow, 'id' | 'is_active'> & {
+      is_active?: boolean;
+    };
+    if (body.start_time >= body.end_time) {
+      return HttpResponse.json(
+        { end_time: ['Конец смены должен быть позже начала'] },
+        { status: 400 },
+      );
+    }
+    const created = schedules.create({ is_active: true, ...body });
+    return HttpResponse.json(enrichSchedule(created), { status: 201 });
+  }),
+
+  http.patch('/api/schedule/:id', async ({ params, request }) => {
+    const id = Number(params.id);
+    const patch = (await request.json()) as Partial<ScheduleRow>;
+    const updated = schedules.update(id, patch);
+    if (!updated) return HttpResponse.json({ error: 'not found' }, { status: 404 });
+    return HttpResponse.json(enrichSchedule(updated));
+  }),
+
+  http.delete('/api/schedule/:id', ({ params }) => {
+    const ok = schedules.remove(Number(params.id));
+    return ok
+      ? new HttpResponse(null, { status: 204 })
+      : HttpResponse.json({ error: 'not found' }, { status: 404 });
   }),
 
   // ---------- queue + current ticket (per-counter) ----------

@@ -94,9 +94,31 @@ sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d nmpi.avtoxizmet.uz
 ```
 
+## Local-first box variant (on-site, offline-capable) — Phase A
+
+For the **on-site box** on the office LAN, use `docker-compose.local.yml`: the
+whole stack (db, redis, backend, 4 frontends, nginx) plus a **`sync_worker`** that
+mirrors the catalog cloud→local and pushes events local→cloud whenever the cloud
+is reachable. HTTP only on the LAN, path-routed by the bundled nginx container on
+`:80` (`/`=kiosk, `/admin`, `/operator`, `/tablo`, `/api`, `/ws`). Devices open
+`http://<BOX_HOST>/`.
+
+```bash
+cd deploy
+cp .env.local.example .env.local   # BOX_HOST=<LAN IP>, SYNC_TOKEN=<match cloud>, secrets
+docker compose -f docker-compose.local.yml --env-file .env.local up -d --build
+```
+
+The box runs `SYNC_ROLE=local` + `CLOUD_URL`; the cloud sets a matching `SYNC_TOKEN`
+to guard `/api/sync/*`. The box keeps working with no internet — `sync_worker`
+backs off and catches up when the link returns.
+
+> ⚠️ Not yet tested end-to-end — scaffolded ahead of having a real box. The sync
+> engine itself (pull/push/watermark) is unit-tested + smoke-tested over HTTP.
+
 ## Notes
-- `.env.prod`, `nginx/queue.conf` (rendered), and `certbot/` are gitignored — they hold
-  secrets / host-specific values.
+- `.env.prod`, `.env.local`, `nginx/queue.conf` (rendered), and `certbot/` are gitignored —
+  they hold secrets / host-specific values.
 - Backend auth is currently `AllowAny` (parity with the mock phase); enforce per-endpoint
   permissions + WS auth before exposing sensitive data publicly.
 - Prod Postgres is **16**; the dev machine used 14 — both fine, schema is identical.

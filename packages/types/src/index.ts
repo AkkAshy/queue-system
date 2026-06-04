@@ -94,6 +94,23 @@ export interface AuthState {
   expiresAt: number | null;   // unix ms
 }
 
+// 0 = Monday … 6 = Sunday (matches Python's date.weekday()).
+export type Weekday = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export interface WorkSchedule {
+  id: number;
+  user_id: number;
+  user_name: string;          // denormalised for the table
+  counter_id: number;
+  counter_number: string;     // denormalised
+  hall_id: number | null;
+  weekday: Weekday;
+  weekday_label: string;      // ru name, e.g. "Понедельник"
+  start_time: string;         // "HH:MM"
+  end_time: string;           // "HH:MM"
+  is_active: boolean;
+}
+
 export interface DashboardMetrics {
   ticketsToday: number;
   avgWaitMinutes: number;

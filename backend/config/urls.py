@@ -2,7 +2,12 @@ from django.contrib import admin
 from django.urls import path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from accounts.views import LoginView, UserDetailView, UserListCreateView
+from accounts.views import (
+    ChangePasswordView,
+    LoginView,
+    UserDetailView,
+    UserListCreateView,
+)
 from catalog.views import (
     CategoryDetailView,
     CategoryListView,
@@ -30,6 +35,9 @@ from queue_app.views import (
     OperatorSessionCreateView,
     OperatorSessionDetailView,
     QueueView,
+    ScheduleCurrentView,
+    ScheduleDetailView,
+    ScheduleListCreateView,
     TicketActionView,
     TicketCreateView,
     TicketRecallView,
@@ -40,6 +48,7 @@ urlpatterns = [
     path("django-admin/", admin.site.urls),
     # auth
     path("api/auth/login", LoginView.as_view()),
+    path("api/auth/change-password", ChangePasswordView.as_view()),
     # catalog
     path("api/halls", HallListView.as_view()),
     path("api/halls/<int:pk>", HallDetailView.as_view()),
@@ -72,6 +81,10 @@ urlpatterns = [
     # operator sessions
     path("api/operator-sessions", OperatorSessionCreateView.as_view()),
     path("api/operator-sessions/<int:pk>", OperatorSessionDetailView.as_view()),
+    # work schedule (recurring shifts) — specific path before <int:pk>
+    path("api/schedule/current", ScheduleCurrentView.as_view()),
+    path("api/schedule", ScheduleListCreateView.as_view()),
+    path("api/schedule/<int:pk>", ScheduleDetailView.as_view()),
     # queue + display
     path("api/queue", QueueView.as_view()),
     path("api/display/active", DisplayActiveView.as_view()),

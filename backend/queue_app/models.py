@@ -174,3 +174,95 @@ class DailyCounter(models.Model):
 
     def __str__(self) -> str:
         return f"{self.code}@{self.date}={self.last_seq}"
+
+
+class WorkSchedule(models.Model):
+    """A recurring weekly shift: operator X works counter Y on weekday Z from
+    start_time to end_time. The admin plans these; the dashboard surfaces "who
+    is supposed to be on duty now" by matching the current weekday + time.
+
+    Part of the catalog half of sync (cloud → local, read-only on the box)."""
+
+    class Weekday(models.IntegerChoices):
+        MON = 0, "Понедельник"
+        TUE = 1, "Вторник"
+        WED = 2, "Среда"
+        THU = 3, "Четверг"
+        FRI = 4, "Пятница"
+        SAT = 5, "Суббота"
+        SUN = 6, "Воскресенье"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="schedules"
+    )
+    counter = models.ForeignKey(
+        Counter, on_delete=models.CASCADE, related_name="schedules"
+    )
+    # Denormalised hall for per-hall scoping/filtering without a join through
+    # the counter. Kept in sync with the counter's hall on save.
+    hall = models.ForeignKey(
+        "catalog.Hall", on_delete=models.CASCADE, related_name="schedules",
+        null=True, blank=True,
+    )
+    weekday = models.IntegerField(choices=Weekday.choices)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    is_active = models.BooleanField(default=True)
+    updated_at = models.DateTimeField(auto_now=True)  # sync watermark
+
+    class Meta:
+        ordering = ["weekday", "start_time", "counter_id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "counter", "weekday", "start_time"],
+                name="uniq_schedule_slot",
+            )
+        ]
+
+    def save(self, *args, **kwargs):
+        # Mirror the counter's hall so scoping never needs a join.
+        if self.counter_id and self.hall_id != self.counter.hall_id:
+            self.hall_id = self.counter.hall_id
+        super().save(*args, **kwargs)
+
+    def covers(self, weekday: int, t) -> bool:
+        """True if this shift is on `weekday` and `t` falls in [start, end)."""
+        return (
+            self.is_active
+            and self.weekday == weekday
+            and self.start_time <= t < self.end_time
+        )
+
+    def __str__(self) -> str:
+        return (
+            f"{self.get_weekday_display()} {self.start_time:%H:%M}–{self.end_time:%H:%M} "
+            f"u={self.user_id} c={self.counter_id}"
+        )
+
+
+class SyncState(models.Model):
+    """Singleton watermark for the local box's push loop. Tracks the high-water
+    mark already pushed to the cloud per stream so each `sync_push` sends only
+    what changed. Tickets/sessions advance by `updated_at`; audit is immutable
+    so it advances by monotonic id. Cloud-role boxes never touch this."""
+
+    tickets_wm = models.DateTimeField(null=True, blank=True)
+    sessions_wm = models.DateTimeField(null=True, blank=True)
+    audit_wm_id = models.PositiveIntegerField(default=0)
+    catalog_pulled_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        self.pk = 1  # enforce singleton row
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def load(cls) -> "SyncState":
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def __str__(self) -> str:
+        return (
+            f"sync@tickets={self.tickets_wm} sessions={self.sessions_wm} "
+            f"audit={self.audit_wm_id}"
+        )

@@ -8,6 +8,7 @@ import {
   Layers,
   Building2,
   Users,
+  CalendarClock,
   Monitor,
   ScrollText,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ const items = [
   { href: '/categories', label: 'Категории',  Icon: Layers },
   { href: '/counters',   label: 'Окна',       Icon: Building2 },
   { href: '/operators',  label: 'Операторы',  Icon: Users },
+  { href: '/schedule',   label: 'Расписание', Icon: CalendarClock },
   { href: '/settings',   label: 'Табло',      Icon: Monitor },
   { href: '/audit',      label: 'Аудит',      Icon: ScrollText },
 ];

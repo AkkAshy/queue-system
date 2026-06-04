@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from accounts.permissions import (
+    HasSyncToken,
     IsCatalogManager,
     IsChief,
     IsChiefOrReadOnly,
@@ -19,7 +20,15 @@ from catalog.models import Service, ServiceCategory
 
 from . import audit, realtime, services, sync
 from .audit import AuditCRUDMixin
-from .models import AuditLog, Counter, DisplaySettings, OperatorSession, Ticket, TicketStatus
+from .models import (
+    AuditLog,
+    Counter,
+    DisplaySettings,
+    OperatorSession,
+    Ticket,
+    TicketStatus,
+    WorkSchedule,
+)
 from .serializers import (
     AuditLogSerializer,
     CounterSerializer,
@@ -30,6 +39,7 @@ from .serializers import (
     DisplayWaitingSerializer,
     OperatorSessionSerializer,
     TicketSerializer,
+    WorkScheduleSerializer,
 )
 
 
@@ -75,6 +85,65 @@ class HallResetView(APIView):
             [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "queue.reset"
         )
         return Response({"ok": True, "cancelled": n})
+
+
+# ---------- work schedule (shifts) ----------
+class ScheduleListCreateView(AuditCRUDMixin, generics.ListCreateAPIView):
+    """Recurring shifts. Chief sees/edits all; a hall_admin is scoped to their
+    own hall (queryset filter + auto hall on create). TZ §4.2 (смены)."""
+
+    audit_entity = "schedule"
+    serializer_class = WorkScheduleSerializer
+    pagination_class = None
+    permission_classes = [IsCatalogManager]
+
+    def get_queryset(self):
+        qs = WorkSchedule.objects.select_related("user", "counter")
+        # Optional filters for the admin table.
+        weekday = self.request.query_params.get("weekday")
+        if weekday is not None and weekday != "":
+            qs = qs.filter(weekday=weekday)
+        return scope_to_hall(qs, self.request)
+
+    def perform_create(self, serializer):
+        # A hall_admin may only schedule onto counters in their own hall.
+        u = self.request.user
+        counter = serializer.validated_data["counter"]
+        if getattr(u, "is_hall_admin", False) and u.hall_id and counter.hall_id != u.hall_id:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Окно вне вашего зала")
+        obj = serializer.save()
+        audit.log(self.request, "schedule.created", target=obj.id)
+
+
+class ScheduleDetailView(AuditCRUDMixin, generics.RetrieveUpdateDestroyAPIView):
+    audit_entity = "schedule"
+    serializer_class = WorkScheduleSerializer
+    permission_classes = [IsCatalogManager]
+
+    def get_queryset(self):
+        return scope_to_hall(
+            WorkSchedule.objects.select_related("user", "counter"), self.request
+        )
+
+
+class ScheduleCurrentView(APIView):
+    """GET /api/schedule/current → operators who are on duty right now per the
+    plan (matches today's weekday + current local time). Powers the admin
+    dashboard's "should be working" indicator. Public-read like the board."""
+
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        now = timezone.localtime()
+        weekday, t = now.weekday(), now.time()
+        qs = scope_to_hall(
+            WorkSchedule.objects.select_related("user", "counter").filter(
+                is_active=True, weekday=weekday, start_time__lte=t, end_time__gt=t
+            ),
+            request,
+        )
+        return Response(WorkScheduleSerializer(qs, many=True).data)
 
 
 # ---------- tickets (kiosk) ----------
@@ -397,12 +466,16 @@ class DisplayWaitingView(APIView):
 class SyncCatalogView(APIView):
     """cloud → local: full catalog snapshot the local box mirrors."""
 
+    permission_classes = [HasSyncToken]
+
     def get(self, request):
         return Response(sync.catalog_snapshot())
 
 
 class SyncEventsView(APIView):
     """local → cloud: upsert tickets / sessions / audit pushed from a box."""
+
+    permission_classes = [HasSyncToken]
 
     def post(self, request):
         counts = sync.ingest_events(request.data or {})

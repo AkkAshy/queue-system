@@ -1,8 +1,18 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from catalog.models import Hall, Service
 
-from .models import AuditLog, Counter, DisplaySettings, OperatorSession, Ticket
+User = get_user_model()
+
+from .models import (
+    AuditLog,
+    Counter,
+    DisplaySettings,
+    OperatorSession,
+    Ticket,
+    WorkSchedule,
+)
 
 
 class CounterSerializer(serializers.ModelSerializer):
@@ -102,3 +112,39 @@ class DisplayBoardCounterSerializer(serializers.Serializer):
     counter_number = serializers.CharField(source="number")
     counter_name = serializers.CharField(source="name")
     current = DisplayCallSerializer(allow_null=True)
+
+
+class WorkScheduleSerializer(serializers.ModelSerializer):
+    """A planned recurring shift. Read includes denormalised labels so the admin
+    table needs no extra lookups; write takes ids."""
+
+    user_id = serializers.PrimaryKeyRelatedField(
+        source="user", queryset=User.objects.all()
+    )
+    counter_id = serializers.PrimaryKeyRelatedField(
+        source="counter", queryset=Counter.objects.all()
+    )
+    hall_id = serializers.PrimaryKeyRelatedField(source="hall", read_only=True)
+    user_name = serializers.SerializerMethodField()
+    counter_number = serializers.CharField(source="counter.number", read_only=True)
+    weekday_label = serializers.CharField(source="get_weekday_display", read_only=True)
+
+    class Meta:
+        model = WorkSchedule
+        fields = [
+            "id", "user_id", "user_name", "counter_id", "counter_number",
+            "hall_id", "weekday", "weekday_label", "start_time", "end_time",
+            "is_active",
+        ]
+
+    def get_user_name(self, obj) -> str:
+        return obj.user.name or obj.user.username
+
+    def validate(self, attrs):
+        start = attrs.get("start_time", getattr(self.instance, "start_time", None))
+        end = attrs.get("end_time", getattr(self.instance, "end_time", None))
+        if start is not None and end is not None and start >= end:
+            raise serializers.ValidationError(
+                {"end_time": "Конец смены должен быть позже начала"}
+            )
+        return attrs

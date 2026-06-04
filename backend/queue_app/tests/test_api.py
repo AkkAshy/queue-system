@@ -313,3 +313,114 @@ def test_catalog_changes_audited(auth_client):
     assert r.status_code == 201
     logs = client.get("/api/audit?action=category.created").json()
     assert any(str(l["target"]) == str(r.json()["id"]) for l in logs)
+
+
+# ---------- password change (self-service + chief reset) ----------
+def test_self_change_password(auth_client):
+    client = auth_client
+    r = client.post("/api/auth/change-password", {
+        "old_password": "admin", "new_password": "S3cret-pw!",
+    }, format="json")
+    assert r.status_code == 204
+    # old password no longer works, new one does
+    assert client.post("/api/auth/login", {"username": "admin", "password": "admin"}, format="json").status_code == 401
+    assert client.post("/api/auth/login", {"username": "admin", "password": "S3cret-pw!"}, format="json").status_code == 200
+    # the change is audited
+    assert client.get("/api/audit?action=auth.password_changed").json()
+
+
+def test_change_password_rejects_wrong_old(auth_client):
+    r = auth_client.post("/api/auth/change-password", {
+        "old_password": "WRONG", "new_password": "S3cret-pw!",
+    }, format="json")
+    assert r.status_code == 400
+
+
+def test_change_password_requires_auth(seeded, client):
+    r = client.post("/api/auth/change-password", {
+        "old_password": "admin", "new_password": "S3cret-pw!",
+    }, format="json")
+    assert r.status_code in (401, 403)
+
+
+def test_chief_resets_operator_password(auth_client):
+    client = auth_client
+    created = client.post("/api/users", {
+        "username": "op_reset", "name": "Op", "role": "operator",
+    }, format="json")
+    assert created.status_code == 201
+    uid = created.json()["id"]
+    # chief sets a brand-new password via PATCH
+    r = client.patch(f"/api/users/{uid}", {"password": "Fresh-pw-9!"}, format="json")
+    assert r.status_code == 200
+    assert "password" not in r.json()  # never echoed back
+    assert client.post("/api/auth/login", {"username": "op_reset", "password": "Fresh-pw-9!"}, format="json").status_code == 200
+    assert client.get("/api/audit?action=user.password_reset").json()
+
+
+# ---------- work schedule (recurring shifts) ----------
+def _admin_id():
+    from accounts.models import User
+    return User.objects.get(username="admin").id
+
+
+def test_schedule_crud_and_validation(auth_client):
+    client = auth_client
+    uid = _admin_id()
+    # create a Monday morning shift on counter 1
+    r = client.post("/api/schedule", {
+        "user_id": uid, "counter_id": 1, "weekday": 0,
+        "start_time": "08:00", "end_time": "12:00",
+    }, format="json")
+    assert r.status_code == 201, r.content
+    sid = r.json()["id"]
+    assert r.json()["hall_id"] == 1  # mirrored from counter's hall
+    assert r.json()["weekday_label"] == "Понедельник"
+    # end before start is rejected
+    bad = client.post("/api/schedule", {
+        "user_id": uid, "counter_id": 1, "weekday": 1,
+        "start_time": "12:00", "end_time": "08:00",
+    }, format="json")
+    assert bad.status_code == 400
+    # list + filter by weekday
+    assert len(client.get("/api/schedule?weekday=0").json()) == 1
+    assert client.get("/api/schedule?weekday=3").json() == []
+    # delete
+    assert client.delete(f"/api/schedule/{sid}").status_code == 204
+    assert client.get("/api/schedule").json() == []
+
+
+def test_schedule_current_matches_now(auth_client):
+    from django.utils import timezone
+    client = auth_client
+    uid = _admin_id()
+    now = timezone.localtime()
+    # an all-day shift for today's weekday must show up in "current"
+    client.post("/api/schedule", {
+        "user_id": uid, "counter_id": 1, "weekday": now.weekday(),
+        "start_time": "00:00", "end_time": "23:59",
+    }, format="json")
+    # a shift for a different weekday must NOT
+    client.post("/api/schedule", {
+        "user_id": uid, "counter_id": 1, "weekday": (now.weekday() + 1) % 7,
+        "start_time": "00:00", "end_time": "23:59",
+    }, format="json")
+    current = client.get("/api/schedule/current").json()
+    assert len(current) == 1
+    assert current[0]["user_id"] == uid
+
+
+def test_schedule_hall_admin_scoped(seeded, client):
+    """A hall-2 admin can't see or schedule onto a hall-1 counter."""
+    from accounts.models import User
+    u = User.objects.create(username="ha_sch", role="hall_admin", hall_id=2, is_active=True)
+    u.set_password("pw"); u.save()
+    tok = client.post("/api/auth/login", {"username": "ha_sch", "password": "pw"}, format="json").json()["token"]
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {tok}")
+    # counter 1 is in hall 1 → forbidden
+    r = client.post("/api/schedule", {
+        "user_id": u.id, "counter_id": 1, "weekday": 0,
+        "start_time": "08:00", "end_time": "12:00",
+    }, format="json")
+    assert r.status_code == 403
+    assert client.get("/api/schedule").json() == []

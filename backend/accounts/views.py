@@ -2,14 +2,19 @@ from datetime import datetime, timezone
 
 from django.contrib.auth import authenticate
 from rest_framework import generics, status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .models import User
 from .permissions import IsChief
-from .serializers import LoginSerializer, UserSerializer, UserWriteSerializer
+from .serializers import (
+    ChangePasswordSerializer,
+    LoginSerializer,
+    UserSerializer,
+    UserWriteSerializer,
+)
 
 
 class LoginView(APIView):
@@ -48,6 +53,21 @@ class LoginView(APIView):
         )
 
 
+class ChangePasswordView(APIView):
+    """POST /api/auth/change-password — any signed-in account changes its OWN
+    password (current + new). Self-service; chief resets others via /api/users."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        ser = ChangePasswordSerializer(data=request.data, context={"request": request})
+        ser.is_valid(raise_exception=True)
+        ser.save()
+        from queue_app import audit
+        audit.log(request, "auth.password_changed", target=request.user.username)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
 class UserListCreateView(generics.ListCreateAPIView):
     queryset = User.objects.all().order_by("id")
     permission_classes = [IsChief]  # accounts are chief-only
@@ -60,3 +80,11 @@ class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserWriteSerializer
     permission_classes = [IsChief]
+
+    def perform_update(self, serializer):
+        # Flag a chief-initiated password reset in the audit trail.
+        reset = bool(serializer.validated_data.get("password"))
+        user = serializer.save()
+        from queue_app import audit
+        action = "user.password_reset" if reset else "user.updated"
+        audit.log(self.request, action, target=user.username)
