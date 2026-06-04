@@ -209,6 +209,18 @@ export const handlers = [
     }),
   ),
 
+  // ---------- audit (Phase G) ----------
+  http.get('/api/audit', ({ request }) => {
+    const action = new URL(request.url).searchParams.get('action');
+    const now = Date.now();
+    const sample = [
+      { id: 3, actor_id: null, actor_label: '2', action: 'ticket.called', target: 'A-012', meta: { counter: '1' }, created_at: new Date(now - 60000).toISOString() },
+      { id: 2, actor_id: null, actor_label: '3', action: 'ticket.finished', target: 'B-004', meta: {}, created_at: new Date(now - 180000).toISOString() },
+      { id: 1, actor_id: 1, actor_label: 'admin', action: 'auth.login', target: 'admin', meta: {}, created_at: new Date(now - 600000).toISOString() },
+    ];
+    return HttpResponse.json(action ? sample.filter((s) => s.action === action) : sample);
+  }),
+
   // ---------- tickets (unchanged from Phase 1) ----------
   http.post('/api/tickets', async ({ request }) => {
     const body = (await request.json()) as CreateTicketRequest;

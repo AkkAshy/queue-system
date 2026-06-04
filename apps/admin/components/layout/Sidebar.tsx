@@ -9,6 +9,7 @@ import {
   Building2,
   Users,
   Monitor,
+  ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const items = [
   { href: '/counters',   label: 'Окна',       Icon: Building2 },
   { href: '/operators',  label: 'Операторы',  Icon: Users },
   { href: '/settings',   label: 'Табло',      Icon: Monitor },
+  { href: '/audit',      label: 'Аудит',      Icon: ScrollText },
 ];
 
 export function Sidebar() {
