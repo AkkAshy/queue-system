@@ -56,9 +56,12 @@ func New(opt Options) (*Server, error) {
 // Router returns an http.Handler covering all agent endpoints.
 func (s *Server) Router() http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/health", s.handleHealth)
-	mux.HandleFunc("/print", s.handlePrint)
-	mux.HandleFunc("/printers", s.handlePrinters)
+	// Local API endpoints get CORS so the kiosk page can call them regardless of
+	// how its origin reads (localhost vs 127.0.0.1, or the cloud HTTPS origin —
+	// localhost is a browser "secure context", so HTTPS→http://localhost is allowed).
+	mux.HandleFunc("/health", cors(s.handleHealth))
+	mux.HandleFunc("/print", cors(s.handlePrint))
+	mux.HandleFunc("/printers", cors(s.handlePrinters))
 	// Kiosk-host mode: everything else is reverse-proxied to the cloud.
 	if s.proxy != nil {
 		mux.Handle("/", s.proxy)
@@ -211,6 +214,22 @@ func (s *Server) handlePrint(w http.ResponseWriter, r *http.Request) {
 		"ok":     true,
 		"number": req.Number,
 	})
+}
+
+// cors wraps a handler with permissive CORS + preflight handling. The agent
+// only listens on localhost, so allowing any origin is safe here and lets the
+// kiosk page reach it whether its origin is localhost, 127.0.0.1, or the cloud.
+func cors(h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		h(w, r)
+	}
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

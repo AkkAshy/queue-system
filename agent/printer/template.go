@@ -49,7 +49,7 @@ const (
 func Render(req PrintRequest) ([]byte, error) {
 	e := NewESC()
 
-	e.Init().CodePage(46) // CP1251 for Russian
+	e.Init().CodePage(17) // PC866 (CP866) for Russian
 
 	// Header
 	e.Align(AlignCenter).Bold(true)

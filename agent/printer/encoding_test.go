@@ -4,13 +4,19 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/text/encoding/charmap"
 )
 
-func TestEncodeRussianCP1251(t *testing.T) {
-	// "Привет" in CP1251: 0xCF 0xF0 0xE8 0xE2 0xE5 0xF2
+func TestEncodeRussianCP866(t *testing.T) {
+	// "Привет" in CP866: П=8F р=E0 и=A8 в=A2 е=A5 т=E2
 	got, err := EncodeRU("Привет")
 	assert.NoError(t, err)
-	assert.Equal(t, []byte{0xCF, 0xF0, 0xE8, 0xE2, 0xE5, 0xF2}, got)
+	assert.Equal(t, []byte{0x8F, 0xE0, 0xA8, 0xA2, 0xA5, 0xE2}, got)
+
+	// Round-trip: decoding the bytes as CP866 must give back the original.
+	back, err := charmap.CodePage866.NewDecoder().Bytes(got)
+	assert.NoError(t, err)
+	assert.Equal(t, "Привет", string(back))
 }
 
 func TestEncodeRussianPassesASCII(t *testing.T) {

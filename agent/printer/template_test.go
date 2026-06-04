@@ -54,14 +54,15 @@ func TestRenderTransliteratesKarakalpak(t *testing.T) {
 	assert.NotContains(t, string(out), "hám")
 }
 
-func TestRenderEncodesRussianAsCP1251(t *testing.T) {
+func TestRenderEncodesRussianAsCP866(t *testing.T) {
 	req := sampleRequest()
 	out, err := Render(req)
 	assert.NoError(t, err)
-	// "Академическая" in CP1251 starts with 0xC0 0xEA 0xE0 0xE4 0xE5 ...
-	expected := []byte{0xC0, 0xEA, 0xE0, 0xE4, 0xE5}
+	// The Russian text must appear CP866-encoded in the stream.
+	expected, err := EncodeRU("Академ")
+	assert.NoError(t, err)
 	assert.True(t, bytes.Contains(out, expected),
-		"CP1251-encoded Russian should be present in output")
+		"CP866-encoded Russian should be present in output")
 }
 
 func TestRenderWrapsLongServiceName(t *testing.T) {

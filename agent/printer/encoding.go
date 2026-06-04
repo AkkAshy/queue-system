@@ -6,23 +6,24 @@ import (
 	"golang.org/x/text/encoding/charmap"
 )
 
-// EncodeRU converts a UTF-8 string into Windows-1251 bytes suitable for
-// ESC/POS printing when the printer's active code page is WPC1251 (46).
-// Characters not representable in CP1251 are replaced with their closest
-// CP1251 equivalent (see cp1251Fallback map) or '?' if unknown.
+// EncodeRU converts a UTF-8 string into CP866 (PC866 Cyrillic) bytes suitable
+// for ESC/POS printing when the printer's active code page is PC866 (ESC t 17).
+// Characters not representable in CP866 are replaced with their closest
+// equivalent (see cp866Fallback map) or '?' if unknown.
 func EncodeRU(s string) ([]byte, error) {
-	enc := charmap.Windows1251.NewEncoder()
-	return enc.Bytes([]byte(sanitizeForCP1251(s)))
+	enc := charmap.CodePage866.NewEncoder()
+	return enc.Bytes([]byte(sanitizeForCP866(s)))
 }
 
-// sanitizeForCP1251 replaces runes absent from Windows-1251 with the closest
-// available substitute so that EncodeRU never returns an encoding error.
-// Covers Karakalpak/Kazakh Cyrillic extras that appear on printed tickets.
-func sanitizeForCP1251(s string) string {
+// sanitizeForCP866 replaces runes absent from CP866 with the closest available
+// substitute so that EncodeRU never returns an encoding error. Covers
+// Karakalpak/Kazakh Cyrillic extras that appear on printed tickets (their
+// substitutes are all plain Russian letters present in CP866).
+func sanitizeForCP866(s string) string {
 	var b strings.Builder
 	b.Grow(len(s))
 	for _, r := range s {
-		if repl, ok := cp1251Fallback[r]; ok {
+		if repl, ok := cp866Fallback[r]; ok {
 			b.WriteString(repl)
 		} else {
 			b.WriteRune(r)
@@ -31,9 +32,9 @@ func sanitizeForCP1251(s string) string {
 	return b.String()
 }
 
-// cp1251Fallback maps Cyrillic characters absent from Windows-1251 to the
-// nearest printable substitute.
-var cp1251Fallback = map[rune]string{
+// cp866Fallback maps Cyrillic characters absent from CP866 to the nearest
+// printable substitute.
+var cp866Fallback = map[rune]string{
 	'Ғ': "Г", // U+0492 Cyrillic capital Ghe with stroke → Г
 	'ғ': "г", // U+0493 Cyrillic small ghe with stroke   → г
 	'Қ': "К", // U+049A Cyrillic capital Ka with descender → К

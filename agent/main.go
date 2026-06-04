@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"runtime"
 	"syscall"
 	"time"
@@ -175,9 +176,17 @@ func launchKiosk(targetURL string, logger *slog.Logger) {
 	var candidates []string
 	switch runtime.GOOS {
 	case "windows":
+		local := os.Getenv("LOCALAPPDATA")
 		candidates = []string{
+			// Chrome — system-wide then per-user install.
 			`C:\Program Files\Google\Chrome\Application\chrome.exe`,
 			`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+			filepath.Join(local, `Google\Chrome\Application\chrome.exe`),
+			// Edge is present on every Windows 10/11 — reliable fallback so the
+			// kiosk window always opens even if Chrome isn't installed.
+			`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
+			`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
+			filepath.Join(local, `Microsoft\Edge\Application\msedge.exe`),
 		}
 	case "darwin":
 		candidates = []string{"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"}
