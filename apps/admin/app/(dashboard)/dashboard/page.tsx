@@ -63,6 +63,10 @@ export default function DashboardPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: fetchDashboard,
+    // Poll fallback so statuses (ожидает → обслужен) refresh without a manual
+    // reload even if the WS event is missed.
+    refetchInterval: 4000,
+    refetchIntervalInBackground: true,
   });
 
   const [hall, setHall] = useState('');
@@ -70,6 +74,8 @@ export default function DashboardPage() {
   const { data: stats } = useQuery({
     queryKey: ['stats', hall],
     queryFn: () => fetchStats(hall),
+    refetchInterval: 4000,
+    refetchIntervalInBackground: true,
   });
   const exportHref = `/api/stats/export${hall ? `?hall=${hall}` : ''}`;
 
