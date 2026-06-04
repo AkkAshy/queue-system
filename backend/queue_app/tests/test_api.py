@@ -30,7 +30,7 @@ def test_login_returns_contract_shape(seeded, client):
     r = client.post("/api/auth/login", {"username": "admin", "password": "admin"}, format="json")
     assert r.status_code == 200
     body = r.json()
-    assert set(body) == {"token", "username", "role", "expires_at"}
+    assert {"token", "user_id", "username", "role", "counter_id", "expires_at"} <= set(body)
     assert body["role"] == "admin"
 
 

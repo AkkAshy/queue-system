@@ -1,6 +1,7 @@
 import type {
   Counter,
   User,
+  LoginResponse,
   OperatorSession,
   OperatorSessionStatus,
   Ticket,
@@ -15,6 +16,13 @@ async function json<T>(res: Response): Promise<T> {
 }
 
 export const api = {
+  login: (username: string, password: string) =>
+    fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    }).then(json<LoginResponse>),
+
   listCounters: () => fetch('/api/counters').then(json<Counter[]>),
   listUsers: () => fetch('/api/users').then(json<User[]>),
 

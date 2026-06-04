@@ -124,8 +124,12 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
+  user_id: number;
   username: string;
+  name: string;
   role: UserRole;
+  counter_id: number | null;
+  hall_id: number | null;
   expires_at: string;     // ISO
 }
 

@@ -37,8 +37,12 @@ class LoginView(APIView):
         return Response(
             {
                 "token": str(token),
+                "user_id": user.id,
                 "username": user.username,
+                "name": user.name,
                 "role": user.role,
+                "counter_id": user.counter_id,
+                "hall_id": user.hall_id,
                 "expires_at": expires_at.isoformat(),
             }
         )

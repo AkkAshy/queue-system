@@ -13,68 +13,80 @@ import { useOperatorStore } from '@/store/operator-store';
 
 export function LoginScreen() {
   const startShift = useOperatorStore((s) => s.startShift);
-  const [userId, setUserId] = useState<string>('');
-  const [counterId, setCounterId] = useState<string>('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [counterId, setCounterId] = useState('');
 
-  const users = useQuery({ queryKey: ['users'], queryFn: api.listUsers });
+  // Counters list is public (GET); the users list is chief-only now → operators
+  // authenticate by username + password instead of picking themselves.
   const counters = useQuery({ queryKey: ['counters'], queryFn: api.listCounters });
-
-  const operators = (users.data ?? []).filter(
-    (u) => u.is_active && (u.role === 'operator' || u.role === 'admin'),
-  );
   const activeCounters = (counters.data ?? []).filter((c) => c.is_active);
 
   const start = useMutation({
-    mutationFn: () =>
-      api.createSession({
-        user_id: Number(userId),
+    mutationFn: async () => {
+      const auth = await api.login(username.trim(), password);
+      const session = await api.createSession({
+        user_id: auth.user_id,
         counter_id: Number(counterId),
-      }),
-    onSuccess: (session) => {
-      const user = operators.find((u) => u.id === session.user_id);
+      });
+      return { auth, session };
+    },
+    onSuccess: ({ auth, session }) => {
       const counter = activeCounters.find((c) => c.id === session.counter_id);
-      if (!user || !counter) {
-        toast.error('Не найден пользователь или окно');
+      if (!counter) {
+        toast.error('Окно не найдено');
         return;
       }
       startShift({
-        userId: user.id,
-        userName: user.name,
+        token: auth.token,
+        userId: auth.user_id,
+        userName: auth.name || auth.username,
         counterId: counter.id,
         counterNumber: counter.number,
         counterName: counter.name,
         sessionId: session.id,
       });
     },
-    onError: () => toast.error('Не удалось начать смену'),
+    onError: () => toast.error('Неверный логин или пароль'),
   });
 
-  const canStart = userId && counterId && !start.isPending;
+  const canStart = !!(username.trim() && password && counterId && !start.isPending);
+  const inputCls =
+    'h-11 w-full rounded-rsm border border-hair-2 bg-white px-3 text-sm text-coal outline-none focus:border-coral';
 
   return (
     <main className="flex h-screen w-screen flex-col justify-between p-6">
       <div>
         <span className="eyebrow text-coral">NDPI · Пульт</span>
-        <h1 className="mt-3 text-2xl font-bold leading-tight text-coal">
-          Начало смены
-        </h1>
+        <h1 className="mt-3 text-2xl font-bold leading-tight text-coal">Вход</h1>
       </div>
 
-      <div className="space-y-5">
+      <form
+        className="space-y-5"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (canStart) start.mutate();
+        }}
+      >
         <div className="space-y-2">
-          <Label className="text-xs">Оператор</Label>
-          <Select value={userId} onValueChange={setUserId}>
-            <SelectTrigger className="h-11 text-sm">
-              <SelectValue placeholder="Выбрать…" />
-            </SelectTrigger>
-            <SelectContent>
-              {operators.map((u) => (
-                <SelectItem key={u.id} value={String(u.id)}>
-                  {u.name} · {u.role}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label className="text-xs">Логин</Label>
+          <input
+            className={inputCls}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs">Пароль</Label>
+          <input
+            type="password"
+            className={inputCls}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
         </div>
 
         <div className="space-y-2">
@@ -92,15 +104,15 @@ export function LoginScreen() {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      <Button
-        onClick={() => start.mutate()}
-        disabled={!canStart}
-        className="h-12 w-full rounded-r bg-coral font-bold text-white shadow-coral hover:bg-coral-600"
-      >
-        {start.isPending ? '…' : 'Начать смену'}
-      </Button>
+        <Button
+          type="submit"
+          disabled={!canStart}
+          className="h-12 w-full rounded-r bg-coral font-bold text-white shadow-coral hover:bg-coral-600"
+        >
+          {start.isPending ? '…' : 'Начать смену'}
+        </Button>
+      </form>
     </main>
   );
 }

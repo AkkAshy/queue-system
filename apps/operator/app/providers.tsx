@@ -5,11 +5,13 @@ import { Toaster } from 'sonner';
 import { useEffect, useState } from 'react';
 import { getQueryClient } from '@/lib/query-client';
 import { startMsw } from '@/lib/msw';
+import { installAuthFetch } from '@/lib/auth-fetch';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [mswReady, setMswReady] = useState(process.env.NODE_ENV !== 'development');
 
   useEffect(() => {
+    installAuthFetch();
     if (process.env.NODE_ENV === 'development') {
       startMsw().then(() => setMswReady(true));
     }

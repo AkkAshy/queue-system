@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface ShiftInit {
+  token: string;
   userId: number;
   userName: string;
   counterId: number;
@@ -11,6 +12,7 @@ interface ShiftInit {
 }
 
 interface OperatorState {
+  token: string | null;
   userId: number | null;
   userName: string | null;
   counterId: number | null;
@@ -28,6 +30,7 @@ interface OperatorState {
 export const useOperatorStore = create<OperatorState>()(
   persist(
     (set, get) => ({
+      token: null,
       userId: null,
       userName: null,
       counterId: null,
@@ -38,6 +41,7 @@ export const useOperatorStore = create<OperatorState>()(
 
       startShift: (init) =>
         set({
+          token: init.token,
           userId: init.userId,
           userName: init.userName,
           counterId: init.counterId,
@@ -51,6 +55,7 @@ export const useOperatorStore = create<OperatorState>()(
 
       logout: () =>
         set({
+          token: null,
           userId: null,
           userName: null,
           counterId: null,

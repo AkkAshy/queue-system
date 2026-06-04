@@ -62,8 +62,12 @@ export const handlers = [
     const expiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000); // 8h
     return HttpResponse.json({
       token: `dev.${user.username}.${expiresAt.getTime()}`,
+      user_id: user.id,
       username: user.username,
+      name: user.name,
       role: user.role,
+      counter_id: user.counter_id ?? null,
+      hall_id: null,
       expires_at: expiresAt.toISOString(),
     });
   }),

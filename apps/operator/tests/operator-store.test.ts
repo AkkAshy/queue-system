@@ -13,6 +13,7 @@ describe('operator-store', () => {
 
   it('startShift persists user + counter + session', () => {
     useOperatorStore.getState().startShift({
+      token: 'tok',
       userId: 2,
       userName: 'Aygül',
       counterId: 1,
@@ -29,6 +30,7 @@ describe('operator-store', () => {
 
   it('logout clears everything', () => {
     useOperatorStore.getState().startShift({
+      token: 'tok',
       userId: 2, userName: 'Aygül', counterId: 1,
       counterNumber: '1', counterName: 'Окно 1', sessionId: 42,
     });
@@ -39,6 +41,7 @@ describe('operator-store', () => {
 
   it('setOnBreak toggles a flag', () => {
     useOperatorStore.getState().startShift({
+      token: 'tok',
       userId: 2, userName: 'Aygül', counterId: 1,
       counterNumber: '1', counterName: 'Окно 1', sessionId: 42,
     });

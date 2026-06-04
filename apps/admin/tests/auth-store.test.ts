@@ -14,6 +14,10 @@ describe('auth-store', () => {
   it('loginSuccess stores token and flips isAuthenticated', () => {
     useAuthStore.getState().loginSuccess({
       token: 'dev.admin.123',
+      user_id: 1,
+      name: 'Admin',
+      counter_id: null,
+      hall_id: null,
       username: 'admin',
       role: 'admin',
       expires_at: new Date(Date.now() + 60_000).toISOString(),
@@ -24,7 +28,7 @@ describe('auth-store', () => {
 
   it('logout clears state', () => {
     useAuthStore.getState().loginSuccess({
-      token: 'x', username: 'admin', role: 'admin',
+      token: 'x', user_id: 1, name: 'Admin', username: 'admin', role: 'admin', counter_id: null, hall_id: null,
       expires_at: new Date(Date.now() + 60_000).toISOString(),
     });
     useAuthStore.getState().logout();
@@ -34,7 +38,7 @@ describe('auth-store', () => {
 
   it('isAuthenticated returns false for expired tokens', () => {
     useAuthStore.getState().loginSuccess({
-      token: 'x', username: 'admin', role: 'admin',
+      token: 'x', user_id: 1, name: 'Admin', username: 'admin', role: 'admin', counter_id: null, hall_id: null,
       expires_at: new Date(Date.now() - 1000).toISOString(),
     });
     expect(useAuthStore.getState().isAuthenticated()).toBe(false);
