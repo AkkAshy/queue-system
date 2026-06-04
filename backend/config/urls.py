@@ -12,6 +12,7 @@ from catalog.views import (
     ServiceListView,
 )
 from queue_app.views import (
+    AuditListView,
     CallNextView,
     CounterDetailView,
     CounterListCreateView,
@@ -47,6 +48,7 @@ urlpatterns = [
     path("api/users/<int:pk>", UserDetailView.as_view()),
     # dashboard
     path("api/dashboard", DashboardView.as_view()),
+    path("api/audit", AuditListView.as_view()),
     # tickets (kiosk) + operator transitions.
     # specific paths MUST precede the <uuid:pk> patterns.
     path("api/tickets", TicketCreateView.as_view()),

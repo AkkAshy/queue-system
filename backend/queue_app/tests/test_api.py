@@ -193,3 +193,15 @@ def test_display_active_scoped_by_hall(seeded, client):
     assert called.status_code == 200
     assert len(client.get("/api/display/active?hall_id=1").json()) >= 1
     assert len(client.get("/api/display/active?hall_id=2").json()) == 0
+
+
+def test_audit_logs_call_and_lists(seeded, client):
+    client.post("/api/tickets", {"category_id": 1, "service_id": 1, "idempotency_key": "au1"}, format="json")
+    client.post("/api/tickets/call-next", {"counter_id": 1, "operator_id": 2}, format="json")
+    logs = client.get("/api/audit").json()
+    assert any(l["action"] == "ticket.called" for l in logs)
+    called = next(l for l in logs if l["action"] == "ticket.called")
+    assert set(called) == {"id", "actor_id", "actor_label", "action", "target", "meta", "created_at"}
+    # filter by action
+    only = client.get("/api/audit?action=ticket.called").json()
+    assert all(l["action"] == "ticket.called" for l in only)

@@ -26,6 +26,29 @@ class Counter(models.Model):
         return f"№{self.number} · {self.name}"
 
 
+class AuditLog(models.Model):
+    """Append-only record of operator/admin actions (calls, transfers, skips,
+    catalog changes, logins) with timestamps — TZ §4.5, §7.4. Local-first:
+    written locally and synced up to the cloud (synced flag)."""
+
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="audit_logs",
+    )
+    actor_label = models.CharField(max_length=150, blank=True)  # fallback when no FK
+    action = models.CharField(max_length=64)   # e.g. "ticket.called"
+    target = models.CharField(max_length=128, blank=True)  # e.g. ticket number
+    meta = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    synced = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.created_at:%Y-%m-%d %H:%M} {self.action} {self.target}"
+
+
 class DisplaySettings(models.Model):
     """Singleton config for the display board, editable from the admin app.
 

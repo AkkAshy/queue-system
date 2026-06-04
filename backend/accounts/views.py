@@ -30,6 +30,9 @@ class LoginView(APIView):
             )
         token = AccessToken.for_user(user)
         expires_at = datetime.fromtimestamp(token["exp"], tz=timezone.utc)
+        # Lazy import avoids a module-load cycle (accounts ↔ queue_app).
+        from queue_app import audit
+        audit.log(request, "auth.login", target=user.username, actor_label=user.username)
         return Response(
             {
                 "token": str(token),

@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from catalog.models import Hall, Service
 
-from .models import Counter, DisplaySettings, OperatorSession, Ticket
+from .models import AuditLog, Counter, DisplaySettings, OperatorSession, Ticket
 
 
 class CounterSerializer(serializers.ModelSerializer):
@@ -81,6 +81,16 @@ class DisplaySettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = DisplaySettings
         fields = ["youtube_url"]
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    actor_id = serializers.PrimaryKeyRelatedField(
+        source="actor", read_only=True, allow_null=True
+    )
+
+    class Meta:
+        model = AuditLog
+        fields = ["id", "actor_id", "actor_label", "action", "target", "meta", "created_at"]
 
 
 class DisplayBoardCounterSerializer(serializers.Serializer):

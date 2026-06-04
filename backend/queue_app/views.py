@@ -7,9 +7,11 @@ from rest_framework.views import APIView
 
 from catalog.models import Service, ServiceCategory
 
-from . import realtime, services
-from .models import Counter, DisplaySettings, OperatorSession, Ticket, TicketStatus
+from . import audit, realtime, services
+from .audit import AuditCRUDMixin
+from .models import AuditLog, Counter, DisplaySettings, OperatorSession, Ticket, TicketStatus
 from .serializers import (
+    AuditLogSerializer,
     CounterSerializer,
     CreateTicketSerializer,
     DisplayBoardCounterSerializer,
@@ -22,13 +24,15 @@ from .serializers import (
 
 
 # ---------- counters ----------
-class CounterListCreateView(generics.ListCreateAPIView):
+class CounterListCreateView(AuditCRUDMixin, generics.ListCreateAPIView):
+    audit_entity = "counter"
     queryset = Counter.objects.all()
     serializer_class = CounterSerializer
     pagination_class = None
 
 
-class CounterDetailView(generics.RetrieveUpdateDestroyAPIView):
+class CounterDetailView(AuditCRUDMixin, generics.RetrieveUpdateDestroyAPIView):
+    audit_entity = "counter"
     queryset = Counter.objects.all()
     serializer_class = CounterSerializer
 
@@ -164,6 +168,11 @@ class CallNextView(APIView):
         )
         if not ticket:
             return Response({"error": "queue empty"}, status=409)
+        audit.log(
+            request, "ticket.called", target=ticket.number,
+            actor_label=str(request.data.get("operator_id") or ""),
+            counter=counter.number,
+        )
         realtime.broadcast(
             [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "ticket.called"
         )
@@ -183,6 +192,7 @@ class TicketActionView(APIView):
             services.finish(ticket)
         elif self.action == "skip":
             services.skip(ticket)
+        audit.log(request, f"ticket.{self.action}ed", target=ticket.number)
         realtime.broadcast(
             [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN],
             f"ticket.{self.action}ed",
@@ -199,6 +209,10 @@ class TicketTransferView(APIView):
         if not counter:
             return Response({"error": "unknown counter"}, status=404)
         services.transfer(ticket, counter)
+        audit.log(
+            request, "ticket.transferred", target=ticket.number,
+            to_counter=counter.number,
+        )
         realtime.broadcast(
             [realtime.DISPLAY, realtime.OPERATORS, realtime.ADMIN], "ticket.transferred"
         )
@@ -239,6 +253,28 @@ class DisplayWaitingView(APIView):
                 services.waiting_list(20, hall_id=hall_id), many=True
             ).data
         )
+
+
+# ---------- audit ----------
+class AuditListView(generics.ListAPIView):
+    """Audit journal with optional filters (?action=&actor=&from=&to=). Capped
+    at 200 newest. Chief-only once auth enforcement lands."""
+
+    serializer_class = AuditLogSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        qs = AuditLog.objects.select_related("actor").all()
+        p = self.request.query_params
+        if p.get("action"):
+            qs = qs.filter(action=p["action"])
+        if p.get("actor"):
+            qs = qs.filter(actor_id=p["actor"])
+        if p.get("from"):
+            qs = qs.filter(created_at__gte=p["from"])
+        if p.get("to"):
+            qs = qs.filter(created_at__lte=p["to"])
+        return qs[:200]
 
 
 class DisplaySettingsView(APIView):
