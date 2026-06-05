@@ -1,0 +1,55 @@
+# Cloud role (admin + backend only). In the local-first architecture the kiosk,
+# operator pult and board run on the on-site BOX over the LAN — the cloud just
+# hosts the admin panel + the API (catalog source + event/stat ingest + sync).
+# Same project name as the host variant so `up --remove-orphans` drops the
+# now-unused kiosk/operator/display containers.
+#   docker compose -f deploy/docker-compose.cloud.yml --env-file deploy/.env.prod up -d --remove-orphans --build
+name: ndpi-queue
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    env_file: .env.prod
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+    ports:
+      - "127.0.0.1:8210:8000"
+
+  admin:
+    build:
+      context: ..
+      dockerfile: deploy/frontend.Dockerfile
+      args:
+        APP: admin
+        NEXT_PUBLIC_USE_MSW: "0"
+        NEXT_PUBLIC_WS_URL: wss://${DOMAIN}
+        APP_BASE_PATH: /admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3211:3000"
+
+volumes:
+  pgdata:

@@ -346,6 +346,39 @@ def test_change_password_requires_auth(seeded, client):
     assert r.status_code in (401, 403)
 
 
+def test_hall_admin_create_and_user_scoping(seeded, client):
+    """Chief creates a hall_admin for hall 2; that head sees/manages only their
+    hall's staff and can't mint admins."""
+    chief = APIClient()
+    tok = chief.post("/api/auth/login", {"username": "admin", "password": "admin"}, format="json").json()["token"]
+    chief.credentials(HTTP_AUTHORIZATION=f"Bearer {tok}")
+    # create the head of hall 2
+    r = chief.post("/api/users", {
+        "username": "head2", "name": "Head", "role": "hall_admin", "hall_id": 2, "password": "hp",
+    }, format="json")
+    assert r.status_code == 201, r.content
+    assert r.json()["hall_id"] == 2 and r.json()["role"] == "hall_admin"
+
+    # head2 logs in → login carries their hall
+    ha = APIClient()
+    login = ha.post("/api/auth/login", {"username": "head2", "password": "hp"}, format="json").json()
+    assert login["hall_id"] == 2
+    ha.credentials(HTTP_AUTHORIZATION=f"Bearer {login['token']}")
+
+    # sees only hall-2 staff (themselves; the seeded operators are hall 1 / unset)
+    users = ha.get("/api/users").json()
+    assert users and all(u["hall_id"] == 2 for u in users)
+
+    # creating an operator is forced into hall 2
+    op = ha.post("/api/users", {"username": "op_h2", "name": "Op", "role": "operator", "password": "x"}, format="json")
+    assert op.status_code == 201
+    assert op.json()["hall_id"] == 2
+
+    # a hall_admin cannot mint an admin/chief
+    bad = ha.post("/api/users", {"username": "hacker", "name": "H", "role": "admin", "password": "x"}, format="json")
+    assert bad.status_code == 403
+
+
 def test_chief_resets_operator_password(auth_client):
     client = auth_client
     created = client.post("/api/users", {

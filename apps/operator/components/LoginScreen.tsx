@@ -18,12 +18,18 @@ export function LoginScreen() {
   const startShift = useOperatorStore((s) => s.startShift);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [hallId, setHallId] = useState('');
   const [counterId, setCounterId] = useState('');
 
-  // Counters list is public (GET); the users list is chief-only now → operators
+  // Counters/halls are public (GET); the users list is chief-only now → operators
   // authenticate by username + password instead of picking themselves.
   const counters = useQuery({ queryKey: ['counters'], queryFn: api.listCounters });
-  const activeCounters = (counters.data ?? []).filter((c) => c.is_active);
+  const halls = useQuery({ queryKey: ['halls'], queryFn: api.listHalls });
+  const activeHalls = (halls.data ?? []).filter((h) => h.is_active);
+  // Windows in the chosen hall only (so the operator picks their own desk).
+  const activeCounters = (counters.data ?? []).filter(
+    (c) => c.is_active && (!hallId || c.hall_id === Number(hallId)),
+  );
 
   const start = useMutation({
     mutationFn: async () => {
@@ -96,10 +102,29 @@ export function LoginScreen() {
         </div>
 
         <div className="space-y-2">
-          <Label className="text-xs">{tr('Oyna', 'Áyne')}</Label>
-          <Select value={counterId} onValueChange={setCounterId}>
+          <Label className="text-xs">{tr('Zal', 'Zal')}</Label>
+          <Select
+            value={hallId}
+            onValueChange={(v) => { setHallId(v); setCounterId(''); }}
+          >
             <SelectTrigger className="h-11 text-sm">
               <SelectValue placeholder={tr('Tanlash…', 'Saylaw…')} />
+            </SelectTrigger>
+            <SelectContent>
+              {activeHalls.map((h) => (
+                <SelectItem key={h.id} value={String(h.id)}>
+                  {tr(h.name_uz || h.name_ru, h.name_kaa)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs">{tr('Oyna', 'Áyne')}</Label>
+          <Select value={counterId} onValueChange={setCounterId} disabled={!hallId}>
+            <SelectTrigger className="h-11 text-sm">
+              <SelectValue placeholder={hallId ? tr('Tanlash…', 'Saylaw…') : tr('Avval zalni tanlang', 'Aldın zaldı saylań')} />
             </SelectTrigger>
             <SelectContent>
               {activeCounters.map((c) => (

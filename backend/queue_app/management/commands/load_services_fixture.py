@@ -104,6 +104,12 @@ class Command(BaseCommand):
 
         users = self._load("users.json")
         for u in users:
+            # An operator belongs to the hall of their counter — set it so the
+            # hall_admin (head of hall) scoping can see them.
+            hall_id = u.get("hall_id")
+            if hall_id is None and u.get("counter_id"):
+                counter = Counter.objects.filter(id=u["counter_id"]).first()
+                hall_id = counter.hall_id if counter else None
             user, created = User.objects.update_or_create(
                 id=u["id"],
                 defaults={
@@ -111,6 +117,7 @@ class Command(BaseCommand):
                     "name": u["name"],
                     "role": u["role"],
                     "counter_id": u["counter_id"],
+                    "hall_id": hall_id,
                     "is_active": u["is_active"],
                     "is_staff": u["role"] == "admin",
                     "is_superuser": u["role"] == "admin",

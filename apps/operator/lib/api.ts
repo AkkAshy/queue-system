@@ -1,5 +1,6 @@
 import type {
   Counter,
+  Hall,
   User,
   LoginResponse,
   OperatorSession,
@@ -24,6 +25,7 @@ export const api = {
     }).then(json<LoginResponse>),
 
   listCounters: () => fetch('/api/counters').then(json<Counter[]>),
+  listHalls: () => fetch('/api/halls').then(json<Hall[]>),
   listUsers: () => fetch('/api/users').then(json<User[]>),
 
   createSession: (body: CreateOperatorSessionRequest) =>

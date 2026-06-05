@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
 
 from .models import User
-from .permissions import IsChief
+from .permissions import IsChief, IsChiefOrHallAdmin, scope_to_hall
 from .serializers import (
     ChangePasswordSerializer,
     LoginSerializer,
@@ -69,17 +69,36 @@ class ChangePasswordView(APIView):
 
 
 class UserListCreateView(generics.ListCreateAPIView):
-    queryset = User.objects.all().order_by("id")
-    permission_classes = [IsChief]  # accounts are chief-only
+    # Chief sees/manages everyone; a hall_admin (head of hall) is scoped to the
+    # staff of their own hall.
+    permission_classes = [IsChiefOrHallAdmin]
+
+    def get_queryset(self):
+        return scope_to_hall(User.objects.all().order_by("id"), self.request, "hall_id")
 
     def get_serializer_class(self):
         return UserWriteSerializer if self.request.method == "POST" else UserSerializer
 
+    def perform_create(self, serializer):
+        u = self.request.user
+        if getattr(u, "is_hall_admin", False) and u.hall_id:
+            # A hall_admin can only create staff in their own hall, and can't
+            # mint chief/admin accounts (no privilege escalation).
+            role = serializer.validated_data.get("role")
+            if role in ("admin", "chief_admin"):
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Нельзя создать администратора")
+            serializer.save(hall_id=u.hall_id)
+        else:
+            serializer.save()
+
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = User.objects.all()
     serializer_class = UserWriteSerializer
-    permission_classes = [IsChief]
+    permission_classes = [IsChiefOrHallAdmin]
+
+    def get_queryset(self):
+        return scope_to_hall(User.objects.all(), self.request, "hall_id")
 
     def perform_update(self, serializer):
         # Flag a chief-initiated password reset in the audit trail.

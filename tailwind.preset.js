@@ -21,6 +21,22 @@ module.exports = {
           i: { DEFAULT: '#8C79C6', soft: '#EFEAF8' },
         },
 
+        // ── shadcn/ui semantic tokens → CSS vars (defined in each app's
+        // globals.css). Without these, classes like `bg-popover` resolve to
+        // nothing → transparent dropdowns/popovers. ──
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
+        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
+        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
+        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
+        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
+        popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
+        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
+
         // ── Legacy dark tokens (kept until fully migrated; harmless) ──
         ink: {
           950: '#0E0D0C', 900: '#141312', 800: '#1B1918', 700: '#26231F',

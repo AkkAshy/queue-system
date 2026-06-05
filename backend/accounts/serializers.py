@@ -10,25 +10,42 @@ class UserSerializer(serializers.ModelSerializer):
     counter_id = serializers.PrimaryKeyRelatedField(
         source="counter", read_only=True, allow_null=True
     )
+    hall_id = serializers.PrimaryKeyRelatedField(
+        source="hall", read_only=True, allow_null=True
+    )
 
     class Meta:
         model = User
-        fields = ["id", "username", "name", "role", "counter_id", "is_active"]
+        fields = ["id", "username", "name", "role", "counter_id", "hall_id", "is_active"]
 
 
 class UserWriteSerializer(serializers.ModelSerializer):
     counter_id = serializers.IntegerField(required=False, allow_null=True)
+    # Hall the account is scoped to (head-of-hall / hall_admin).
+    hall_id = serializers.IntegerField(required=False, allow_null=True)
     # Chief may set/reset an account's password inline (create or update). Never
     # echoed back. Optional on update — omit to leave the password untouched.
     password = serializers.CharField(write_only=True, required=False, allow_blank=False)
 
     class Meta:
         model = User
-        fields = ["id", "username", "name", "role", "counter_id", "is_active", "password"]
+        fields = ["id", "username", "name", "role", "counter_id", "hall_id", "is_active", "password"]
+
+    @staticmethod
+    def _derive_hall(validated_data):
+        """An operator belongs to the hall of their counter — derive it so the
+        hall_admin scoping (which filters users by hall) catches them, unless a
+        hall was set explicitly (e.g. for a hall_admin head account)."""
+        if validated_data.get("hall_id") is None and validated_data.get("counter_id"):
+            from queue_app.models import Counter
+            counter = Counter.objects.filter(id=validated_data["counter_id"]).first()
+            if counter:
+                validated_data["hall_id"] = counter.hall_id
 
     def create(self, validated_data):
         # An explicit password wins; otherwise fall back to the legacy default.
         password = validated_data.pop("password", None) or "operator"
+        self._derive_hall(validated_data)
         user = User(**validated_data)
         user.set_password(password)
         user.save()
@@ -36,6 +53,7 @@ class UserWriteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)
+        self._derive_hall(validated_data)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         if password:

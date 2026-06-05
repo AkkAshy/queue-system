@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { Counter, User, UserRole } from '@queue/types';
+import type { Counter, Hall, User, UserRole } from '@queue/types';
 import {
   Sheet,
   SheetContent,
@@ -26,9 +26,10 @@ import {
 import { useTr } from '@/lib/i18n';
 
 const ROLES: { value: UserRole; uz: string; kaa: string }[] = [
-  { value: 'admin',    uz: 'Administrator', kaa: 'Administrator' },
-  { value: 'operator', uz: 'Operator',      kaa: 'Operator' },
-  { value: 'viewer',   uz: 'Kuzatuvchi',    kaa: 'Baqlawshı' },
+  { value: 'admin',      uz: 'Administrator',   kaa: 'Administrator' },
+  { value: 'hall_admin', uz: 'Zal boshlig\'i',  kaa: 'Zal basshısı' },
+  { value: 'operator',   uz: 'Operator',        kaa: 'Operator' },
+  { value: 'viewer',     uz: 'Kuzatuvchi',      kaa: 'Baqlawshı' },
 ];
 
 interface Props {
@@ -45,6 +46,7 @@ const EMPTY: Draft = {
   name: '',
   role: 'operator',
   counter_id: null,
+  hall_id: null,
   is_active: true,
   password: '',
 };
@@ -53,6 +55,10 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
   const tr = useTr();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(user ?? EMPTY);
+  const { data: halls = [] } = useQuery<Hall[]>({
+    queryKey: ['halls'],
+    queryFn: async () => (await fetch('/api/halls')).json(),
+  });
 
   useEffect(() => setDraft(user ?? EMPTY), [user]);
 
@@ -148,6 +154,30 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
                   {counters.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
                       №{c.number} · {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          {/* Hall select — for the head of a hall (hall_admin) */}
+          {draft.role === 'hall_admin' && (
+            <div className="space-y-2">
+              <Label>{tr('Zal', 'Zal')}</Label>
+              <Select
+                value={draft.hall_id ? String(draft.hall_id) : 'none'}
+                onValueChange={(v) =>
+                  setDraft({ ...draft, hall_id: v === 'none' ? null : Number(v) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{tr('— tanlanmagan —', '— saylanbaǵan —')}</SelectItem>
+                  {halls.map((h) => (
+                    <SelectItem key={h.id} value={String(h.id)}>
+                      {tr(h.name_uz || h.name_ru, h.name_kaa)}
                     </SelectItem>
                   ))}
                 </SelectContent>

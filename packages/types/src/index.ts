@@ -14,7 +14,7 @@ export type TicketStatus =
   | 'skipped'
   | 'cancelled';
 
-export type UserRole = 'admin' | 'operator' | 'viewer';
+export type UserRole = 'admin' | 'chief_admin' | 'hall_admin' | 'operator' | 'viewer';
 
 // A service hall (zal). The office has two, each with its own queue/board.
 export interface Hall {
@@ -107,6 +107,7 @@ export interface User {
   name: string;
   role: UserRole;
   counter_id: number | null;  // assigned counter for operators; null for admins/viewers
+  hall_id?: number | null;    // assigned hall for hall_admin (head of hall)
   is_active: boolean;
 }
 

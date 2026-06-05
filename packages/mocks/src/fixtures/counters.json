@@ -1,6 +1,7 @@
 [
   {
     "id": 1,
+    "hall_id": 1,
     "number": "1",
     "name": "Okno 1 — Akademiyalıq + Onlayn",
     "service_ids": [1, 2, 9, 10, 11, 12, 13, 14, 15],
@@ -8,6 +9,7 @@
   },
   {
     "id": 2,
+    "hall_id": 1,
     "number": "2",
     "name": "Okno 2 — HEMIS + Hújjetler",
     "service_ids": [21, 23, 61, 63, 64, 65],
@@ -15,6 +17,7 @@
   },
   {
     "id": 3,
+    "hall_id": 1,
     "number": "3",
     "name": "Okno 3 — Qosımsha + Buxgalteriya",
     "service_ids": [25, 26, 30, 31, 32, 33, 34, 37, 38, 39, 40],
@@ -22,6 +25,7 @@
   },
   {
     "id": 4,
+    "hall_id": 1,
     "number": "4",
     "name": "Okno 4 — Buyrıqlar / Mobillik",
     "service_ids": [41, 42, 43],
@@ -29,6 +33,7 @@
   },
   {
     "id": 5,
+    "hall_id": 1,
     "number": "5",
     "name": "Okno 5 — Xalıqaralıq + Ilimiy",
     "service_ids": [44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 57, 58],

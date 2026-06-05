@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { Hall, ServiceCategory } from '@queue/types';
+import type { Hall } from '@queue/types';
 import {
   Sheet,
   SheetContent,
@@ -15,69 +15,50 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useTr } from '@/lib/i18n';
 
 interface Props {
-  category: ServiceCategory | null; // null = creating
+  hall: Hall | null; // null = creating
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-type Draft = Omit<ServiceCategory, 'id'> & { id?: number };
+type Draft = Omit<Hall, 'id'> & { id?: number };
 
 const EMPTY: Draft = {
   code: '',
-  name_kaa: '',
+  name_uz: '',
   name_ru: '',
-  color: '#DC6A4C',
+  name_kaa: '',
+  name_en: '',
+  is_active: true,
   order: 0,
-  hall_id: null,
 };
 
-export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
+export function HallEditSheet({ hall, open, onOpenChange }: Props) {
   const tr = useTr();
   const qc = useQueryClient();
-  const [draft, setDraft] = useState<Draft>(category ?? EMPTY);
+  const [draft, setDraft] = useState<Draft>(hall ?? EMPTY);
 
-  const { data: halls = [] } = useQuery({
-    queryKey: ['halls'],
-    queryFn: async () => (await fetch('/api/halls')).json() as Promise<Hall[]>,
-  });
-
-  useEffect(() => setDraft(category ?? EMPTY), [category]);
-
-  // On create, default the hall to the first available one if none chosen.
-  useEffect(() => {
-    const first = halls[0];
-    if (!category && first) {
-      setDraft((d) => (d.hall_id == null ? { ...d, hall_id: first.id } : d));
-    }
-  }, [category, halls]);
+  useEffect(() => setDraft(hall ?? EMPTY), [hall]);
 
   const isCreate = !draft.id;
 
   const mutation = useMutation({
     mutationFn: async (d: Draft) => {
-      const url = isCreate ? '/api/categories' : `/api/categories/${d.id}`;
+      const url = isCreate ? '/api/halls' : `/api/halls/${d.id}`;
       const res = await fetch(url, {
         method: isCreate ? 'POST' : 'PATCH',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(d),
       });
       if (!res.ok) throw new Error('save failed');
-      return (await res.json()) as ServiceCategory;
+      return (await res.json()) as Hall;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['categories'] });
-      qc.invalidateQueries({ queryKey: ['services'] });
-      toast.success(isCreate ? tr('Kategoriya yaratildi', 'Kategoriya jaratıldı') : tr('Saqlandi', 'Saqlandı'));
+      qc.invalidateQueries({ queryKey: ['halls'] });
+      toast.success(tr('Zal saqlandi', 'Zal saqlandı'));
       onOpenChange(false);
     },
     onError: () => toast.error(tr("Saqlab bo'lmadi", 'Saqlap bolmadı')),
@@ -94,24 +75,24 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
       <SheetContent className="w-full max-w-md bg-cream text-coal">
         <SheetHeader>
           <SheetTitle className="text-2xl font-bold">
-            {isCreate ? tr('Yangi kategoriya', 'Jańa kategoriya') : tr(`Kategoriya ${draft.code}`, `Kategoriya ${draft.code}`)}
+            {isCreate ? tr('Yangi zal', 'Jańa zal') : tr(`Zal #${draft.id}`, `Zal #${draft.id}`)}
           </SheetTitle>
           <SheetDescription className="text-coal-3">
-            {isCreate ? tr('Xizmat kategoriyasini yaratish', 'Xızmet kategoriyasın jaratıw') : tr('Kategoriyani tahrirlash', 'Kategoriyanı redaktorlaw')}
+            {isCreate
+              ? tr('Yangi zal yaratish', 'Jańa zal jaratıw')
+              : tr('Zalni tahrirlash', 'Zaldı redaktorlaw')}
           </SheetDescription>
         </SheetHeader>
 
         <div className="my-8 space-y-5">
           <div className="grid grid-cols-[1fr_auto] gap-4">
             <div className="space-y-2">
-              <Label htmlFor="code">{tr('Kod (A, B, …)', 'Kod (A, B, …)')}</Label>
+              <Label htmlFor="code">{tr('Kod (1, 2, …)', 'Kod (1, 2, …)')}</Label>
               <Input
                 id="code"
                 value={draft.code}
                 maxLength={4}
-                onChange={(e) =>
-                  setDraft({ ...draft, code: e.target.value.toUpperCase() })
-                }
+                onChange={(e) => setDraft({ ...draft, code: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -127,6 +108,14 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
                 }
               />
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="name_uz">{tr('Nomi (uz)', 'Atı (uz)')}</Label>
+            <Input
+              id="name_uz"
+              value={draft.name_uz ?? ''}
+              onChange={(e) => setDraft({ ...draft, name_uz: e.target.value })}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="name_ru">{tr('Nomi (ru)', 'Atı (ru)')}</Label>
@@ -145,31 +134,20 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
             />
           </div>
           <div className="space-y-2">
-            <Label>{tr('Zal', 'Zal')}</Label>
-            <Select
-              value={draft.hall_id != null ? String(draft.hall_id) : undefined}
-              onValueChange={(v) => setDraft({ ...draft, hall_id: Number(v) })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {halls.map((h) => (
-                  <SelectItem key={h.id} value={String(h.id)}>
-                    {tr(h.name_uz || h.name_ru, h.name_kaa)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="name_en">{tr('Nomi (en)', 'Atı (en)')}</Label>
+            <Input
+              id="name_en"
+              value={draft.name_en ?? ''}
+              onChange={(e) => setDraft({ ...draft, name_en: e.target.value })}
+            />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="color">{tr('Rang', 'Reń')}</Label>
-            <input
-              id="color"
-              type="color"
-              value={draft.color}
-              onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-              className="h-10 w-16 cursor-pointer rounded-md border border-hair bg-white"
+          <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">
+            <div>
+              <div className="text-sm font-medium">{tr('Faol', 'Belsendi')}</div>
+            </div>
+            <Switch
+              checked={draft.is_active}
+              onCheckedChange={(v) => setDraft({ ...draft, is_active: v })}
             />
           </div>
         </div>

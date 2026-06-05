@@ -21,6 +21,8 @@ async function fetchCounters(): Promise<Counter[]> {
 
 const ROLE_LABEL: Record<string, { uz: string; kaa: string }> = {
   admin: { uz: 'administrator', kaa: 'administrator' },
+  chief_admin: { uz: 'bosh administrator', kaa: 'bas administrator' },
+  hall_admin: { uz: 'zal boshlig\'i', kaa: 'zal basshısı' },
   operator: { uz: 'operator', kaa: 'operator' },
   viewer: { uz: 'kuzatuvchi', kaa: 'baqlawshı' },
 };

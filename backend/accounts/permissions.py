@@ -29,6 +29,20 @@ class IsChief(BasePermission):
         return bool(u and u.is_authenticated and getattr(u, "is_chief", False))
 
 
+class IsChiefOrHallAdmin(BasePermission):
+    """Chief (sees every hall) or a hall_admin (head of a hall). Per-hall limits
+    are enforced by the view's queryset (`scope_to_hall`), so a hall_admin can
+    only reach their own hall's rows."""
+
+    def has_permission(self, request, view):
+        u = request.user
+        return bool(
+            u
+            and u.is_authenticated
+            and (getattr(u, "is_chief", False) or getattr(u, "is_hall_admin", False))
+        )
+
+
 class IsStaff(BasePermission):
     """Any authenticated staff account (operator / hall_admin / chief)."""
 
