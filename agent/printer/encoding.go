@@ -3,15 +3,18 @@ package printer
 import (
 	"strings"
 
+	"golang.org/x/text/encoding"
 	"golang.org/x/text/encoding/charmap"
 )
 
 // EncodeRU converts a UTF-8 string into CP866 (PC866 Cyrillic) bytes suitable
 // for ESC/POS printing when the printer's active code page is PC866 (ESC t 17).
-// Characters not representable in CP866 are replaced with their closest
-// equivalent (see cp866Fallback map) or '?' if unknown.
+// Characters not representable in CP866 are first remapped via cp866Fallback
+// (nicer substitutes for known Cyrillic extras + typographic punctuation); any
+// remaining unsupported rune is replaced with '?' by ReplaceUnsupported instead
+// of aborting the whole ticket — so EncodeRU NEVER returns an encoding error.
 func EncodeRU(s string) ([]byte, error) {
-	enc := charmap.CodePage866.NewEncoder()
+	enc := encoding.ReplaceUnsupported(charmap.CodePage866.NewEncoder())
 	return enc.Bytes([]byte(sanitizeForCP866(s)))
 }
 
@@ -49,6 +52,23 @@ var cp866Fallback = map[rune]string{
 	'ұ': "у", // U+04B1
 	'Ҳ': "Х", // U+04B2
 	'ҳ': "х", // U+04B3
+	// Uzbek Cyrillic extras (in case any RU-field text carries them).
+	'Ў': "У", // U+040E
+	'ў': "у", // U+045E
+	'Ҷ': "Ж", // U+04B6
+	'ҷ': "ж", // U+04B7
+	// Typographic punctuation absent from CP866 — these are the usual culprits
+	// behind "rune not supported": em/en dashes, curly quotes, ellipsis, №.
+	'—': "-",   // U+2014 em dash
+	'–': "-",   // U+2013 en dash
+	'«': "\"",  // U+00AB
+	'»': "\"",  // U+00BB
+	'“': "\"",  // U+201C
+	'”': "\"",  // U+201D
+	'‘': "'",   // U+2018
+	'’': "'",   // U+2019
+	'…': "...", // U+2026 ellipsis
+	'№': "No.", // U+2116 numero sign
 }
 
 // EncodeKAA transliterates Karakalpak text to plain ASCII and returns the

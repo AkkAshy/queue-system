@@ -10,3 +10,6 @@ dist/
 # local env overrides
 .env
 .env.local
+
+# Go build artifacts
+*.exe
