@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTr } from '@/lib/i18n';
+import { useAuthStore } from '@/store/auth-store';
 
 const items = [
   { href: '/dashboard',  uz: 'Boshqaruv paneli', kaa: 'Basqarıw paneli', Icon: LayoutDashboard },
@@ -22,15 +23,20 @@ const items = [
   { href: '/categories', uz: 'Kategoriyalar',    kaa: 'Kategoriyalar',   Icon: Layers },
   { href: '/counters',   uz: 'Oynalar',          kaa: 'Áyneler',         Icon: Building2 },
   { href: '/operators',  uz: 'Operatorlar',      kaa: 'Operatorlar',     Icon: Users },
-  { href: '/halls',      uz: 'Zallar',           kaa: 'Zallar',          Icon: LayoutGrid },
+  // Managing halls (create/delete) is a chief-only concern; a hall_admin only
+  // works within their own hall via the catalog/counters pages.
+  { href: '/halls',      uz: 'Zallar',           kaa: 'Zallar',          Icon: LayoutGrid, chiefOnly: true },
   { href: '/schedule',   uz: 'Jadval',           kaa: 'Keste',           Icon: CalendarClock },
-  { href: '/settings',   uz: 'Tablo',            kaa: 'Tablo',           Icon: Monitor },
-  { href: '/audit',      uz: 'Audit',            kaa: 'Audit',           Icon: ScrollText },
+  { href: '/settings',   uz: 'Tablo',            kaa: 'Tablo',           Icon: Monitor, chiefOnly: true },
+  { href: '/audit',      uz: 'Audit',            kaa: 'Audit',           Icon: ScrollText, chiefOnly: true },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const tr = useTr();
+  const role = useAuthStore((s) => s.role);
+  const isChief = role === 'admin' || role === 'chief_admin';
+  const visible = items.filter((it) => !it.chiefOnly || isChief);
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-hair bg-cream/80">
@@ -45,7 +51,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-5">
-        {items.map(({ href, uz, kaa, Icon }) => {
+        {visible.map(({ href, uz, kaa, Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/');
           return (
             <Link

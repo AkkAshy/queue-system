@@ -13,12 +13,15 @@ def _audit(request, action, target):
     log(request, action, target=str(target))
 
 
-# Halls themselves are managed by the chief only.
+# Halls are managed by the chief; a hall_admin only sees their own hall (scoped
+# by the hall's own id), so even a direct GET can't list other halls.
 class HallListView(generics.ListCreateAPIView):
-    queryset = Hall.objects.filter(is_active=True)
     serializer_class = HallSerializer
     pagination_class = None
     permission_classes = [IsChiefOrReadOnly]
+
+    def get_queryset(self):
+        return scope_to_hall(Hall.objects.filter(is_active=True), self.request, "id")
 
 
 class HallDetailView(generics.RetrieveUpdateDestroyAPIView):
