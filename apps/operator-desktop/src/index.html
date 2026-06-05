@@ -129,10 +129,13 @@
         go(host);
       });
 
-      // Entry: saved → countdown to auto-connect; otherwise → setup
+      // Entry: a box address was saved before → connect IMMEDIATELY (don't ask
+      // again). First run (nothing saved) → show the setup form.
+      // Reconfigure later: launch with ?setup (or clear app data / reinstall).
       const saved = localStorage.getItem(KEY);
-      if (saved) startCountdown(saved);
-      else showSetup('');
+      const wantSetup = location.search.includes('setup') || location.hash.includes('setup');
+      if (saved && !wantSetup) go(saved);
+      else showSetup(saved || '');
     </script>
   </body>
 </html>
