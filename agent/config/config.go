@@ -3,10 +3,49 @@
 package config
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 )
+
+// LoadConfFile reads an optional `agent.conf` sitting next to the executable and
+// seeds AGENT_* environment variables from it (KEY=VALUE per line, '#' comments).
+// Real env vars always win — the file only fills what's unset. This lets the
+// kiosk PC run the bare .exe (double-click) with settings in a plain text file,
+// no .bat/script needed (handy where script execution is locked down).
+func LoadConfFile() {
+	exe, err := os.Executable()
+	if err != nil {
+		return
+	}
+	for _, name := range []string{"agent.conf", "agent.env"} {
+		f, err := os.Open(filepath.Join(filepath.Dir(exe), name))
+		if err != nil {
+			continue
+		}
+		sc := bufio.NewScanner(f)
+		for sc.Scan() {
+			line := strings.TrimSpace(sc.Text())
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			key, val, ok := strings.Cut(line, "=")
+			if !ok {
+				continue
+			}
+			key = strings.TrimSpace(key)
+			val = strings.TrimSpace(strings.TrimRight(val, "\r"))
+			if key != "" && os.Getenv(key) == "" {
+				_ = os.Setenv(key, val)
+			}
+		}
+		f.Close()
+		return // first file found wins
+	}
+}
 
 type Backend = string
 

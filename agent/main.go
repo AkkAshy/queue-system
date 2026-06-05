@@ -26,6 +26,7 @@ import (
 var Version = "dev"
 
 func main() {
+	config.LoadConfFile() // seed AGENT_* from agent.conf next to the exe (if any)
 	cfg := config.FromEnv(config.Default())
 
 	// CLI flags override env
