@@ -95,19 +95,40 @@ async function loadBuffer(url: string): Promise<AudioBuffer | null> {
 // ---------- sequential player ----------
 let queue: Phrase[] = [];
 let running = false;
-let currentSrc: AudioBufferSourceNode | null = null;
+let currentSources: AudioBufferSourceNode[] = [];
 let leadTimer: ReturnType<typeof setTimeout> | null = null;
 
-function playBuffer(buf: AudioBuffer): Promise<void> {
+// Spacing between clips. Digits get a short breath so "nol to'rt ikki" doesn't
+// slur into one blob; the window phrase gets a longer pause so the number is
+// clearly separated from "...oynaga o'ting".
+const GAP_S = 0.16;
+const WINDOW_PAUSE_S = 0.34;
+const LEAD_S = 0.06; // tiny offset so the very first clip's onset isn't clipped
+
+// Schedule the whole phrase on the AudioContext clock in one go: each clip
+// starts at an absolute time = end-of-previous + gap. Clock-scheduling is
+// sample-accurate and gap-stable, unlike chaining src.onended in JS (which
+// adds variable latency between clips → the "каша" effect).
+function scheduleClips(buffers: AudioBuffer[], clips: string[]): Promise<void> {
   return new Promise((resolve) => {
     const c = getCtx();
-    if (!c) { resolve(); return; }
-    const src = c.createBufferSource();
-    src.buffer = buf;
-    src.connect(c.destination);
-    currentSrc = src;
-    src.onended = () => { if (currentSrc === src) currentSrc = null; resolve(); };
-    try { src.start(); } catch { resolve(); }
+    if (!c || buffers.length === 0) { resolve(); return; }
+    const sources: AudioBufferSourceNode[] = [];
+    let t = c.currentTime + LEAD_S;
+    buffers.forEach((buf, i) => {
+      const src = c.createBufferSource();
+      src.buffer = buf;
+      src.connect(c.destination);
+      try { src.start(t); } catch { /* context closed */ }
+      sources.push(src);
+      // Pause AFTER this clip: longer if the NEXT clip is the window phrase.
+      const nextIsWindow = clips[i + 1]?.includes('/window_') ?? false;
+      t += buf.duration + (nextIsWindow ? WINDOW_PAUSE_S : GAP_S);
+    });
+    currentSources = sources;
+    const last = sources[sources.length - 1];
+    if (!last) { resolve(); return; }
+    last.onended = () => { resolve(); };
   });
 }
 
@@ -130,7 +151,7 @@ async function playPhrase(p: Phrase): Promise<void> {
   if (p.clips.length > 0) {
     const buffers = await Promise.all(p.clips.map(loadBuffer));
     if (buffers.every((b): b is AudioBuffer => b != null)) {
-      for (const b of buffers) await playBuffer(b);
+      await scheduleClips(buffers, p.clips);
       return;
     }
   }
@@ -163,6 +184,7 @@ export function cancelSpeech() {
   queue = [];
   running = false;
   if (leadTimer) { clearTimeout(leadTimer); leadTimer = null; }
-  if (currentSrc) { try { currentSrc.stop(); } catch { /* already stopped */ } currentSrc = null; }
+  for (const s of currentSources) { try { s.stop(); } catch { /* already stopped */ } }
+  currentSources = [];
   if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
 }
