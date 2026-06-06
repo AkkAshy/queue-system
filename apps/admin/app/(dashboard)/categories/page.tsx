@@ -73,7 +73,7 @@ export default function CategoriesPage() {
               <div
                 key={c.id}
                 onClick={() => setEditing(c)}
-                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-hair bg-white p-6 shadow-soft transition-all duration-200 hover:-translate-y-0.5"
+                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-hair bg-card p-6 shadow-soft transition-all duration-200 hover:-translate-y-0.5"
               >
                 <span
                   className="absolute inset-x-6 top-0 h-[3px] rounded-b-full"

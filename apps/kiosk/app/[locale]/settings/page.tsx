@@ -82,7 +82,7 @@ export default function SettingsPage() {
                 <p className="text-lg font-semibold text-coal">{t('agentDown')}</p>
                 <p className="mt-2 text-sm text-coal-2">{state.message}</p>
                 <button
-                  className="mt-6 inline-flex items-center gap-2 rounded-r border border-hair-2 bg-white px-5 py-3 font-semibold text-coal-2 hover:text-coal"
+                  className="mt-6 inline-flex items-center gap-2 rounded-r border border-hair-2 bg-card px-5 py-3 font-semibold text-coal-2 hover:text-coal"
                   onClick={() => void load()}
                 >
                   <RefreshCw className="h-4 w-4" /> {t('retry')}
@@ -104,7 +104,7 @@ export default function SettingsPage() {
                             className={`flex w-full items-center gap-4 rounded-rlg border px-5 py-4 text-left transition-colors ${
                               active
                                 ? 'border-coral bg-coral/5'
-                                : 'border-hair-2 bg-white hover:border-coral/40'
+                                : 'border-hair-2 bg-card hover:border-coral/40'
                             }`}
                             onClick={() => setSelected(name)}
                           >
@@ -137,7 +137,7 @@ export default function SettingsPage() {
 
                 <div className="mt-8 flex gap-4">
                   <button
-                    className="flex-1 rounded-r border border-hair-2 bg-white py-5 text-lg font-semibold text-coal-2 transition-colors hover:text-coal disabled:opacity-40"
+                    className="flex-1 rounded-r border border-hair-2 bg-card py-5 text-lg font-semibold text-coal-2 transition-colors hover:text-coal disabled:opacity-40"
                     onClick={test}
                     disabled={!selected}
                   >

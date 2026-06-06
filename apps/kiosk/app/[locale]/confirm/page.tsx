@@ -106,7 +106,7 @@ export default function ConfirmPage() {
 
           <div className="mt-8 flex gap-4">
             <button
-              className="flex-1 rounded-r border border-hair-2 bg-white py-6 text-lg font-semibold text-coal-2 transition-colors hover:text-coal disabled:opacity-40"
+              className="flex-1 rounded-r border border-hair-2 bg-card py-6 text-lg font-semibold text-coal-2 transition-colors hover:text-coal disabled:opacity-40"
               onClick={() => router.push(`/${locale}`)}
               disabled={mutation.isPending}
             >

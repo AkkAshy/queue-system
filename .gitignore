@@ -41,3 +41,6 @@ public/mockServiceWorker.js
 deploy/.env.prod
 deploy/nginx/queue.conf
 deploy/certbot/
+
+# TS build cache
+*.tsbuildinfo

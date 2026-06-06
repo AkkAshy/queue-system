@@ -110,7 +110,7 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-hair bg-white/40">
+      <section className="overflow-hidden rounded-2xl border border-hair bg-card/40">
         {isLoading ? (
           <div className="p-8 text-sm text-coal-3">{tr('Yuklanmoqda…', 'Júklenbekte…')}</div>
         ) : (

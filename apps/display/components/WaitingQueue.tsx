@@ -9,7 +9,7 @@ import type { DisplayWaiting } from '@queue/types';
  */
 export function WaitingQueue({ waiting }: { waiting: DisplayWaiting[] }) {
   return (
-    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-rxl border border-hair bg-white shadow-soft">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-rxl border border-hair bg-card shadow-soft">
       <div className="flex items-center justify-between border-b border-hair px-5 py-2.5">
         <span className="eyebrow">Gezekte · Navbatda</span>
         <span className="eyebrow text-coal-2">{waiting.length}</span>

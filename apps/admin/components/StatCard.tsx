@@ -7,7 +7,7 @@ interface Props {
 
 export function StatCard({ eyebrow, value, unit, hint }: Props) {
   return (
-    <div className="rounded-2xl border border-hair bg-white/40 p-6">
+    <div className="rounded-2xl border border-hair bg-card/40 p-6">
       <span className="eyebrow">{eyebrow}</span>
       <div className="mt-4 flex items-baseline gap-2">
         <span className="text-4xl font-semibold tabular-nums text-coal">

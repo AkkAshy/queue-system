@@ -5,8 +5,7 @@
 @layer base {
   html, body {
     height: 100%;
-    background-color: #FBF6EE; /* cream */
-    color: #2C2722;            /* coal */
+    @apply bg-cream text-coal;
     overflow: hidden;          /* fullscreen TV — never scroll */
   }
   body { font-variant-numeric: tabular-nums; }
@@ -18,7 +17,7 @@
     text-transform: uppercase;
     font-size: 0.8rem;
     letter-spacing: 0.16em;
-    color: #A79D8F; /* coal-3 */
+    @apply text-coal-3;
   }
 }
 
@@ -42,11 +41,11 @@
   }
   .animate-board-pop { animation: board-pop 450ms cubic-bezier(0.16, 1, 0.3, 1) both; }
 
-  /* fresh call: coral ring pulse on the window tile */
+  /* fresh call: brand-blue ring pulse on the window tile */
   @keyframes board-ring {
-    0%   { box-shadow: 0 0 0 0 rgba(220, 106, 76, 0.5); }
-    70%  { box-shadow: 0 0 0 12px rgba(220, 106, 76, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(220, 106, 76, 0); }
+    0%   { box-shadow: 0 0 0 0 rgb(var(--brand) / 0.5); }
+    70%  { box-shadow: 0 0 0 12px rgb(var(--brand) / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(var(--brand) / 0); }
   }
   .animate-board-ring { animation: board-ring 1.4s ease-out 2; }
 }

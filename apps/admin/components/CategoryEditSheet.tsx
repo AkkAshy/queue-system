@@ -169,7 +169,7 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
               type="color"
               value={draft.color}
               onChange={(e) => setDraft({ ...draft, color: e.target.value })}
-              className="h-10 w-16 cursor-pointer rounded-md border border-hair bg-white"
+              className="h-10 w-16 cursor-pointer rounded-md border border-hair bg-card"
             />
           </div>
         </div>

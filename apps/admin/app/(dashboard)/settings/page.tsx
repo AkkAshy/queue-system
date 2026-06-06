@@ -96,7 +96,7 @@ export default function DisplaySettingsPage() {
         <p className="mt-1 text-sm text-coal-3">{tr('Nomi, video, ovoz, yuguruvchi satr', 'Atı, video, dawıs, juwırıwshı qatar')}</p>
       </div>
 
-      <div className="space-y-5 rounded-xl border border-hair bg-white p-6">
+      <div className="space-y-5 rounded-xl border border-hair bg-card p-6">
         <div className="space-y-2">
           <Label htmlFor="org">{tr('Muassasa nomi', 'Mákeme atı')}</Label>
           <Input
@@ -162,7 +162,7 @@ export default function DisplaySettingsPage() {
             value={form.ticker_text}
             onChange={(e) => set('ticker_text', e.target.value)}
             placeholder={tr('Chaqiruvgacha talonni saqlang\nTablodan chaqiruvni kuting', 'Shaqırıwǵa deyin talondı saqlań\nTablodan shaqırıwdı kútiń')}
-            className="w-full rounded-lg border border-hair-2 bg-white px-3 py-2 text-sm text-coal outline-none focus:border-coral"
+            className="w-full rounded-lg border border-hair-2 bg-card px-3 py-2 text-sm text-coal outline-none focus:border-coral"
           />
         </div>
 

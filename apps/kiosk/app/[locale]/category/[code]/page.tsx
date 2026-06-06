@@ -46,7 +46,7 @@ export default function CategoryPage() {
       <section className="mx-auto max-w-4xl px-10 pb-16 pt-6">
         <button
           onClick={() => router.push(`/${locale}`)}
-          className="mb-8 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-medium text-coal-2 shadow-soft transition-colors hover:text-coral"
+          className="mb-8 inline-flex items-center gap-2 rounded-full bg-card px-5 py-2.5 text-sm font-medium text-coal-2 shadow-soft transition-colors hover:text-coral"
         >
           <span className="text-lg leading-none">←</span>
           {t('back')}

@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import { useOperatorStore } from '@/store/operator-store';
 import { LangSwitcher } from '@/components/LangSwitcher';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTr } from '@/lib/i18n';
 
 export function LoginScreen() {
@@ -61,14 +62,17 @@ export function LoginScreen() {
 
   const canStart = !!(username.trim() && password && counterId && !start.isPending);
   const inputCls =
-    'h-11 w-full rounded-rsm border border-hair-2 bg-white px-3 text-sm text-coal outline-none focus:border-coral';
+    'h-11 w-full rounded-rsm border border-hair-2 bg-card px-3 text-sm text-coal outline-none focus:border-coral';
 
   return (
     <main className="flex h-screen w-screen flex-col justify-between p-6">
       <div>
         <div className="flex items-start justify-between">
           <span className="eyebrow text-coral">NDPI · Pult</span>
-          <LangSwitcher />
+          <div className="flex items-center gap-2">
+            <ThemeToggle className="h-9 w-9" />
+            <LangSwitcher />
+          </div>
         </div>
         <h1 className="mt-3 text-2xl font-bold leading-tight text-coal">{tr('Kirish', 'Kiriw')}</h1>
       </div>

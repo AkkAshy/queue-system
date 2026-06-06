@@ -102,7 +102,7 @@ export default function TicketPage() {
           <div className="mt-6 flex justify-center">
             <button
               onClick={goHome}
-              className="rounded-full bg-white px-10 py-4 font-semibold text-coal-2 shadow-soft transition-colors hover:text-coral"
+              className="rounded-full bg-card px-10 py-4 font-semibold text-coal-2 shadow-soft transition-colors hover:text-coral"
             >
               {t('new')}
             </button>

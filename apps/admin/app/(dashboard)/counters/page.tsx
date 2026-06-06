@@ -63,7 +63,7 @@ export default function CountersPage() {
         </Button>
       </div>
 
-      <section className="overflow-hidden rounded-2xl border border-hair bg-white/40">
+      <section className="overflow-hidden rounded-2xl border border-hair bg-card/40">
         <table className="admin-table w-full">
           <thead>
             <tr>

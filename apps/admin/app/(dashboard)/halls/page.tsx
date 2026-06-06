@@ -56,7 +56,7 @@ export default function HallsPage() {
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-hair bg-white shadow-soft">
+      <div className="overflow-hidden rounded-2xl border border-hair bg-card shadow-soft">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-hair text-left text-xs uppercase tracking-wide text-coal-3">

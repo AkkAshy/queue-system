@@ -10,7 +10,7 @@ export function Ticker({ items }: Props) {
   const doubled = `${line}     ·     ${line}     ·     `;
 
   return (
-    <footer className="overflow-hidden border-t border-hair bg-white py-4">
+    <footer className="overflow-hidden border-t border-hair bg-card py-4">
       <div className="animate-ticker whitespace-nowrap will-change-transform">
         <span className="text-xl text-coal-2">{doubled}</span>
       </div>

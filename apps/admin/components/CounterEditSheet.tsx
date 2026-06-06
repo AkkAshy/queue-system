@@ -127,7 +127,7 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
               {services.map((s) => (
                 <label
                   key={s.id}
-                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-white/60"
+                  className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-card/60"
                 >
                   <Checkbox
                     checked={draft.service_ids.includes(s.id)}

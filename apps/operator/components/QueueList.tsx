@@ -39,7 +39,7 @@ export function QueueList({ queue, services }: Props) {
             return (
               <li
                 key={t.id}
-                className="flex items-center gap-3 rounded-rsm bg-white px-3 py-2 shadow-soft"
+                className="flex items-center gap-3 rounded-rsm bg-card px-3 py-2 shadow-soft"
               >
                 <span
                   className={

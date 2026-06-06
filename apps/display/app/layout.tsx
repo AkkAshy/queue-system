@@ -16,7 +16,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="uz" className={rubik.variable}>
+    <html lang="uz" className={rubik.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}",
+          }}
+        />
+      </head>
       <body className="h-screen w-screen overflow-hidden bg-cream font-sans text-coal antialiased">
         <Providers>{children}</Providers>
       </body>

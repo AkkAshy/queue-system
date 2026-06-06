@@ -45,7 +45,7 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center p-6">
       <form
         onSubmit={onSubmit}
-        className="w-full max-w-md space-y-7 rounded-2xl border border-hair bg-white/50 p-10 shadow-paper-lift"
+        className="w-full max-w-md space-y-7 rounded-2xl border border-hair bg-card/50 p-10 shadow-soft"
       >
         <div>
           <span className="eyebrow text-coral">NDPI · Admin</span>

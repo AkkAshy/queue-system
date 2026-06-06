@@ -2,35 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  :root {
-    /* light "warm paper" theme for shadcn primitives */
-    --background: 38 53% 96%;
-    --foreground: 30 13% 15%;
-    --card: 0 0% 100%;
-    --card-foreground: 30 13% 15%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 30 13% 15%;
-    --primary: 13 66% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 38 39% 91%;
-    --secondary-foreground: 30 13% 15%;
-    --muted: 38 39% 91%;
-    --muted-foreground: 30 9% 45%;
-    --accent: 38 39% 91%;
-    --accent-foreground: 30 13% 15%;
-    --border: 38 33% 87%;
-    --input: 38 33% 87%;
-    --ring: 13 66% 58%;
-    --radius: 0.75rem;
-  }
+/* Theme variables (light + dark) come from the shared tailwind preset's
+   addBase plugin — see tailwind.preset.js. Toggle `.dark` on <html> to flip. */
 
+@layer base {
   * { border-color: hsl(var(--border)); }
 
   html, body {
     height: 100%;
-    background-color: #FBF6EE;
-    color: #2C2722;
+    @apply bg-cream text-coal;
     overflow: hidden; /* widget is fixed-size; never scroll */
   }
   body { font-variant-numeric: tabular-nums; }
@@ -42,6 +22,6 @@
     text-transform: uppercase;
     font-size: 0.65rem;
     letter-spacing: 0.13em;
-    color: #A79D8F;
+    @apply text-coal-3;
   }
 }

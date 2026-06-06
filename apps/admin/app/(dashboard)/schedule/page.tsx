@@ -90,7 +90,7 @@ export default function SchedulePage() {
       </div>
 
       {/* On-duty-now strip */}
-      <section className="rounded-2xl border border-hair bg-white/40 px-5 py-4">
+      <section className="rounded-2xl border border-hair bg-card/40 px-5 py-4">
         <div className="eyebrow text-coral">{tr("Hozir jadval bo'yicha", 'Házir keste boyınsha')}</div>
         {onDuty.length === 0 ? (
           <p className="mt-2 text-sm text-coal-3">{tr('Hozir hech kim rejalashtirilmagan.', 'Házir heshkim jobalastırılmaǵan.')}</p>
@@ -110,7 +110,7 @@ export default function SchedulePage() {
       </section>
 
       {/* Schedule grouped by weekday */}
-      <section className="overflow-hidden rounded-2xl border border-hair bg-white/40">
+      <section className="overflow-hidden rounded-2xl border border-hair bg-card/40">
         <table className="admin-table w-full">
           <thead>
             <tr>

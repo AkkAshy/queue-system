@@ -57,7 +57,7 @@ export default function AuditPage() {
         <select
           value={action}
           onChange={(e) => setAction(e.target.value)}
-          className="rounded-lg border border-hair-2 bg-white px-3 py-2 text-sm text-coal"
+          className="rounded-lg border border-hair-2 bg-card px-3 py-2 text-sm text-coal"
         >
           {ACTIONS.map((a) => (
             <option key={a.value} value={a.value}>
@@ -67,7 +67,7 @@ export default function AuditPage() {
         </select>
       </div>
 
-      <section className="rounded-2xl border border-hair bg-white/40 p-6">
+      <section className="rounded-2xl border border-hair bg-card/40 p-6">
         {isLoading ? (
           <div className="text-sm text-coal-3">{tr('Yuklanmoqda…', 'Júklenbekte…')}</div>
         ) : data.length === 0 ? (

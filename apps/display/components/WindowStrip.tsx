@@ -22,7 +22,7 @@ export function WindowStrip({
         return (
           <div
             key={w.counter_id}
-            className={`flex min-w-0 flex-[1_1_calc(12.5%-8px)] flex-col items-center rounded-rlg border bg-white px-2 py-2 text-center shadow-soft transition-colors duration-500 ${
+            className={`flex min-w-0 flex-[1_1_calc(12.5%-8px)] flex-col items-center rounded-rlg border bg-card px-2 py-2 text-center shadow-soft transition-colors duration-500 ${
               fresh ? 'animate-board-ring border-coral bg-coral-soft' : 'border-hair'
             }`}
           >

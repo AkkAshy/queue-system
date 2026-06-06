@@ -5,6 +5,7 @@ import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/store/auth-store';
 import { LangSwitcher } from '@/components/layout/LangSwitcher';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useTr } from '@/lib/i18n';
 
 export function TopBar() {
@@ -29,6 +30,7 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-4">
+        <ThemeToggle />
         <LangSwitcher />
         <div className="text-right leading-tight">
           <div className="text-sm font-medium">{username ?? '—'}</div>

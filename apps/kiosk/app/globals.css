@@ -7,8 +7,7 @@
     height: 100%;
     user-select: none;
     -webkit-tap-highlight-color: transparent;
-    background-color: #FBF6EE; /* cream */
-    color: #2C2722;            /* coal */
+    @apply bg-cream text-coal;
   }
   body {
     font-variant-numeric: tabular-nums;
@@ -22,14 +21,12 @@
     text-transform: uppercase;
     font-size: 0.72rem;
     letter-spacing: 0.14em;
-    color: #A79D8F; /* coal-3 */
+    @apply text-coal-3;
   }
 
-  /* white rounded surface card */
+  /* rounded surface card (theme-aware) */
   .paper {
-    background: #FFFFFF;
-    border-radius: 22px;
-    box-shadow: 0 4px 8px rgba(74,57,40,.06), 0 24px 48px -16px rgba(74,57,40,.12);
+    @apply bg-card rounded-rlg shadow-soft;
   }
   .paper-interactive {
     transition: transform 220ms cubic-bezier(.2,.7,.3,1),

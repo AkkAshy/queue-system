@@ -16,7 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   if (!mswReady) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center text-sm text-ink-400">
+      <div className="flex h-screen w-screen items-center justify-center text-sm text-coal-3">
         …
       </div>
     );

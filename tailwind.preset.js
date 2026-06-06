@@ -1,14 +1,29 @@
 /** @type {import('tailwindcss').Config} */
+
+// All themeable colours are CSS variables so the whole design system can flip
+// between light/dark by toggling a `.dark` class on <html>. The variables live
+// in ONE place (the addBase plugin below) and are injected into every app that
+// uses this preset — no per-app duplication.
+//
+// Neutrals + brand use space-separated RGB triples consumed via
+// `rgb(var(--x) / <alpha-value>)`, so opacity utilities (bg-cream/80) still work.
+// shadcn/ui primitives keep their HSL `--background` etc. vars (also flipped).
+
+const v = (name) => `rgb(var(${name}) / <alpha-value>)`;
+
 module.exports = {
+  darkMode: /** @type {const} */ ('class'),
   theme: {
     extend: {
       colors: {
-        // ── New "warm paper" design system (light) ──
-        cream: { DEFAULT: '#FBF6EE', deep: '#F4ECE0' },
-        coral: { DEFAULT: '#DC6A4C', 600: '#C8573B', soft: '#FBE9E1' },
-        coal: { DEFAULT: '#2C2722', 2: '#6E655A', 3: '#A79D8F' },
-        hair: { DEFAULT: '#ECE2D2', 2: '#E0D4C0' },
-        grass: { DEFAULT: '#2F9E72', soft: '#E4F2EA' },
+        // ── neutrals (flip in dark) ──
+        cream: { DEFAULT: v('--cream'), deep: v('--cream-deep') },
+        coal: { DEFAULT: v('--coal'), 2: v('--coal-2'), 3: v('--coal-3') },
+        hair: { DEFAULT: v('--hair'), 2: v('--hair-2') },
+        // ── brand (now BLUE; class names kept as `coral` to avoid churn) ──
+        coral: { DEFAULT: v('--brand'), 600: v('--brand-600'), soft: v('--brand-soft') },
+        grass: { DEFAULT: v('--grass'), soft: v('--grass-soft') },
+        // ── category accents (static — used as small color dots/labels) ──
         cat: {
           a: { DEFAULT: '#3F7CC4', soft: '#E7F0FB' },
           b: { DEFAULT: '#2C9E76', soft: '#E4F3EC' },
@@ -21,9 +36,7 @@ module.exports = {
           i: { DEFAULT: '#8C79C6', soft: '#EFEAF8' },
         },
 
-        // ── shadcn/ui semantic tokens → CSS vars (defined in each app's
-        // globals.css). Without these, classes like `bg-popover` resolve to
-        // nothing → transparent dropdowns/popovers. ──
+        // ── shadcn/ui semantic tokens → CSS vars (light+dark below) ──
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -34,42 +47,100 @@ module.exports = {
         destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
         muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
         accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
-        popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
-        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
-
-        // ── Legacy dark tokens (kept until fully migrated; harmless) ──
-        ink: {
-          950: '#0E0D0C', 900: '#141312', 800: '#1B1918', 700: '#26231F',
-          600: '#38342E', 500: '#5C574F', 400: '#8A8277', 300: '#B8AEA0',
-        },
-        paper: { 50: '#FBF9F3', 100: '#F5F1E8', 200: '#E8E1D0', 300: '#D6CBB2' },
-        brass: { 300: '#E0C98D', 400: '#D4B878', 500: '#C9A961', 600: '#B5922F', 700: '#8C7125' },
-        category: {
-          A: '#7A8FA3', B: '#8D9C7C', C: '#A98A63', D: '#C2A359', E: '#9B8F6E',
-          F: '#B56E5A', G: '#8C5E6B', H: '#6E8489', I: '#7E7489',
-        },
+        popover: { DEFAULT: 'hsl(var(--popover) / <alpha-value>)', foreground: 'hsl(var(--popover-foreground))' },
+        card: { DEFAULT: 'hsl(var(--card) / <alpha-value>)', foreground: 'hsl(var(--card-foreground))' },
       },
       fontFamily: {
-        // Rubik — the new system typeface (apps load it as --font-rubik).
         sans: ['var(--font-rubik)', 'system-ui', '-apple-system', 'sans-serif'],
         serif: ['var(--font-rubik)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-jetbrains)', 'ui-monospace', 'monospace'],
       },
-      borderRadius: {
-        rsm: '10px',
-        r: '16px',
-        rlg: '22px',
-        rxl: '28px',
-        '4xl': '2rem',
-      },
+      borderRadius: { rsm: '10px', r: '16px', rlg: '22px', rxl: '28px', '4xl': '2rem' },
       boxShadow: {
-        soft: '0 4px 8px rgba(74,57,40,.06), 0 24px 48px -16px rgba(74,57,40,.12)',
-        coral: '0 8px 20px -6px rgba(220,106,76,.45)',
-        // legacy
-        paper: '0 1px 2px 0 rgba(0,0,0,0.4), 0 12px 40px -12px rgba(0,0,0,0.55)',
-        'paper-lift': '0 2px 4px 0 rgba(0,0,0,0.35), 0 20px 60px -18px rgba(0,0,0,0.65)',
+        soft: '0 4px 8px rgba(20,30,50,.06), 0 24px 48px -16px rgba(20,30,50,.14)',
+        // brand glow (blue)
+        coral: '0 8px 20px -6px rgba(37,99,235,.42)',
       },
       spacing: { '18': '4.5rem', '22': '5.5rem', '30': '7.5rem' },
     },
   },
+  plugins: [
+    function ({ addBase }) {
+      addBase({
+        ':root': {
+          // neutrals — light "warm paper"
+          '--cream': '251 246 238',
+          '--cream-deep': '244 236 224',
+          '--coal': '44 39 34',
+          '--coal-2': '110 101 90',
+          '--coal-3': '167 157 143',
+          '--hair': '236 226 210',
+          '--hair-2': '224 212 192',
+          // brand — blue
+          '--brand': '37 99 235',      // #2563EB
+          '--brand-600': '29 78 216',  // #1D4ED8 (hover)
+          '--brand-soft': '230 238 252', // #E6EEFC tint
+          '--grass': '47 158 114',
+          '--grass-soft': '228 242 234',
+          // shadcn primitives — light
+          '--background': '38 53% 96%',
+          '--foreground': '30 13% 15%',
+          '--card': '0 0% 100%',
+          '--card-foreground': '30 13% 15%',
+          '--popover': '0 0% 100%',
+          '--popover-foreground': '30 13% 15%',
+          '--primary': '221 83% 53%',
+          '--primary-foreground': '0 0% 100%',
+          '--secondary': '38 39% 91%',
+          '--secondary-foreground': '30 13% 15%',
+          '--muted': '38 39% 91%',
+          '--muted-foreground': '30 9% 45%',
+          '--accent': '214 95% 93%',
+          '--accent-foreground': '221 70% 30%',
+          '--destructive': '8 70% 55%',
+          '--destructive-foreground': '0 0% 100%',
+          '--border': '38 33% 87%',
+          '--input': '38 33% 87%',
+          '--ring': '221 83% 53%',
+          '--radius': '0.75rem',
+        },
+        '.dark': {
+          // neutrals — cool dark (pairs with blue brand)
+          '--cream': '15 18 23',        // page bg  #0F1217
+          '--cream-deep': '22 27 34',   // raised panel #161B22
+          '--coal': '233 236 241',      // primary text #E9ECF1
+          '--coal-2': '163 170 181',    // secondary text
+          '--coal-3': '122 130 142',    // muted text
+          '--hair': '38 45 54',         // borders #262D36
+          '--hair-2': '48 56 67',
+          // brand — slightly lighter blue for contrast on dark
+          '--brand': '96 165 250',      // #60A5FA
+          '--brand-600': '129 184 252', // hover lighter
+          '--brand-soft': '23 37 64',   // dark navy tint
+          '--grass': '52 197 142',
+          '--grass-soft': '18 38 30',
+          // shadcn primitives — dark
+          '--background': '220 20% 9%',
+          '--foreground': '220 14% 92%',
+          '--card': '220 17% 13%',
+          '--card-foreground': '220 14% 92%',
+          '--popover': '220 17% 13%',
+          '--popover-foreground': '220 14% 92%',
+          '--primary': '213 94% 68%',
+          '--primary-foreground': '220 40% 10%',
+          '--secondary': '220 14% 17%',
+          '--secondary-foreground': '220 14% 92%',
+          '--muted': '220 14% 17%',
+          '--muted-foreground': '220 9% 60%',
+          '--accent': '220 30% 20%',
+          '--accent-foreground': '213 94% 80%',
+          '--destructive': '6 62% 52%',
+          '--destructive-foreground': '0 0% 100%',
+          '--border': '220 13% 20%',
+          '--input': '220 13% 22%',
+          '--ring': '213 94% 68%',
+        },
+      });
+    },
+  ],
 };

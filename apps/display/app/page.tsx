@@ -13,6 +13,7 @@ import { WindowStrip } from '@/components/WindowStrip';
 import { Ticker } from '@/components/Ticker';
 import { DisplayClock } from '@/components/DisplayClock';
 import { MuteButton } from '@/components/MuteButton';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const TICKER_ITEMS = [
   'Talonıńızdı joǵaltpań — nómer ekranda kórsetiledi',
@@ -122,7 +123,7 @@ export default function Page() {
 
   return (
     <main className="flex h-screen w-screen flex-col bg-cream">
-      <header className="flex items-center justify-between border-b border-hair bg-white px-12 py-5">
+      <header className="flex items-center justify-between border-b border-hair bg-card px-12 py-5">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 items-center justify-center rounded-r bg-coral text-lg font-bold text-white shadow-coral">
             NP
@@ -137,6 +138,7 @@ export default function Page() {
         <div className="flex items-center gap-8">
           <DisplayClock />
           <MuteButton muted={muted} onToggle={toggleMute} />
+          <ThemeToggle className="h-12 w-12" />
         </div>
       </header>
 

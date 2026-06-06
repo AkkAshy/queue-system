@@ -43,7 +43,7 @@ export function CurrentTicket({ current }: Props) {
   });
 
   return (
-    <section className="rounded-rlg bg-white p-4 shadow-soft">
+    <section className="rounded-rlg bg-card p-4 shadow-soft">
       <div className="flex items-center justify-between">
         <span className="eyebrow">{tr('Hozir xizmat ko\'rsatyapsiz', 'Házir xızmet kórsetpekte')}</span>
         {current && (

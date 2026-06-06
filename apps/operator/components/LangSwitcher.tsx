@@ -11,7 +11,7 @@ export function LangSwitcher() {
   const { lang, setLang } = useLang();
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-ink-200/40 p-0.5">
+    <div className="flex items-center gap-1 rounded-full border border-hair/40 p-0.5">
       {LANGS.map(({ code, label }) => {
         const active = code === lang;
         return (
@@ -22,7 +22,7 @@ export function LangSwitcher() {
             className={
               active
                 ? 'rounded-full bg-coral px-2.5 py-1 text-[11px] font-medium text-white'
-                : 'rounded-full px-2.5 py-1 text-[11px] font-medium text-ink-400 transition-colors hover:text-coral'
+                : 'rounded-full px-2.5 py-1 text-[11px] font-medium text-coal-3 transition-colors hover:text-coral'
             }
           >
             {label}

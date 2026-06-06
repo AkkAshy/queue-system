@@ -12,7 +12,7 @@ export function HourlyLoadChart({ data }: Props) {
   const max = Math.max(...data.map((d) => Math.max(d.issued, d.served)));
 
   return (
-    <div className="rounded-2xl border border-hair bg-white/40 p-6">
+    <div className="rounded-2xl border border-hair bg-card/40 p-6">
       <div className="mb-6 flex items-center justify-between">
         <span className="eyebrow">{tr("Soatlar bo'yicha yuklama", 'Saatlar boyınsha júklem')}</span>
         <div className="flex items-center gap-4 text-xs text-coal-3">

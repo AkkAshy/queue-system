@@ -107,14 +107,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Статистика по залам (richer metrics + CSV export) */}
-      <section className="rounded-2xl border border-hair bg-white/40 p-6">
+      <section className="rounded-2xl border border-hair bg-card/40 p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <span className="eyebrow">{tr('Statistika', 'Statistika')}</span>
           <div className="flex items-center gap-2">
             <select
               value={hall}
               onChange={(e) => setHall(e.target.value)}
-              className="rounded-lg border border-hair-2 bg-white px-3 py-1.5 text-sm text-coal"
+              className="rounded-lg border border-hair-2 bg-card px-3 py-1.5 text-sm text-coal"
             >
               <option value="">{tr('Barcha zallar', 'Barlıq zallar')}</option>
               {(halls ?? []).map((h) => (
@@ -135,7 +135,7 @@ export default function DashboardPage() {
                 if (hall && window.confirm(tr('Shu zal navbatini tiklaysizmi?', 'Usı zal nóbetin tiklewdi qálaysız ba?'))) reset.mutate();
               }}
               disabled={!hall || reset.isPending}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-hair-2 bg-white px-3 py-1.5 text-sm font-semibold text-coal-2 hover:text-coral disabled:opacity-40"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-hair-2 bg-card px-3 py-1.5 text-sm font-semibold text-coal-2 hover:text-coral disabled:opacity-40"
             >
               <RotateCcw className="h-4 w-4" />
               {tr('Tiklash', 'Tiklew')}
@@ -182,7 +182,7 @@ export default function DashboardPage() {
 
           <HourlyLoadChart data={data.hourly} />
 
-          <section className="rounded-2xl border border-hair bg-white/40 p-6">
+          <section className="rounded-2xl border border-hair bg-card/40 p-6">
             <div className="mb-4 flex items-center justify-between">
               <span className="eyebrow">{tr("So'nggi talonlar", 'Sońǵı talonlar')}</span>
               <span className="text-xs text-coal-3">{data.recent.length} {tr('ta yozuv', 'jazıw')}</span>

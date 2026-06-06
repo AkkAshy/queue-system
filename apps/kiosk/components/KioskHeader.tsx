@@ -27,7 +27,7 @@ export function KioskHeader() {
   };
 
   return (
-    <header className="flex items-center justify-between gap-8 border-b border-hair bg-white px-10 py-5">
+    <header className="flex items-center justify-between gap-8 border-b border-hair bg-card px-10 py-5">
       <div className="flex items-center gap-4">
         {/* coral monogram chip — doubles as the hidden settings gesture */}
         <button
