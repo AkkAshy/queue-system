@@ -111,9 +111,10 @@ services:
         NEXT_PUBLIC_USE_MSW: "0"
         NEXT_PUBLIC_WS_URL: ws://${BOX_HOST}
         APP_BASE_PATH: /tablo
-        # Local board video served by nginx from deploy/media/ (offline-first).
-        # Board plays this; falls back to the admin YouTube URL if file missing.
-        NEXT_PUBLIC_BOARD_VIDEO: /media/board.mp4
+        # Local board video PLAYLIST folder served by nginx (offline-first).
+        # Board plays every video here in a loop; falls back to the admin
+        # YouTube URL if the folder is empty.
+        NEXT_PUBLIC_BOARD_MEDIA_DIR: /media/
     restart: unless-stopped
     expose:
       - "3000"
