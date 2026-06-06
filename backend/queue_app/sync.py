@@ -146,6 +146,7 @@ def apply_catalog(snapshot: dict) -> dict:
     for h in snapshot.get("halls", []):
         Hall.objects.update_or_create(id=h["id"], defaults={
             "code": h["code"], "name_kaa": h["name_kaa"], "name_ru": h["name_ru"],
+            "name_uz": h.get("name_uz", ""), "name_en": h.get("name_en", ""),
             "is_active": h["is_active"], "order": h["order"],
         })
         counts["halls"] += 1
@@ -154,6 +155,7 @@ def apply_catalog(snapshot: dict) -> dict:
         ServiceCategory.objects.update_or_create(id=c["id"], defaults={
             "hall_id": c.get("hall_id"), "code": c["code"],
             "name_kaa": c["name_kaa"], "name_ru": c["name_ru"],
+            "name_uz": c.get("name_uz", ""), "name_en": c.get("name_en", ""),
             "color": c["color"], "order": c["order"],
         })
         counts["categories"] += 1
@@ -161,7 +163,9 @@ def apply_catalog(snapshot: dict) -> dict:
     for s in snapshot.get("services", []):
         Service.objects.update_or_create(id=s["id"], defaults={
             "category_id": s["category_id"], "name_kaa": s["name_kaa"],
-            "name_ru": s["name_ru"], "sla_days": s["sla_days"],
+            "name_ru": s["name_ru"],
+            "name_uz": s.get("name_uz", ""), "name_en": s.get("name_en", ""),
+            "sla_days": s["sla_days"],
             "delivery_type": s["delivery_type"], "requires_visit": s["requires_visit"],
             "is_active": s["is_active"], "is_popular": s["is_popular"],
         })

@@ -64,6 +64,28 @@ def test_apply_catalog_recreates_missing_rows(seeded):
     assert counts["services"] == before
 
 
+def test_apply_catalog_syncs_uz_en_names(seeded):
+    """Uzbek + English translations must survive snapshot → apply (the offline
+    box gets all 4 languages, not just kaa/ru)."""
+    from catalog.models import Service
+
+    svc = Service.objects.first()
+    svc.name_uz = "Hujjat (uz)"
+    svc.name_en = "Document (en)"
+    svc.save()
+
+    snap = sync.catalog_snapshot()
+
+    # Simulate the box missing the translations (old apply dropped uz/en).
+    Service.objects.filter(id=svc.id).update(name_uz="", name_en="")
+
+    sync.apply_catalog(snap)
+
+    svc.refresh_from_db()
+    assert svc.name_uz == "Hujjat (uz)"
+    assert svc.name_en == "Document (en)"
+
+
 def test_apply_catalog_syncs_schedules(seeded):
     from queue_app.models import WorkSchedule
 

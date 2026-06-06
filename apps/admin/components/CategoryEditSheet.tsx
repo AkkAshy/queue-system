@@ -36,7 +36,9 @@ const EMPTY: Draft = {
   code: '',
   name_kaa: '',
   name_ru: '',
-  color: '#DC6A4C',
+  name_uz: '',
+  name_en: '',
+  color: '#2563EB',
   order: 0,
   hall_id: null,
 };
@@ -142,6 +144,22 @@ export function CategoryEditSheet({ category, open, onOpenChange }: Props) {
               id="name_kaa"
               value={draft.name_kaa}
               onChange={(e) => setDraft({ ...draft, name_kaa: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="name_uz">{tr('Nomi (uz)', 'Atı (uz)')}</Label>
+            <Input
+              id="name_uz"
+              value={draft.name_uz ?? ''}
+              onChange={(e) => setDraft({ ...draft, name_uz: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="name_en">{tr('Nomi (en)', 'Atı (en)')}</Label>
+            <Input
+              id="name_en"
+              value={draft.name_en ?? ''}
+              onChange={(e) => setDraft({ ...draft, name_en: e.target.value })}
             />
           </div>
           <div className="space-y-2">
