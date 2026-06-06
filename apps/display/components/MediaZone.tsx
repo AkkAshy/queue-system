@@ -1,21 +1,42 @@
 'use client';
 
+import { useState } from 'react';
 import { youtubeEmbed } from '@/lib/youtube';
 
 /**
- * Left media zone — plays the YouTube URL configured in the admin app.
- * Accepts youtu.be/ID, watch?v=ID and /embed/ID forms. Falls back to a
- * branded placeholder when no (valid) URL is set.
+ * Left media zone. Priority:
+ *   1. Local video file (NEXT_PUBLIC_BOARD_VIDEO, e.g. "/media/board.mp4")
+ *      served by the box itself — works fully OFFLINE, no YouTube needed.
+ *   2. YouTube URL from admin (fallback, needs internet).
+ *   3. Branded placeholder.
+ *
+ * The local file is the recommended setup for the on-site box: drop an MP4 in
+ * the box's media folder, nginx serves it at /media/. If the file is missing
+ * (404 → <video> error) we automatically fall back to the YouTube embed.
  */
+const LOCAL_VIDEO = process.env.NEXT_PUBLIC_BOARD_VIDEO || '';
+
 export function MediaZone({ url }: { url?: string | null }) {
+  const [videoFailed, setVideoFailed] = useState(false);
   const embed = youtubeEmbed(url);
+  const useLocal = LOCAL_VIDEO && !videoFailed;
 
   return (
     <section
       className="relative overflow-hidden rounded-rxl bg-coal shadow-soft"
       style={{ gridColumn: 1, gridRow: 1 }}
     >
-      {embed ? (
+      {useLocal ? (
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          src={LOCAL_VIDEO}
+          autoPlay
+          muted
+          loop
+          playsInline
+          onError={() => setVideoFailed(true)}
+        />
+      ) : embed ? (
         <iframe
           key={embed}
           className="absolute inset-0 h-full w-full border-0"

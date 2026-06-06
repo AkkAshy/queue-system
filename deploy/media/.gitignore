@@ -1,0 +1,5 @@
+# Board video files are NOT committed — drop them on the box.
+*.mp4
+*.webm
+*.mov
+!README.md
