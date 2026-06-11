@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Hall, ServiceCategory, Service, Ticket } from '@queue/types';
+import { safeUUID } from '@/lib/uuid';
 
 interface KioskState {
   hall: Hall | null;
@@ -43,7 +44,7 @@ export const useKioskStore = create<KioskState>()(
       prepareIdempotencyKey: () => {
         const existing = get().idempotencyKey;
         if (existing) return existing;
-        const key = crypto.randomUUID();
+        const key = safeUUID();
         set({ idempotencyKey: key });
         return key;
       },
