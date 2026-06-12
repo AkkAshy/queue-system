@@ -83,9 +83,9 @@ export default function HomePage() {
           </>
         )}
 
-        {/* All categories */}
+        {/* All categories — one per row (full width, names never truncate) */}
         <p className="eyebrow mt-12">{t('byCategory')}</p>
-        <div className="mt-4 grid grid-cols-3 gap-4">
+        <div className="mt-4 grid grid-cols-1 gap-3">
           {(categories ?? [])
             .slice()
             .sort((a, b) => a.order - b.order)
