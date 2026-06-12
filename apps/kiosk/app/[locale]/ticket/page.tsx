@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Printer } from 'lucide-react';
 import { localizedName, type KioskLocale } from '@queue/types';
@@ -16,9 +16,31 @@ export default function TicketPage() {
   const router = useRouter();
   const { ticket, category, service, hall, printFailed, reset } = useKioskStore();
 
+  // Auto-return to the home screen so the next person can take a ticket. A bit
+  // longer when printing failed, so the visitor can note the number on screen.
+  const autoSecs = printFailed ? 12 : 6;
+  const [secs, setSecs] = useState(autoSecs);
+
   useEffect(() => {
     if (!ticket) router.replace(`/${locale}`);
   }, [ticket, locale, router]);
+
+  // Countdown + auto-redirect home when it hits zero.
+  useEffect(() => {
+    if (!ticket) return;
+    const id = setInterval(() => {
+      setSecs((s) => {
+        if (s <= 1) {
+          clearInterval(id);
+          reset();
+          router.replace(`/${locale}`);
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [ticket, reset, router, locale]);
 
   if (!ticket || !category) return null;
 
@@ -104,7 +126,7 @@ export default function TicketPage() {
               onClick={goHome}
               className="rounded-full bg-card px-10 py-4 font-semibold text-coal-2 shadow-soft transition-colors hover:text-coral"
             >
-              {t('new')}
+              {t('new')} · {secs}
             </button>
           </div>
         </div>
