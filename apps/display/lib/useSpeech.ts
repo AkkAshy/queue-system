@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
+import { getAudioCtx } from './audio';
 
 /**
  * Uzbek voice announcement for a call: «A, nol to'rt ikki, uchinchi oynaga o'ting».
@@ -17,7 +18,9 @@ import { useCallback } from 'react';
  * Calls are QUEUED — overlapping calls are spoken one after another.
  */
 
-const BASE = '/voice/uz';
+// Prefix the basePath (e.g. /tablo in prod) so the clips resolve under the
+// app's mount point — without it the fetch 404s and we fall back to browser TTS.
+const BASE = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/voice/uz`;
 const LEAD_MS = 550; // let the chime finish before the voice starts
 
 const DIGITS_UZ = ['nol', 'bir', 'ikki', 'uch', "to'rt", 'besh', 'olti', 'yetti', 'sakkiz', "to'qqiz"];
@@ -60,20 +63,10 @@ function buildPhrase(number: string, counterNumber: string): Phrase {
 }
 
 // ---------- shared Web Audio context + buffer cache ----------
-let ctx: AudioContext | null = null;
 const cache = new Map<string, AudioBuffer | null>(); // url → buffer (null = load failed)
 
 function getCtx(): AudioContext | null {
-  if (typeof window === 'undefined') return null;
-  if (!ctx) {
-    const Ctor =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!Ctor) return null;
-    ctx = new Ctor();
-  }
-  void ctx.resume(); // resume after a user gesture (kiosk autoplay)
-  return ctx;
+  return getAudioCtx(); // one context shared with the chime; gesture-unlocked
 }
 
 async function loadBuffer(url: string): Promise<AudioBuffer | null> {

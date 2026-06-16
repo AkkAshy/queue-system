@@ -1074,7 +1074,7 @@ const (
 // Layout (top to bottom):
 //
 //	[Init]
-//	"АДЖИНИЯЗ АТЫНДАҒЫ НДПИ"        (CP1251, centered, bold)
+//	"АЖИНИЯЗ АТЫНДАҒЫ НДПИ"        (CP1251, centered, bold)
 //	"Registrator ofisi"             (ASCII, centered)
 //	-------- dashed rule --------
 //	"SIZIŃ NOMERIŃIZ / ВАШ НОМЕР"   (centered, small)
@@ -1097,7 +1097,7 @@ func Render(req PrintRequest) ([]byte, error) {
 
 	// Header
 	e.Align(AlignCenter).Bold(true)
-	hdr, err := EncodeRU("АДЖИНИЯЗ АТЫНДАҒЫ НДПИ")
+	hdr, err := EncodeRU("АЖИНИЯЗ АТЫНДАҒЫ НДПИ")
 	if err != nil {
 		return nil, fmt.Errorf("encode header: %w", err)
 	}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
+import { getAudioCtx } from './audio';
 
 /**
  * A short two-tone WebAudio chime, played when a new call lands.
@@ -11,22 +12,14 @@ import { useCallback, useRef } from 'react';
  * The visuals flash in parallel; only the audio is serialised.
  */
 export function useChime() {
-  const ctxRef = useRef<AudioContext | null>(null);
   const nextAtRef = useRef(0); // earliest start time for the next queued chime
 
   return useCallback((muted: boolean) => {
     if (muted) return;
     if (typeof window === 'undefined') return;
 
-    const Ctor =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (!Ctor) return;
-
-    if (!ctxRef.current) ctxRef.current = new Ctor();
-    const ctx = ctxRef.current;
-    void ctx.resume(); // resume if suspended before a user gesture
+    const ctx = getAudioCtx(); // shared with the voice; gesture-unlocked
+    if (!ctx) return;
 
     const GAP = 0.65; // spacing between queued chimes
     const start = Math.max(ctx.currentTime, nextAtRef.current);

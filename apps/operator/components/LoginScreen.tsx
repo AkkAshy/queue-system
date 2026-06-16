@@ -1,12 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import { useOperatorStore } from '@/store/operator-store';
@@ -19,34 +16,29 @@ export function LoginScreen() {
   const startShift = useOperatorStore((s) => s.startShift);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [hallId, setHallId] = useState('');
-  const [counterId, setCounterId] = useState('');
 
-  // Counters/halls are public (GET); the users list is chief-only now → operators
-  // authenticate by username + password instead of picking themselves.
-  const counters = useQuery({ queryKey: ['counters'], queryFn: api.listCounters });
-  const halls = useQuery({ queryKey: ['halls'], queryFn: api.listHalls });
-  const activeHalls = (halls.data ?? []).filter((h) => h.is_active);
-  // Windows in the chosen hall only (so the operator picks their own desk).
-  const activeCounters = (counters.data ?? []).filter(
-    (c) => c.is_active && (!hallId || c.hall_id === Number(hallId)),
-  );
-
+  // The operator no longer picks a hall/window — the admin assigns the window to
+  // the account (User.counter, via the admin → Operatorlar page). On login we
+  // read the assigned counter from the auth response and resolve its label from
+  // the public counters list. The hall follows from the counter (Counter.hall).
   const start = useMutation({
     mutationFn: async () => {
       const auth = await api.login(username.trim(), password);
+      if (!auth.counter_id) {
+        throw Object.assign(new Error('no-counter'), { code: 'NO_COUNTER' });
+      }
+      const counters = await api.listCounters();
+      const counter = counters.find((c) => c.id === auth.counter_id);
+      if (!counter) {
+        throw Object.assign(new Error('no-counter'), { code: 'NO_COUNTER' });
+      }
       const session = await api.createSession({
         user_id: auth.user_id,
-        counter_id: Number(counterId),
+        counter_id: counter.id,
       });
-      return { auth, session };
+      return { auth, counter, session };
     },
-    onSuccess: ({ auth, session }) => {
-      const counter = activeCounters.find((c) => c.id === session.counter_id);
-      if (!counter) {
-        toast.error(tr('Oyna topilmadi', 'Áyne tabılmadı'));
-        return;
-      }
+    onSuccess: ({ auth, counter, session }) => {
       startShift({
         token: auth.token,
         userId: auth.user_id,
@@ -57,10 +49,21 @@ export function LoginScreen() {
         sessionId: session.id,
       });
     },
-    onError: () => toast.error(tr('Login yoki parol noto\'g\'ri', 'Login yamasa parol qáte')),
+    onError: (err: unknown) => {
+      if ((err as { code?: string })?.code === 'NO_COUNTER') {
+        toast.error(
+          tr(
+            'Sizga oyna biriktirilmagan. Administratorga murojaat qiling.',
+            'Sizge áyne biriktirilmegen. Administratorǵa múrájat etiń.',
+          ),
+        );
+        return;
+      }
+      toast.error(tr("Login yoki parol noto'g'ri", 'Login yamasa parol qáte'));
+    },
   });
 
-  const canStart = !!(username.trim() && password && counterId && !start.isPending);
+  const canStart = !!(username.trim() && password && !start.isPending);
   const inputCls =
     'h-11 w-full rounded-rsm border border-hair-2 bg-card px-3 text-sm text-coal outline-none focus:border-coral';
 
@@ -75,6 +78,12 @@ export function LoginScreen() {
           </div>
         </div>
         <h1 className="mt-3 text-2xl font-bold leading-tight text-coal">{tr('Kirish', 'Kiriw')}</h1>
+        <p className="mt-1 text-sm text-coal-3">
+          {tr(
+            'Oynangiz administrator tomonidan biriktiriladi',
+            'Áynéńiz administrator tárepinen biriktiriledi',
+          )}
+        </p>
       </div>
 
       <form
@@ -103,41 +112,6 @@ export function LoginScreen() {
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs">{tr('Zal', 'Zal')}</Label>
-          <Select
-            value={hallId}
-            onValueChange={(v) => { setHallId(v); setCounterId(''); }}
-          >
-            <SelectTrigger className="h-11 text-sm">
-              <SelectValue placeholder={tr('Tanlash…', 'Saylaw…')} />
-            </SelectTrigger>
-            <SelectContent>
-              {activeHalls.map((h) => (
-                <SelectItem key={h.id} value={String(h.id)}>
-                  {tr(h.name_uz || h.name_ru, h.name_kaa)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label className="text-xs">{tr('Oyna', 'Áyne')}</Label>
-          <Select value={counterId} onValueChange={setCounterId} disabled={!hallId}>
-            <SelectTrigger className="h-11 text-sm">
-              <SelectValue placeholder={hallId ? tr('Tanlash…', 'Saylaw…') : tr('Avval zalni tanlang', 'Aldın zaldı saylań')} />
-            </SelectTrigger>
-            <SelectContent>
-              {activeCounters.map((c) => (
-                <SelectItem key={c.id} value={String(c.id)}>
-                  №{c.number} · {c.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <Button
