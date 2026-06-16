@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- coral background -->
+    <path
+        android:fillColor="#FF6B5B"
+        android:pathData="M0,0 H320 V180 H0 Z" />
+    <!-- white rounded logo square -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M130,55 h60 a8,8 0 0 1 8,8 v54 a8,8 0 0 1 -8,8 h-60 a8,8 0 0 1 -8,-8 v-54 a8,8 0 0 1 8,-8 z" />
+</vector>
