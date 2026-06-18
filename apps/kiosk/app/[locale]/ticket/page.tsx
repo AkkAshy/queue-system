@@ -66,45 +66,45 @@ export default function TicketPage() {
       <KioskHeader />
 
       <section className="flex flex-1 items-center justify-center px-10 pb-16">
-        <div className="w-full max-w-xl">
+        <div className="w-full max-w-2xl">
           <div className="paper rounded-rxl px-12 pb-12 pt-10">
             <div className="flex items-center justify-between">
               <span className="eyebrow">{t('eyebrow')}</span>
-              <span className="text-sm text-coal-3">#{ticket.id.slice(0, 8)}</span>
+              <span className="text-base text-coal-3">#{ticket.id.slice(0, 8)}</span>
             </div>
 
             <div className="my-6 border-t border-dashed border-hair-2" />
 
             <div className="text-center">
               <span className="eyebrow text-coral">{t('title')}</span>
-              <div className={`mt-3 text-8xl font-extrabold leading-none tracking-tight ${text}`}>
+              <div className={`mt-3 text-[10rem] font-extrabold leading-none tracking-tight ${text}`}>
                 {ticket.number}
               </div>
             </div>
 
             <div className="my-8 border-t border-dashed border-hair-2" />
 
-            <div className="grid grid-cols-2 gap-y-5">
+            <div className="grid grid-cols-2 gap-y-6">
               {hall && (
                 <div className="col-span-2">
                   <span className="eyebrow">{t('hall')}</span>
-                  <div className="mt-1.5 font-semibold text-coal">
+                  <div className="mt-1.5 text-2xl font-semibold text-coal">
                     {localizedName(hall, locale)}
                   </div>
                 </div>
               )}
               <div>
                 <span className="eyebrow">{t('category')}</span>
-                <div className="mt-1.5 font-semibold text-coal">{categoryName}</div>
+                <div className="mt-1.5 text-2xl font-semibold text-coal">{categoryName}</div>
               </div>
               <div className="text-right">
                 <span className="eyebrow">{t('issued')}</span>
-                <div className="mt-1.5 font-medium tabular-nums text-coal">{issuedText}</div>
+                <div className="mt-1.5 text-xl font-medium tabular-nums text-coal">{issuedText}</div>
               </div>
               {serviceName && (
                 <div className="col-span-2">
                   <span className="eyebrow">{t('service')}</span>
-                  <div className="mt-1.5 leading-snug text-coal">{serviceName}</div>
+                  <div className="mt-1.5 text-xl leading-snug text-coal">{serviceName}</div>
                 </div>
               )}
             </div>
@@ -112,19 +112,19 @@ export default function TicketPage() {
 
           {printFailed && (
             <div className="mt-6 flex items-center gap-4 rounded-rlg border border-coral/30 bg-coral-soft px-6 py-5 text-left">
-              <Printer className="h-7 w-7 shrink-0 text-coral" strokeWidth={2} />
-              <p className="text-base font-medium leading-snug text-coal">
+              <Printer className="h-9 w-9 shrink-0 text-coral" strokeWidth={2} />
+              <p className="text-xl font-medium leading-snug text-coal">
                 {t('notPrinted')}
               </p>
             </div>
           )}
 
-          <p className="mt-8 text-center text-lg text-coal-2">{t('goTo')}</p>
+          <p className="mt-8 text-center text-2xl text-coal-2">{t('goTo')}</p>
 
           <div className="mt-6 flex justify-center">
             <button
               onClick={goHome}
-              className="rounded-full bg-card px-10 py-4 font-semibold text-coal-2 shadow-soft transition-colors hover:text-coral"
+              className="rounded-full bg-card px-10 py-5 text-xl font-semibold text-coal-2 shadow-soft transition-colors hover:text-coral"
             >
               {t('new')} · {secs}
             </button>

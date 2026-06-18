@@ -84,36 +84,36 @@ export default function ConfirmPage() {
         <div className="w-full max-w-2xl">
           <div className="mb-8 text-center">
             <span className="eyebrow text-coral">{t('eyebrow')}</span>
-            <h1 className="mt-3 text-4xl font-extrabold text-coal">{t('title')}</h1>
+            <h1 className="mt-3 text-5xl font-extrabold text-coal">{t('title')}</h1>
           </div>
 
           <div className="paper rounded-rxl p-8">
             <div className="flex items-center gap-5">
-              <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-rlg ${chip}`}>
-                <Icon className="h-8 w-8" strokeWidth={2} />
+              <span className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-rlg ${chip}`}>
+                <Icon className="h-10 w-10" strokeWidth={2} />
               </span>
               <div>
                 <span className="eyebrow">{t('category')}</span>
-                <div className="mt-1 text-xl font-bold text-coal">{categoryName}</div>
+                <div className="mt-1 text-3xl font-bold text-coal">{categoryName}</div>
               </div>
             </div>
 
             <div className="my-6 h-px bg-hair" aria-hidden />
 
             <span className="eyebrow">{t('service')}</span>
-            <p className="mt-2 text-lg font-medium leading-snug text-coal">{serviceName}</p>
+            <p className="mt-2 text-2xl font-medium leading-snug text-coal">{serviceName}</p>
           </div>
 
           <div className="mt-8 flex gap-4">
             <button
-              className="flex-1 rounded-r border border-hair-2 bg-card py-6 text-lg font-semibold text-coal-2 transition-colors hover:text-coal disabled:opacity-40"
+              className="flex-1 rounded-r border border-hair-2 bg-card py-7 text-2xl font-semibold text-coal-2 transition-colors hover:text-coal disabled:opacity-40"
               onClick={() => router.push(`/${locale}`)}
               disabled={mutation.isPending}
             >
               {t('cancel')}
             </button>
             <button
-              className="flex-1 rounded-r bg-coral py-6 text-lg font-bold text-white shadow-coral transition-all hover:bg-coral-600 active:translate-y-px disabled:opacity-60"
+              className="flex-1 rounded-r bg-coral py-7 text-2xl font-bold text-primary-foreground shadow-coral transition-all hover:bg-coral-600 active:translate-y-px disabled:opacity-60"
               onClick={confirm}
               disabled={mutation.isPending}
             >

@@ -19,14 +19,14 @@ export function CategoryCard({ category, count }: Props) {
   return (
     <Link
       href={`/${locale}/category/${category.code}`}
-      className="paper paper-interactive flex items-center gap-4 rounded-r p-5"
+      className="paper paper-interactive flex items-center gap-5 rounded-r p-6 touch-target"
     >
-      <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-rsm ${chip}`}>
-        <Icon className="h-6 w-6" strokeWidth={2} />
+      <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-rsm ${chip}`}>
+        <Icon className="h-8 w-8" strokeWidth={2} />
       </span>
       <div className="min-w-0">
-        <div className="truncate font-semibold leading-snug text-coal">{name}</div>
-        <div className="mt-0.5 text-sm text-coal-3">
+        <div className="truncate text-2xl font-bold leading-snug text-coal">{name}</div>
+        <div className="mt-1 text-base text-coal-3">
           {t('serviceCount', { count })}
         </div>
       </div>

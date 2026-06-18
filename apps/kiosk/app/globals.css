@@ -17,11 +17,11 @@
 @layer components {
   /* uppercase micro-label */
   .eyebrow {
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    font-size: 0.72rem;
-    letter-spacing: 0.14em;
-    @apply text-coal-3;
+    font-size: 0.95rem;
+    letter-spacing: 0.12em;
+    @apply text-coal-2;
   }
 
   /* rounded surface card (theme-aware) */
@@ -45,5 +45,5 @@
 }
 
 @layer utilities {
-  .touch-target { min-height: 72px; min-width: 72px; }
+  .touch-target { min-height: 88px; min-width: 88px; }
 }

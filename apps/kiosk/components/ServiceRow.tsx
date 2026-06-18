@@ -37,12 +37,12 @@ export function ServiceRow({ service, category, onClick }: Props) {
         />
       )}
       <div className="flex-1 pl-2">
-        <div className="font-medium leading-snug text-coal">{name}</div>
-        {disabled && <div className="mt-1.5 text-sm text-coal-3">{t('onlineHint')}</div>}
+        <div className="text-xl font-semibold leading-snug text-coal">{name}</div>
+        {disabled && <div className="mt-1.5 text-base text-coal-3">{t('onlineHint')}</div>}
       </div>
       {!disabled && (
         <span
-          className={cn('text-2xl transition-transform duration-200 group-hover:translate-x-1', text)}
+          className={cn('text-3xl transition-transform duration-200 group-hover:translate-x-1', text)}
           aria-hidden
         >
           →

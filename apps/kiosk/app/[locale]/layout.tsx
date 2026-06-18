@@ -38,8 +38,8 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={rubik.variable}>
-      <body className="min-h-screen bg-cream font-sans text-coal antialiased">
+    <html lang={locale} className={`${rubik.variable} dark`}>
+      <body className="min-h-screen bg-cream font-sans text-lg text-coal antialiased">
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <KioskGuards />

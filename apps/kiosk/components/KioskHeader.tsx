@@ -35,13 +35,13 @@ export function KioskHeader() {
           aria-hidden
           tabIndex={-1}
           onClick={onMonogramTap}
-          className="flex h-12 w-12 items-center justify-center rounded-r bg-coral text-base font-bold text-white shadow-coral"
+          className="flex h-14 w-14 items-center justify-center rounded-r bg-coral text-lg font-bold text-primary-foreground shadow-coral"
         >
           NP
         </button>
         <div className="flex flex-col leading-tight">
-          <span className="text-lg font-bold text-coal">{t('name')}</span>
-          <span className="text-sm text-coal-2">{t('office')}</span>
+          <span className="text-2xl font-bold text-coal">{t('name')}</span>
+          <span className="text-base text-coal-2">{t('office')}</span>
         </div>
       </div>
 

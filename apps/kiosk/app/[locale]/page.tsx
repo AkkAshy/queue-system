@@ -51,7 +51,7 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-5xl px-10 pb-16 pt-10">
         <span className="eyebrow text-coral">{t('eyebrow')}</span>
-        <h1 className="mt-3 text-5xl font-extrabold tracking-tight text-coal">
+        <h1 className="mt-3 text-6xl font-extrabold tracking-tight text-coal">
           {t('title')}
         </h1>
 
@@ -68,12 +68,12 @@ export default function HomePage() {
                   <button
                     key={s.id}
                     onClick={() => pickService(s)}
-                    className="paper paper-interactive flex items-center gap-4 rounded-r p-4 text-left"
+                    className="paper paper-interactive flex items-center gap-4 rounded-r p-5 text-left touch-target"
                   >
-                    <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-rsm ${chip}`}>
-                      <Icon className="h-5 w-5" strokeWidth={2} />
+                    <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-rsm ${chip}`}>
+                      <Icon className="h-7 w-7" strokeWidth={2} />
                     </span>
-                    <span className="line-clamp-2 font-semibold leading-snug text-coal">
+                    <span className="line-clamp-2 text-xl font-semibold leading-snug text-coal">
                       {name}
                     </span>
                   </button>

@@ -46,18 +46,18 @@ export default function CategoryPage() {
       <section className="mx-auto max-w-4xl px-10 pb-16 pt-6">
         <button
           onClick={() => router.push(`/${locale}`)}
-          className="mb-8 inline-flex items-center gap-2 rounded-full bg-card px-5 py-2.5 text-sm font-medium text-coal-2 shadow-soft transition-colors hover:text-coral"
+          className="mb-8 inline-flex items-center gap-2 rounded-full bg-card px-6 py-3 text-lg font-semibold text-coal-2 shadow-soft transition-colors hover:text-coral"
         >
-          <span className="text-lg leading-none">←</span>
+          <span className="text-2xl leading-none">←</span>
           {t('back')}
         </button>
 
         <div className="mb-8 flex items-center gap-5">
-          <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-rlg ${chip}`}>
-            <Icon className="h-8 w-8" strokeWidth={2} />
+          <span className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-rlg ${chip}`}>
+            <Icon className="h-10 w-10" strokeWidth={2} />
           </span>
           <div>
-            <h1 className="text-3xl font-bold leading-tight text-coal">{categoryName}</h1>
+            <h1 className="text-4xl font-extrabold leading-tight text-coal">{categoryName}</h1>
             {services && (
               <p className="mt-1 text-sm text-coal-3">
                 {t('serviceCount', { count: services.length })}
