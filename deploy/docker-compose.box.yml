@@ -101,6 +101,11 @@ services:
   watchtower:
     image: containrrr/watchtower
     restart: unless-stopped
+    environment:
+      # The watchtower image ships an old Docker API client (1.25); modern
+      # Docker daemons require >= 1.40. Pin a supported version so its calls
+      # aren't rejected (otherwise it crash-loops on every poll).
+      DOCKER_API_VERSION: "1.41"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --interval 120 --cleanup --label-enable
