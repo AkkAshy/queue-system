@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { Counter, Service } from '@queue/types';
+import { localizedName, type Counter, type Service } from '@queue/types';
 import {
   Sheet,
   SheetContent,
@@ -17,7 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useTr } from '@/lib/i18n';
+import { useTr, useLang } from '@/lib/i18n';
 
 interface Props {
   counter: Counter | null; // null = creating
@@ -37,6 +37,7 @@ const EMPTY: Draft = {
 
 export function CounterEditSheet({ counter, services, open, onOpenChange }: Props) {
   const tr = useTr();
+  const { lang } = useLang();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(counter ?? EMPTY);
 
@@ -133,7 +134,7 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
                     checked={draft.service_ids.includes(s.id)}
                     onCheckedChange={() => toggleService(s.id)}
                   />
-                  <span className="flex-1 text-sm">{s.name_ru}</span>
+                  <span className="flex-1 text-sm">{localizedName(s, lang)}</span>
                   <span className="font-mono text-xs text-coal-3">#{s.id}</span>
                 </label>
               ))}
