@@ -88,12 +88,15 @@ export function MediaZone({ url }: { url?: string | null }) {
           title="NMPI media"
         />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-center text-white/90">
-          <div className="flex h-20 w-20 items-center justify-center rounded-rlg bg-coral text-2xl font-bold shadow-coral">
-            NP
-          </div>
-          <span className="text-2xl font-bold">Ájiniyaz atındaǵı NMPI</span>
-          <span className="text-base text-white/60">Registrator ofisi</span>
+        <div className="flex h-full w-full flex-col items-center justify-center gap-6 text-center text-white/90">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`}
+            alt="NMPI"
+            className="h-56 w-56 rounded-full bg-white object-contain p-4 shadow-soft"
+          />
+          <span className="text-3xl font-bold">Ájiniyaz atındaǵı NMPI</span>
+          <span className="text-lg text-white/60">Registrator ofisi</span>
         </div>
       )}
     </section>

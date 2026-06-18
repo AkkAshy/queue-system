@@ -125,8 +125,13 @@ export default function Page() {
     <main className="flex h-screen w-screen flex-col bg-cream">
       <header className="flex items-center justify-between border-b border-hair bg-card px-12 py-5">
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-r bg-coral text-lg font-bold text-white shadow-coral">
-            NP
+          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-soft">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/logo.png`}
+              alt="NMPI"
+              className="h-full w-full object-contain p-1"
+            />
           </div>
           <div className="flex flex-col leading-tight">
             <span className="text-xl font-bold text-coal">

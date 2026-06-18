@@ -35,9 +35,11 @@ export function KioskHeader() {
           aria-hidden
           tabIndex={-1}
           onClick={onMonogramTap}
-          className="flex h-14 w-14 items-center justify-center rounded-r bg-coral text-lg font-bold text-primary-foreground shadow-coral"
+          className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white shadow-soft"
         >
-          NP
+          {/* NMPI crest — white disc so the dark-blue logo reads on the dark theme */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="NMPI" className="h-full w-full object-contain p-1" />
         </button>
         <div className="flex flex-col leading-tight">
           <span className="text-2xl font-bold text-coal">{t('name')}</span>
