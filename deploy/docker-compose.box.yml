@@ -3,7 +3,8 @@
 # Watchtower polls GHCR and redeploys changed containers automatically — so a
 # `git push` to main is all it takes to update the box, no USB flash needed.
 #
-#   docker login ghcr.io -u <github-user>          # once (read:packages PAT)
+# GHCR packages are PUBLIC → no docker login needed.
+#   docker compose -f deploy/docker-compose.box.yml --env-file deploy/.env.local pull
 #   docker compose -f deploy/docker-compose.box.yml --env-file deploy/.env.local up -d
 #
 # Reuses the SAME deploy/.env.local that the build-on-box stack uses — one env
@@ -95,14 +96,13 @@ services:
 
   # Auto-updater: every 2 min checks GHCR for new :latest of the labelled
   # containers and redeploys them (only services with the watchtower label —
-  # db/redis/nginx are left alone). Reads ~/.docker/config.json for GHCR auth.
+  # db/redis/nginx are left alone). GHCR packages are public, so no registry
+  # creds are needed (no docker config mount → clean on Windows too).
   watchtower:
     image: containrrr/watchtower
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      # GHCR creds from `docker login` (compose expands ${HOME}, not ~).
-      - ${HOME}/.docker/config.json:/config.json:ro
     command: --interval 120 --cleanup --label-enable
 
 volumes:
