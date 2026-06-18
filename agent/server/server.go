@@ -115,7 +115,14 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 
 // printRequest is the JSON schema accepted by POST /print.
 type printRequest struct {
-	Number          string    `json:"number"`
+	Number string `json:"number"`
+	// Locale the visitor used + the localized names in that locale. Preferred
+	// over the legacy kaa/ru pairs below.
+	Locale       string `json:"locale"`
+	HallName     string `json:"hall_name"`
+	CategoryName string `json:"category_name"`
+	ServiceName  string `json:"service_name"`
+	// Legacy bilingual fields (older kiosk builds).
 	HallNameKaa     string    `json:"hall_name_kaa"`
 	HallNameRu      string    `json:"hall_name_ru"`
 	CategoryCode    string    `json:"category_code"`
@@ -178,6 +185,10 @@ func (s *Server) handlePrint(w http.ResponseWriter, r *http.Request) {
 
 	bytesOut, err := printer.Render(printer.PrintRequest{
 		Number:          req.Number,
+		Locale:          req.Locale,
+		HallName:        req.HallName,
+		CategoryName:    req.CategoryName,
+		ServiceName:     req.ServiceName,
 		HallNameKaa:     req.HallNameKaa,
 		HallNameRu:      req.HallNameRu,
 		CategoryCode:    req.CategoryCode,

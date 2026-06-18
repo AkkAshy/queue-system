@@ -78,6 +78,37 @@ func EncodeKAA(s string) []byte {
 	return []byte(TransliterateKAA(s))
 }
 
+// EncodeLatin renders any Latin-script text (Karakalpak / Uzbek / English) as
+// pure ASCII for an ESC/POS printer whose code page is PC866 (which has no
+// Latin diacritics). Diacritics become ASCII digraphs (TransliterateKAA),
+// common punctuation is folded, and anything still non-ASCII becomes '?'.
+func EncodeLatin(s string) []byte {
+	t := TransliterateKAA(s)
+	var b strings.Builder
+	b.Grow(len(t))
+	for _, r := range t {
+		switch {
+		case r < 128:
+			b.WriteRune(r)
+		default:
+			if repl, ok := latinFallback[r]; ok {
+				b.WriteString(repl)
+			} else {
+				b.WriteByte('?')
+			}
+		}
+	}
+	return []byte(b.String())
+}
+
+// latinFallback folds non-ASCII punctuation that survives transliteration.
+var latinFallback = map[rune]string{
+	'—': "-", '–': "-",
+	'«': "\"", '»': "\"", '“': "\"", '”': "\"",
+	'‘': "'", '’': "'", 'ʻ': "'", 'ʼ': "'",
+	'…': "...", '№': "No.",
+}
+
 // TransliterateKAA converts Karakalpak-Latin diacritics to ASCII digraphs.
 // Mapping (UPPER first, then lower):
 //

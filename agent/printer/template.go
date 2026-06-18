@@ -4,22 +4,55 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // PrintRequest is the payload sent by the kiosk for every printed ticket.
 // Field names match the JSON keys used on the wire (snake_case via struct
 // tags on server.PrintRequest, which embeds this).
 type PrintRequest struct {
-	Number          string    // e.g. "A042"
-	HallNameKaa     string    // hall (zal) Karakalpak name
-	HallNameRu      string    // hall (zal) Russian name
-	CategoryCode    string    // "A".."I"
-	CategoryNameKaa string    // Karakalpak name
-	CategoryNameRu  string    // Russian name
-	ServiceNameKaa  string    // Karakalpak service name
-	ServiceNameRu   string    // Russian service name
+	Number string // e.g. "A042"
+	// Locale the visitor used on the kiosk: "ru" | "kaa" | "uz" | "en".
+	// Drives both which name to print and how to encode it (ru → CP866
+	// Cyrillic, everything else → ASCII Latin).
+	Locale string
+	// Localized names (already in Locale) — preferred over the kaa/ru pair.
+	HallName     string
+	CategoryName string
+	ServiceName  string
+	// Legacy bilingual fields — fallback when the kiosk didn't send localized
+	// names (older build). Kept so an old kiosk still prints something sane.
+	HallNameKaa     string
+	HallNameRu      string
+	CategoryCode    string // "A".."I"
+	CategoryNameKaa string
+	CategoryNameRu  string
+	ServiceNameKaa  string
+	ServiceNameRu   string
 	IssuedAt        time.Time // UTC
 	TicketID        string    // UUID — goes into the QR code
+}
+
+// encodeFor renders a string for the ticket in the request's locale: Russian
+// goes through CP866, every other (Latin) locale through ASCII transliteration.
+func (req PrintRequest) encodeFor(s string) []byte {
+	if req.Locale == "ru" {
+		b, _ := EncodeRU(s) // EncodeRU never errors (replaces unsupported)
+		return b
+	}
+	return EncodeLatin(s)
+}
+
+// pickName prefers the localized field; otherwise falls back to the bilingual
+// pair, choosing by locale (ru → Russian, else Karakalpak).
+func (req PrintRequest) pickName(localized, ru, kaa string) string {
+	if localized != "" {
+		return localized
+	}
+	if req.Locale == "ru" {
+		return ru
+	}
+	return kaa
 }
 
 const (
@@ -64,13 +97,9 @@ func Render(req PrintRequest) ([]byte, error) {
 
 	e.Text([]byte(dashLine())).Feed(1)
 
-	// Number eyebrow
+	// Number eyebrow — in the visitor's language.
 	e.Size(1, 1)
-	eyebrow, err := EncodeRU("ВАШ НОМЕР")
-	if err != nil {
-		return nil, fmt.Errorf("encode eyebrow: %w", err)
-	}
-	e.Text(eyebrow).Feed(1)
+	e.Text(req.encodeFor(numberEyebrow(req.Locale))).Feed(1)
 
 	// Big number
 	e.Size(4, 4).Text([]byte(req.Number)).Feed(1)
@@ -78,45 +107,30 @@ func Render(req PrintRequest) ([]byte, error) {
 
 	e.Text([]byte(dashLine())).Feed(1)
 
-	// Hall (zal) — so the student knows which hall to wait in.
+	// Hall + category + service — printed ONLY in the visitor's chosen language
+	// (Russian → CP866 Cyrillic, everything else → ASCII Latin).
 	e.Align(AlignLeft)
-	if req.HallNameRu != "" || req.HallNameKaa != "" {
-		e.Bold(true).Text([]byte("ZAL  ")).Bold(false)
-		e.Text(EncodeKAA(req.HallNameKaa)).Feed(1)
-		if req.HallNameRu != "" {
-			hall, err := EncodeRU("     " + req.HallNameRu)
-			if err != nil {
-				return nil, err
+	printField := func(ruLabel, latinLabel, name string) {
+		if name == "" {
+			return
+		}
+		label := latinLabel
+		if req.Locale == "ru" {
+			label = ruLabel
+		}
+		for i, ln := range wrap(name, lineWidth-5) {
+			if i == 0 {
+				e.Bold(true).Text(req.encodeFor(label)).Bold(false)
+			} else {
+				e.Text([]byte("     "))
 			}
-			e.Text(hall).Feed(1)
+			e.Text(req.encodeFor(ln)).Feed(1)
 		}
 	}
 
-	// Category + service — bilingual
-	e.Bold(true).Text([]byte("KAT  ")).Bold(false)
-	e.Text(EncodeKAA(req.CategoryNameKaa)).Feed(1)
-	cat, err := EncodeRU("     " + req.CategoryNameRu)
-	if err != nil {
-		return nil, err
-	}
-	e.Text(cat).Feed(1)
-
-	kaaLines := wrap(TransliterateKAA(req.ServiceNameKaa), lineWidth-5)
-	for i, ln := range kaaLines {
-		if i == 0 {
-			e.Bold(true).Text([]byte("XIZ  ")).Bold(false)
-		} else {
-			e.Text([]byte("     "))
-		}
-		e.Text([]byte(ln)).Feed(1)
-	}
-	for _, ln := range wrap(req.ServiceNameRu, lineWidth-5) {
-		encoded, err := EncodeRU(ln)
-		if err != nil {
-			return nil, err
-		}
-		e.Text([]byte("     ")).Text(encoded).Feed(1)
-	}
+	printField("ЗАЛ  ", "ZAL  ", req.pickName(req.HallName, req.HallNameRu, req.HallNameKaa))
+	printField("КАТ  ", "KAT  ", req.pickName(req.CategoryName, req.CategoryNameRu, req.CategoryNameKaa))
+	printField("УСЛ  ", "XIZ  ", req.pickName(req.ServiceName, req.ServiceNameRu, req.ServiceNameKaa))
 
 	e.Text([]byte(dashLine())).Feed(1)
 
@@ -138,8 +152,23 @@ func dashLine() string {
 	return strings.Repeat("-", lineWidth)
 }
 
-// wrap breaks s into lines not longer than width, breaking on spaces.
-// Pure ASCII input only (run after EncodeKAA / before EncodeRU caller decides).
+// numberEyebrow returns the "your number" caption in the visitor's language.
+func numberEyebrow(locale string) string {
+	switch locale {
+	case "ru":
+		return "ВАШ НОМЕР"
+	case "uz":
+		return "SIZNING RAQAMINGIZ"
+	case "en":
+		return "YOUR NUMBER"
+	default: // kaa
+		return "SIZIŃ NÓMERIŃIZ"
+	}
+}
+
+// wrap breaks s into lines no wider than width, breaking on spaces. Width is
+// counted in RUNES (so Cyrillic UTF-8 wraps at the right visual column, not at
+// half-width as a byte count would).
 func wrap(s string, width int) []string {
 	if width <= 0 {
 		return []string{s}
@@ -148,10 +177,11 @@ func wrap(s string, width int) []string {
 	if len(words) == 0 {
 		return []string{""}
 	}
+	rc := utf8.RuneCountInString
 	var out []string
 	cur := words[0]
 	for _, w := range words[1:] {
-		if len(cur)+1+len(w) <= width {
+		if rc(cur)+1+rc(w) <= width {
 			cur = cur + " " + w
 			continue
 		}

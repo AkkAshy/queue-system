@@ -1,4 +1,11 @@
-import type { Hall, Ticket, Service, ServiceCategory } from '@queue/types';
+import {
+  localizedName,
+  type Hall,
+  type KioskLocale,
+  type Ticket,
+  type Service,
+  type ServiceCategory,
+} from '@queue/types';
 
 export interface PrintResult {
   ok: boolean;
@@ -10,6 +17,8 @@ export interface PrintContext {
   category: ServiceCategory;
   service: Service | null;
   hall?: Hall | null;
+  // The language the visitor used — the ticket is printed in this language only.
+  locale?: KioskLocale;
 }
 
 /** localStorage key holding the operator-selected printer (hidden settings). */
@@ -113,11 +122,19 @@ export async function printTicket(
     return { ok: true };
   }
 
+  const locale: KioskLocale = ctx.locale ?? 'ru';
   return sendPrint({
     number: ctx.ticket.number,
+    // New agent prints in the visitor's language only.
+    locale,
+    hall_name: ctx.hall ? localizedName(ctx.hall, locale) : '',
+    category_name: ctx.category ? localizedName(ctx.category, locale) : '',
+    service_name: ctx.service ? localizedName(ctx.service, locale) : '',
+    category_code: ctx.category?.code ?? '',
+    // Legacy bilingual fields — kept so an OLD agent (not yet updated on the
+    // kiosk PC) still prints correctly during the transition.
     hall_name_kaa: ctx.hall?.name_kaa ?? '',
     hall_name_ru: ctx.hall?.name_ru ?? '',
-    category_code: ctx.category?.code ?? '',
     category_name_kaa: ctx.category?.name_kaa ?? '',
     category_name_ru: ctx.category?.name_ru ?? '',
     service_name_kaa: ctx.service?.name_kaa ?? '',
@@ -132,11 +149,10 @@ export async function printTicket(
 export async function printTest(printerName?: string): Promise<PrintResult> {
   return sendPrint({
     number: 'TEST',
+    locale: 'ru',
+    category_name: 'Тест печати',
+    service_name: 'Проверка принтера',
     category_code: '',
-    category_name_kaa: 'Sınaq',
-    category_name_ru: 'Тест печати',
-    service_name_kaa: 'Printer sınaǵı',
-    service_name_ru: 'Проверка принтера',
     issued_at: new Date().toISOString(),
     ticket_id: 'test',
     printer_name: printerName ?? getSelectedPrinter(),

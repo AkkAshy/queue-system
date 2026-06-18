@@ -11,6 +11,7 @@ import (
 func sampleRequest() PrintRequest {
 	return PrintRequest{
 		Number:          "A042",
+		Locale:          "kaa", // default sample is a Karakalpak ticket
 		CategoryCode:    "A",
 		CategoryNameKaa: "Akademiyalıq iskerlik",
 		CategoryNameRu:  "Академическая деятельность",
@@ -56,6 +57,7 @@ func TestRenderTransliteratesKarakalpak(t *testing.T) {
 
 func TestRenderEncodesRussianAsCP866(t *testing.T) {
 	req := sampleRequest()
+	req.Locale = "ru" // a Russian ticket → body printed in Russian (CP866)
 	out, err := Render(req)
 	assert.NoError(t, err)
 	// The Russian text must appear CP866-encoded in the stream.
@@ -63,6 +65,15 @@ func TestRenderEncodesRussianAsCP866(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, bytes.Contains(out, expected),
 		"CP866-encoded Russian should be present in output")
+}
+
+func TestRenderUsesLocalizedNameWhenProvided(t *testing.T) {
+	req := sampleRequest()
+	req.Locale = "uz"
+	req.ServiceName = "Akademik ma'lumotnoma olish" // localized (uz) wins over kaa/ru
+	out, err := Render(req)
+	assert.NoError(t, err)
+	assert.Contains(t, string(out), "Akademik ma'lumotnoma olish")
 }
 
 func TestRenderWrapsLongServiceName(t *testing.T) {

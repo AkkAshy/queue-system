@@ -49,7 +49,7 @@ export default function ConfirmPage() {
       // ticket page tells them to remember it.
       setTicket(ticket);
       setHall(hall); // so the ticket screen + print show which hall
-      const result = await printTicket({ ticket, category: category!, service, hall });
+      const result = await printTicket({ ticket, category: category!, service, hall, locale });
       setPrintFailed(!result.ok);
       router.push(`/${locale}/ticket`);
     },
