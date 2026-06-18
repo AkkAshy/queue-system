@@ -1,0 +1,78 @@
+name: build-images
+
+# Builds all service images and pushes them to GHCR on every push to main.
+# The on-site box pulls these (docker-compose.box.yml + watchtower) — no build
+# happens on the box. Frontend images are install-agnostic: APP_BASE_PATH is
+# constant per app, and the WS URL is derived from the page origin at runtime
+# (so the same image works on any box IP and on prod).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: backend
+            dockerfile: backend/Dockerfile
+            build_args: ""
+          - app: kiosk
+            dockerfile: deploy/frontend.Dockerfile
+            build_args: |
+              APP=kiosk
+              NEXT_PUBLIC_USE_MSW=0
+          - app: admin
+            dockerfile: deploy/frontend.Dockerfile
+            build_args: |
+              APP=admin
+              NEXT_PUBLIC_USE_MSW=0
+              APP_BASE_PATH=/admin
+          - app: operator
+            dockerfile: deploy/frontend.Dockerfile
+            build_args: |
+              APP=operator
+              NEXT_PUBLIC_USE_MSW=0
+              APP_BASE_PATH=/operator
+          - app: display
+            dockerfile: deploy/frontend.Dockerfile
+            build_args: |
+              APP=display
+              NEXT_PUBLIC_USE_MSW=0
+              APP_BASE_PATH=/tablo
+              NEXT_PUBLIC_BOARD_MEDIA_DIR=/media/
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # GHCR image paths must be lowercase.
+      - name: Resolve image name
+        id: img
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/ndpi-${{ matrix.app }}" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          build-args: ${{ matrix.build_args }}
+          push: true
+          tags: |
+            ${{ steps.img.outputs.name }}:latest
+            ${{ steps.img.outputs.name }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
