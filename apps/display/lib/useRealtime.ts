@@ -18,7 +18,14 @@ export function useRealtime(path: string, queryKeys: QueryKey[]) {
     if (process.env.NEXT_PUBLIC_USE_MSW !== '0') return;
     if (typeof window === 'undefined') return;
 
-    const base = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:8000';
+    // Empty WS_URL → derive from the page origin (ws/wss + current host), so
+    // one prebuilt image works on any box IP and on prod. nginx proxies /ws on
+    // the same host. An explicit NEXT_PUBLIC_WS_URL still wins (e.g. dev :8000).
+    const envBase = process.env.NEXT_PUBLIC_WS_URL;
+    const base =
+      envBase && envBase.length > 0
+        ? envBase
+        : `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
     let ws: WebSocket | null = null;
     let closed = false;
     let retry = 0;
