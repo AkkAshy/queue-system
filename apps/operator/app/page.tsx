@@ -74,7 +74,12 @@ export default function Page() {
         onBreak={onBreak}
       />
 
-      <QueueList queue={queue.data ?? []} services={services.data ?? []} />
+      <QueueList
+        queue={queue.data ?? []}
+        services={services.data ?? []}
+        current={current.data ?? null}
+        onBreak={onBreak}
+      />
 
       <OperatorFooter current={current.data ?? null} />
     </main>

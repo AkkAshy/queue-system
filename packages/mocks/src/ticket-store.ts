@@ -11,6 +11,7 @@ interface CallNextArgs {
   counter_id: number;
   operator_id: number;
   service_ids: number[];
+  ticket_id?: string;
 }
 
 interface SeedArgs {
@@ -109,8 +110,11 @@ export class TicketStore {
   callNext(args: CallNextArgs): Ticket | null {
     const q = this.queueForCounter(args.service_ids);
     if (q.length === 0) return null;
-    const oldest = q[0]!;
-    return this.update(oldest.id, {
+    // ticket_id set → operator picked a specific client; it must be in the
+    // eligible queue. Otherwise call the oldest.
+    const target = args.ticket_id ? q.find((t) => t.id === args.ticket_id) : q[0];
+    if (!target) return null;
+    return this.update(target.id, {
       status: 'called',
       counter_id: args.counter_id,
       operator_id: args.operator_id,

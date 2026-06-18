@@ -69,6 +69,16 @@ def current_for_counter(counter: Counter) -> Ticket | None:
     )
 
 
+def _mark_called(ticket: Ticket, counter: Counter, operator_id) -> Ticket:
+    """Transition a waiting ticket to CALLED at this counter."""
+    ticket.status = TicketStatus.CALLED
+    ticket.counter = counter
+    ticket.operator_id = operator_id
+    ticket.called_at = timezone.now()
+    ticket.save(update_fields=["status", "counter", "operator", "called_at"])
+    return ticket
+
+
 @transaction.atomic
 def call_next(*, counter: Counter, operator_id=None) -> Ticket | None:
     """Call the oldest eligible waiting ticket to this counter."""
@@ -76,12 +86,19 @@ def call_next(*, counter: Counter, operator_id=None) -> Ticket | None:
     if not q:
         return None
     ticket = Ticket.objects.select_for_update().get(pk=q[0].pk)
-    ticket.status = TicketStatus.CALLED
-    ticket.counter = counter
-    ticket.operator_id = operator_id
-    ticket.called_at = timezone.now()
-    ticket.save(update_fields=["status", "counter", "operator", "called_at"])
-    return ticket
+    return _mark_called(ticket, counter, operator_id)
+
+
+@transaction.atomic
+def call_specific(*, counter: Counter, ticket_id, operator_id=None) -> Ticket | None:
+    """Call a SPECIFIC waiting ticket the operator picked from their queue.
+    Only tickets that are still waiting AND eligible for this counter can be
+    called — so an operator can't pull a ticket another window serves."""
+    eligible = {str(t.pk) for t in queue_for_counter(counter)}
+    if str(ticket_id) not in eligible:
+        return None
+    ticket = Ticket.objects.select_for_update().get(pk=ticket_id)
+    return _mark_called(ticket, counter, operator_id)
 
 
 def recall(ticket: Ticket) -> Ticket:

@@ -355,11 +355,20 @@ class CallNextView(APIView):
         counter = Counter.objects.filter(id=request.data.get("counter_id")).first()
         if not counter:
             return Response({"error": "unknown counter"}, status=404)
-        ticket = services.call_next(
-            counter=counter, operator_id=request.data.get("operator_id")
-        )
-        if not ticket:
-            return Response({"error": "queue empty"}, status=409)
+        operator_id = request.data.get("operator_id")
+        # Optional ticket_id → operator picked a SPECIFIC client from the queue;
+        # otherwise fall back to calling the oldest eligible one (the big button).
+        ticket_id = request.data.get("ticket_id")
+        if ticket_id:
+            ticket = services.call_specific(
+                counter=counter, ticket_id=ticket_id, operator_id=operator_id
+            )
+            if not ticket:
+                return Response({"error": "ticket not callable"}, status=409)
+        else:
+            ticket = services.call_next(counter=counter, operator_id=operator_id)
+            if not ticket:
+                return Response({"error": "queue empty"}, status=409)
         audit.log(
             request, "ticket.called", target=ticket.number,
             actor_label=str(request.data.get("operator_id") or ""),

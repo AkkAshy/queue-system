@@ -195,6 +195,9 @@ export interface CreateOperatorSessionRequest {
 export interface CallNextRequest {
   counter_id: number;
   operator_id: number;
+  // When set, call this specific waiting ticket (operator picked from the
+  // queue) instead of the oldest one.
+  ticket_id?: string;
 }
 
 export interface TransferTicketRequest {

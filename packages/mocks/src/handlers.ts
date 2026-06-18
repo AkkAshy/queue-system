@@ -363,7 +363,11 @@ export const handlers = [
 
   // ---------- ticket transitions ----------
   http.post('/api/tickets/call-next', async ({ request }) => {
-    const body = (await request.json()) as { counter_id: number; operator_id: number };
+    const body = (await request.json()) as {
+      counter_id: number;
+      operator_id: number;
+      ticket_id?: string;
+    };
     const counter = counters.get(body.counter_id);
     if (!counter) {
       return HttpResponse.json({ error: 'unknown counter' }, { status: 404 });
@@ -372,9 +376,13 @@ export const handlers = [
       counter_id: body.counter_id,
       operator_id: body.operator_id,
       service_ids: counter.service_ids,
+      ticket_id: body.ticket_id,
     });
     if (!t) {
-      return HttpResponse.json({ error: 'queue empty' }, { status: 409 });
+      return HttpResponse.json(
+        { error: body.ticket_id ? 'ticket not callable' : 'queue empty' },
+        { status: 409 },
+      );
     }
     return HttpResponse.json(t);
   }),
