@@ -13,7 +13,22 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_BASE_PATH: process.env.APP_BASE_PATH || '',
   },
-  transpilePackages: ['@queue/types', '@queue/mocks'],
+  // Старые WebView (X96 = Chromium 84) не парсят logical-assignment (??=, ||=)
+  // из vendor-кода (react-query, msw и т.п.). Транспилируем эти node_modules
+  // под browserslist (см. package.json), иначе SyntaxError → «Application error».
+  transpilePackages: [
+    '@queue/types',
+    '@queue/mocks',
+    '@tanstack/react-query',
+    '@tanstack/query-core',
+    'msw',
+    'zustand',
+    '@radix-ui/react-slot',
+    'lucide-react',
+    'class-variance-authority',
+    'tailwind-merge',
+    'clsx',
+  ],
   // Phase 6: when MSW is off, proxy /api/* to the real Django backend.
   async rewrites() {
     if (process.env.NEXT_PUBLIC_USE_MSW === '0') {
