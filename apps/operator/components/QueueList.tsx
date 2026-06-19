@@ -3,10 +3,10 @@
 import { useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { Service, Ticket } from '@queue/types';
+import { localizedName, type Service, type Ticket } from '@queue/types';
 import { api } from '@/lib/api';
 import { useOperatorStore } from '@/store/operator-store';
-import { useTr } from '@/lib/i18n';
+import { useTr, useLang } from '@/lib/i18n';
 
 interface Props {
   queue: Ticket[];
@@ -22,6 +22,7 @@ function waitMinutes(iso: string) {
 
 export function QueueList({ queue, services, current, onBreak }: Props) {
   const tr = useTr();
+  const { lang } = useLang();
   const qc = useQueryClient();
   const counterId = useOperatorStore((s) => s.counterId);
   const userId = useOperatorStore((s) => s.userId);
@@ -73,7 +74,7 @@ export function QueueList({ queue, services, current, onBreak }: Props) {
                     {t.number}
                   </span>
                   <span className="flex-1 truncate text-[11px] text-coal-2">
-                    {svc ? svc.name_ru : '—'}
+                    {svc ? localizedName(svc, lang) : '—'}
                   </span>
                   <span className="text-[10px] text-coal-3">{waitMinutes(t.created_at)}′</span>
                 </button>
