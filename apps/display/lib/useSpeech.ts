@@ -24,7 +24,7 @@ const BASE = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/voice/uz`;
 const LEAD_MS = 550; // let the chime finish before the voice starts
 
 const DIGITS_UZ = ['nol', 'bir', 'ikki', 'uch', "to'rt", 'besh', 'olti', 'yetti', 'sakkiz', "to'qqiz"];
-const ORD_UZ = ['', 'birinchi', 'ikkinchi', 'uchinchi', "to'rtinchi", 'beshinchi', 'oltinchi', 'yettinchi', 'sakkizinchi', "to'qqizinchi"];
+const ORD_UZ = ['', 'birinchi', 'ikkinchi', 'uchinchi', "to'rtinchi", 'beshinchi', 'oltinchi', 'yettinchi', 'sakkizinchi', "to'qqizinchi", "o'ninchi", "o'n birinchi", "o'n ikkinchi", "o'n uchinchi", "o'n to'rtinchi", "o'n beshinchi", "o'n oltinchi", "o'n yettinchi", "o'n sakkizinchi", "o'n to'qqizinchi", 'yigirmanchi', 'yigirma birinchi', 'yigirma ikkinchi', 'yigirma uchinchi'];
 
 interface Phrase {
   clips: string[]; // ordered clip URLs
@@ -50,7 +50,7 @@ function buildPhrase(number: string, counterNumber: string): Phrase {
   }
 
   const w = String(counterNumber).trim();
-  if (/^[1-9]$/.test(w)) {
+  if (/^([1-9]|1[0-9]|2[0-3])$/.test(w)) {
     clips.push(`${BASE}/window_${w}.mp3`);
     tts.push(`${ORD_UZ[Number(w)]} oynaga o'ting`);
   } else {
