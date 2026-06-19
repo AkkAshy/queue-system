@@ -9,7 +9,6 @@ import { useRealtime } from '@/lib/useRealtime';
 import { MediaZone } from '@/components/MediaZone';
 import { NowServing } from '@/components/NowServing';
 import { WaitingQueue } from '@/components/WaitingQueue';
-import { WindowStrip } from '@/components/WindowStrip';
 import { Ticker } from '@/components/Ticker';
 import { DisplayClock } from '@/components/DisplayClock';
 import { MuteButton } from '@/components/MuteButton';
@@ -52,7 +51,6 @@ export default function Page() {
   // three board queries. Polling is the fallback when the socket is down.
   useRealtime('/ws/display', [
     ['display-active'],
-    ['display-board'],
     ['display-waiting'],
     ['display-settings'],
   ]);
@@ -60,12 +58,6 @@ export default function Page() {
   const active = useQuery({
     queryKey: ['display-active', hallId],
     queryFn: () => api.getActiveCalls(hallId),
-    refetchInterval: 2000,
-    refetchIntervalInBackground: true,
-  });
-  const board = useQuery({
-    queryKey: ['display-board', hallId],
-    queryFn: () => api.getBoard(hallId),
     refetchInterval: 2000,
     refetchIntervalInBackground: true,
   });
@@ -149,18 +141,17 @@ export default function Page() {
 
       <div
         className="grid min-h-0 flex-1 gap-4 p-5"
-        style={{ gridTemplateColumns: '1.55fr 1fr', gridTemplateRows: '1fr auto' }}
+        style={{ gridTemplateColumns: '1.55fr 1fr' }}
       >
         <MediaZone url={settings.data?.youtube_url} />
-        <div className="flex min-h-0 flex-col gap-4" style={{ gridColumn: 2, gridRow: 1 }}>
-          <div className="min-h-0 flex-[3]">
+        <div className="flex min-h-0 flex-col gap-4">
+          <div className="min-h-0 flex-[4]">
             <NowServing calls={calls} freshIds={freshIds} />
           </div>
-          <div className="min-h-0 flex-[2]">
+          <div className="min-h-0 flex-[1]">
             <WaitingQueue waiting={waiting.data ?? []} />
           </div>
         </div>
-        <WindowStrip windows={board.data ?? []} freshIds={freshIds} />
       </div>
 
       <Ticker
