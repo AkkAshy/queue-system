@@ -128,7 +128,7 @@ export default function DashboardPage() {
               className="inline-flex items-center gap-1.5 rounded-lg bg-coral px-3 py-1.5 text-sm font-semibold text-cream hover:bg-coral-600"
             >
               <Download className="h-4 w-4" />
-              CSV
+              Excel
             </a>
             <button
               onClick={() => {
