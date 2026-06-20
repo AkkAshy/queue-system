@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OperatorEditSheet } from '@/components/OperatorEditSheet';
 import { useTr } from '@/lib/i18n';
+import { useTableControls, Th, FilterRow, type ColumnDef } from '@/lib/table-controls';
 
 async function fetchUsers(): Promise<User[]> {
   const res = await fetch('/api/users');
@@ -57,6 +58,36 @@ export default function OperatorsPage() {
     return c ? `№${c.number}` : '—';
   }
 
+  const columns = useMemo<ColumnDef<User>[]>(
+    () => [
+      { key: 'username', accessor: (u) => u.username, filter: 'text' },
+      { key: 'name', accessor: (u) => u.name, filter: 'text' },
+      {
+        key: 'role',
+        accessor: (u) => u.role,
+        filter: 'select',
+        options: Object.entries(ROLE_LABEL).map(([value, l]) => ({
+          value,
+          label: tr(l.uz, l.kaa),
+        })),
+      },
+      { key: 'counter', accessor: (u) => counterLabel(u.counter_id), filter: 'text' },
+      {
+        key: 'status',
+        accessor: (u) => (u.is_active ? 'active' : 'inactive'),
+        filter: 'select',
+        options: [
+          { value: 'active', label: tr('faol', 'belsendi') },
+          { value: 'inactive', label: tr("o'chiq", 'óshik') },
+        ],
+      },
+      { key: 'actions' },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tr, counters],
+  );
+  const ctl = useTableControls(users, columns);
+
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between">
@@ -78,16 +109,17 @@ export default function OperatorsPage() {
         <table className="admin-table w-full">
           <thead>
             <tr>
-              <th className="w-32">{tr('Login', 'Login')}</th>
-              <th>{tr('Ism', 'Atı')}</th>
-              <th className="w-36">{tr('Rol', 'Lawazım')}</th>
-              <th className="w-24">{tr('Oyna', 'Áyne')}</th>
-              <th className="w-28">{tr('Holat', 'Halat')}</th>
+              <Th ctl={ctl} col="username" className="w-32">{tr('Login', 'Login')}</Th>
+              <Th ctl={ctl} col="name">{tr('Ism', 'Atı')}</Th>
+              <Th ctl={ctl} col="role" className="w-36">{tr('Rol', 'Lawazım')}</Th>
+              <Th ctl={ctl} col="counter" className="w-24">{tr('Oyna', 'Áyne')}</Th>
+              <Th ctl={ctl} col="status" className="w-28">{tr('Holat', 'Halat')}</Th>
               <th className="w-32"></th>
             </tr>
+            <FilterRow ctl={ctl} />
           </thead>
           <tbody>
-            {users.map((u) => (
+            {ctl.view.map((u) => (
               <tr key={u.id}>
                 <td className="font-mono text-sm">{u.username}</td>
                 <td>{u.name}</td>

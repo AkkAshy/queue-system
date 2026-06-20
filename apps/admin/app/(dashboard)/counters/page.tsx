@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CounterEditSheet } from '@/components/CounterEditSheet';
 import { useTr } from '@/lib/i18n';
+import { useTableControls, Th, FilterRow, type ColumnDef } from '@/lib/table-controls';
 
 async function fetchCounters(): Promise<Counter[]> {
   const res = await fetch('/api/counters');
@@ -33,6 +34,26 @@ export default function CountersPage() {
 
   const [editing, setEditing] = useState<Counter | null>(null);
   const [creating, setCreating] = useState(false);
+
+  const columns = useMemo<ColumnDef<Counter>[]>(
+    () => [
+      { key: 'number', accessor: (c) => c.number, filter: 'text' },
+      { key: 'name', accessor: (c) => c.name, filter: 'text' },
+      { key: 'services', accessor: (c) => c.service_ids.length },
+      {
+        key: 'status',
+        accessor: (c) => (c.is_active ? 'active' : 'inactive'),
+        filter: 'select',
+        options: [
+          { value: 'active', label: tr('faol', 'belsendi') },
+          { value: 'inactive', label: tr("o'chiq", 'óshik') },
+        ],
+      },
+      { key: 'actions' },
+    ],
+    [tr],
+  );
+  const ctl = useTableControls(counters, columns);
 
   const deleteMut = useMutation({
     mutationFn: async (id: number) => {
@@ -67,15 +88,16 @@ export default function CountersPage() {
         <table className="admin-table w-full">
           <thead>
             <tr>
-              <th className="w-20">№</th>
-              <th>{tr('Nomi', 'Atı')}</th>
-              <th className="w-32">{tr('Xizmatlar', 'Xızmetler')}</th>
-              <th className="w-28">{tr('Holat', 'Halat')}</th>
+              <Th ctl={ctl} col="number" className="w-20">№</Th>
+              <Th ctl={ctl} col="name">{tr('Nomi', 'Atı')}</Th>
+              <Th ctl={ctl} col="services" className="w-32">{tr('Xizmatlar', 'Xızmetler')}</Th>
+              <Th ctl={ctl} col="status" className="w-28">{tr('Holat', 'Halat')}</Th>
               <th className="w-32"></th>
             </tr>
+            <FilterRow ctl={ctl} />
           </thead>
           <tbody>
-            {counters.map((c) => (
+            {ctl.view.map((c) => (
               <tr key={c.id}>
                 <td className="font-mono text-lg font-semibold text-coral-600">
                   {c.number}

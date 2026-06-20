@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { HallEditSheet } from '@/components/HallEditSheet';
 import { useTr } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
+import { useTableControls, Th, FilterRow, type ColumnDef } from '@/lib/table-controls';
 
 async function fetchHalls(): Promise<Hall[]> {
   const res = await fetch('/api/halls');
@@ -24,6 +25,35 @@ export default function HallsPage() {
   });
   const [editing, setEditing] = useState<Hall | null>(null);
   const [creating, setCreating] = useState(false);
+
+  const columns = useMemo<ColumnDef<Hall>[]>(
+    () => [
+      { key: 'code', accessor: (h) => h.code, filter: 'text' },
+      {
+        key: 'name',
+        accessor: (h) => h.name_uz || h.name_ru,
+        filter: 'text',
+        filterValue: (h) => `${h.name_uz} ${h.name_ru} ${h.name_kaa}`,
+      },
+      {
+        key: 'status',
+        accessor: (h) => (h.is_active ? 'active' : 'inactive'),
+        filter: 'select',
+        options: [
+          { value: 'active', label: tr('Faol', 'Belsendi') },
+          { value: 'inactive', label: tr('Faol emas', 'Belsendi emes') },
+        ],
+      },
+      { key: 'actions' },
+    ],
+    [tr],
+  );
+  // Keep default order by `order`; column-sort overrides it when activated.
+  const sortedHalls = useMemo(
+    () => halls.slice().sort((a, b) => a.order - b.order),
+    [halls],
+  );
+  const ctl = useTableControls(sortedHalls, columns);
 
   const deleteMut = useMutation({
     mutationFn: async (id: number) => {
@@ -60,17 +90,15 @@ export default function HallsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-hair text-left text-xs uppercase tracking-wide text-coal-3">
-              <th className="px-6 py-3 font-medium">{tr('Kod', 'Kod')}</th>
-              <th className="px-6 py-3 font-medium">{tr('Nomi', 'Atı')}</th>
-              <th className="px-6 py-3 font-medium">{tr('Holati', 'Halatı')}</th>
+              <Th ctl={ctl} col="code" className="px-6 py-3 font-medium">{tr('Kod', 'Kod')}</Th>
+              <Th ctl={ctl} col="name" className="px-6 py-3 font-medium">{tr('Nomi', 'Atı')}</Th>
+              <Th ctl={ctl} col="status" className="px-6 py-3 font-medium">{tr('Holati', 'Halatı')}</Th>
               <th className="px-6 py-3 font-medium text-right">{tr('Amallar', 'Ámeller')}</th>
             </tr>
+            <FilterRow ctl={ctl} cellClassName="px-6" />
           </thead>
           <tbody>
-            {halls
-              .slice()
-              .sort((a, b) => a.order - b.order)
-              .map((h) => (
+            {ctl.view.map((h) => (
                 <tr
                   key={h.id}
                   className="border-b border-hair/60 last:border-0 transition-colors hover:bg-hair/20"
@@ -122,10 +150,12 @@ export default function HallsPage() {
                   </td>
                 </tr>
               ))}
-            {halls.length === 0 && (
+            {ctl.view.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-6 py-10 text-center text-coal-3">
-                  {tr("Hozircha zallar yo'q", 'Házirshe zallar joq')}
+                  {halls.length === 0
+                    ? tr("Hozircha zallar yo'q", 'Házirshe zallar joq')
+                    : tr('Mos zal topilmadi', 'Sáykes zal tabılmadı')}
                 </td>
               </tr>
             )}

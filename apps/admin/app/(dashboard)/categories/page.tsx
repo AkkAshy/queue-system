@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
-import type { Service, ServiceCategory } from '@queue/types';
+import { localizedName, type Service, type ServiceCategory } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { CategoryEditSheet } from '@/components/CategoryEditSheet';
-import { useTr } from '@/lib/i18n';
+import { useTr, useLang } from '@/lib/i18n';
 
 async function fetchCategories(): Promise<ServiceCategory[]> {
   const res = await fetch('/api/categories');
@@ -20,6 +20,7 @@ async function fetchServices(): Promise<Service[]> {
 
 export default function CategoriesPage() {
   const tr = useTr();
+  const { lang } = useLang();
   const qc = useQueryClient();
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -69,6 +70,9 @@ export default function CategoriesPage() {
           .sort((a, b) => a.order - b.order)
           .map((c) => {
             const count = services.filter((s) => s.category_id === c.id).length;
+            const loc = localizedName(c, lang);
+            // вторая, мелкая строка — на другом служебном языке (для справки)
+            const alt = localizedName(c, lang === 'uz' ? 'kaa' : 'uz');
             return (
               <div
                 key={c.id}
@@ -87,7 +91,7 @@ export default function CategoriesPage() {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (confirm(tr(`«${c.name_ru}» kategoriyasini o'chirasizmi?`, `«${c.name_ru}» kategoriyasın óshirewdi qálaysız ba?`))) {
+                      if (confirm(tr(`«${loc}» kategoriyasini o'chirasizmi?`, `«${loc}» kategoriyasın óshirewdi qálaysız ba?`))) {
                         deleteMut.mutate(c.id);
                       }
                     }}
@@ -105,8 +109,10 @@ export default function CategoriesPage() {
                     {c.code}
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-coal">{c.name_ru}</div>
-                <div className="mt-1 text-xs text-coal-3">{c.name_kaa}</div>
+                <div className="text-sm font-semibold text-coal">{loc}</div>
+                {alt && alt !== loc && (
+                  <div className="mt-1 text-xs text-coal-3">{alt}</div>
+                )}
                 <div className="mt-5 border-t border-hair pt-4 text-xs text-coal-3">
                   {count} {tr('ta xizmat', 'xızmet')}
                 </div>

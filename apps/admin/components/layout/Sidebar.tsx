@@ -41,9 +41,12 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-hair bg-cream/80">
       <div className="flex items-center gap-3 border-b border-hair px-6 py-6">
-        <div className="grid h-10 w-10 place-items-center rounded-full border border-coral/60 font-serif text-sm font-semibold text-coral">
-          NP
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/nmpi-logo.png"
+          alt="NMPI"
+          className="h-10 w-10 shrink-0 rounded-full bg-white object-contain p-0.5 ring-1 ring-hair"
+        />
         <div className="leading-tight">
           <div className="eyebrow text-coral">NDPI</div>
           <div className="mt-1 text-sm font-medium">Admin Panel</div>

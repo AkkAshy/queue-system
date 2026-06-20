@@ -4,19 +4,12 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
-import type { Service, ServiceCategory } from '@queue/types';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
+import { localizedName, type Service, type ServiceCategory } from '@queue/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ServiceEditSheet } from '@/components/ServiceEditSheet';
-import { useTr } from '@/lib/i18n';
+import { useTr, useLang } from '@/lib/i18n';
+import { useTableControls, Th, FilterRow, type ColumnDef } from '@/lib/table-controls';
 
 async function fetchCategories(): Promise<ServiceCategory[]> {
   const res = await fetch('/api/categories');
@@ -29,6 +22,7 @@ async function fetchServices(): Promise<Service[]> {
 
 export default function ServicesPage() {
   const tr = useTr();
+  const { lang } = useLang();
   const qc = useQueryClient();
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
@@ -39,8 +33,6 @@ export default function ServicesPage() {
     queryFn: fetchServices,
   });
 
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<Service | null>(null);
   const [creating, setCreating] = useState(false);
 
@@ -56,18 +48,59 @@ export default function ServicesPage() {
     onError: () => toast.error(tr("O'chirib bo'lmadi", 'Óshirip bolmadı')),
   });
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return services.filter((s) => {
-      if (categoryFilter !== 'all' && s.category_id !== Number(categoryFilter)) return false;
-      if (q && !`${s.name_kaa} ${s.name_ru}`.toLowerCase().includes(q)) return false;
-      return true;
-    });
-  }, [services, categoryFilter, search]);
-
   function codeOf(s: Service) {
     return categories.find((c) => c.id === s.category_id)?.code ?? '?';
   }
+
+  const columns = useMemo<ColumnDef<Service>[]>(() => {
+    const deliveryTypes = [...new Set(services.map((s) => s.delivery_type))];
+    return [
+      { key: 'id', accessor: (s) => s.id },
+      {
+        key: 'code',
+        accessor: (s) => codeOf(s),
+        filter: 'select',
+        options: categories
+          .slice()
+          .sort((a, b) => a.order - b.order)
+          .map((c) => ({ value: c.code, label: `${c.code} · ${c.name_ru}` })),
+      },
+      {
+        key: 'name',
+        accessor: (s) => localizedName(s, lang),
+        filter: 'text',
+        filterValue: (s) => `${s.name_kaa} ${s.name_ru} ${s.name_uz ?? ''}`,
+      },
+      { key: 'sla', accessor: (s) => s.sla_days },
+      {
+        key: 'delivery',
+        accessor: (s) => s.delivery_type,
+        filter: 'select',
+        options: deliveryTypes.map((v) => ({ value: v, label: v })),
+      },
+      {
+        key: 'popular',
+        accessor: (s) => (s.is_popular ? 'yes' : 'no'),
+        filter: 'select',
+        options: [
+          { value: 'yes', label: tr('ha', 'awa') },
+          { value: 'no', label: '—' },
+        ],
+      },
+      {
+        key: 'status',
+        accessor: (s) => (s.is_active ? 'active' : 'inactive'),
+        filter: 'select',
+        options: [
+          { value: 'active', label: tr('faol', 'belsendi') },
+          { value: 'inactive', label: tr("o'chiq", 'óshik') },
+        ],
+      },
+      { key: 'actions' },
+    ];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tr, lang, categories, services]);
+  const ctl = useTableControls(services, columns);
 
   return (
     <div className="space-y-6">
@@ -77,37 +110,13 @@ export default function ServicesPage() {
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Xizmatlar', 'Xızmetler')}</h1>
           <p className="mt-1 text-sm text-coal-3">{services.length} {tr('ta yozuv', 'jazıw')}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-56">
-              <SelectValue placeholder={tr('Kategoriya', 'Kategoriya')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{tr('Barcha kategoriyalar', 'Barlıq kategoriyalar')}</SelectItem>
-              {categories
-                .slice()
-                .sort((a, b) => a.order - b.order)
-                .map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    {c.code} · {c.name_ru}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-          <Input
-            placeholder={tr('Qidirish…', 'Izlew…')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-56"
-          />
-          <Button
-            onClick={() => setCreating(true)}
-            className="gap-2 bg-coral text-cream hover:bg-coral-600"
-          >
-            <Plus className="h-4 w-4" />
-            {tr('Yaratish', 'Jaratıw')}
-          </Button>
-        </div>
+        <Button
+          onClick={() => setCreating(true)}
+          className="gap-2 bg-coral text-cream hover:bg-coral-600"
+        >
+          <Plus className="h-4 w-4" />
+          {tr('Yaratish', 'Jaratıw')}
+        </Button>
       </div>
 
       <section className="overflow-hidden rounded-2xl border border-hair bg-card/40">
@@ -117,18 +126,19 @@ export default function ServicesPage() {
           <table className="admin-table w-full">
             <thead>
               <tr>
-                <th className="w-12">#</th>
-                <th className="w-16">{tr('Kod', 'Kod')}</th>
-                <th>{tr('Nomi (ru)', 'Atı (ru)')}</th>
-                <th className="w-24">{tr('Muddat', 'Múddet')}</th>
-                <th className="w-36">{tr('Berilishi', 'Beriliwi')}</th>
-                <th className="w-24">{tr('Ommabop', 'Ommabap')}</th>
-                <th className="w-24">{tr('Holat', 'Halat')}</th>
+                <Th ctl={ctl} col="id" className="w-12">#</Th>
+                <Th ctl={ctl} col="code" className="w-16">{tr('Kod', 'Kod')}</Th>
+                <Th ctl={ctl} col="name">{tr('Nomi', 'Atı')}</Th>
+                <Th ctl={ctl} col="sla" className="w-24">{tr('Muddat', 'Múddet')}</Th>
+                <Th ctl={ctl} col="delivery" className="w-36">{tr('Berilishi', 'Beriliwi')}</Th>
+                <Th ctl={ctl} col="popular" className="w-24">{tr('Ommabop', 'Ommabap')}</Th>
+                <Th ctl={ctl} col="status" className="w-24">{tr('Holat', 'Halat')}</Th>
                 <th className="w-16"></th>
               </tr>
+              <FilterRow ctl={ctl} />
             </thead>
             <tbody>
-              {filtered.map((s) => (
+              {ctl.view.map((s) => (
                 <tr
                   key={s.id}
                   className="cursor-pointer"
@@ -140,7 +150,7 @@ export default function ServicesPage() {
                       {codeOf(s)}
                     </span>
                   </td>
-                  <td className="max-w-[360px] truncate">{s.name_ru}</td>
+                  <td className="max-w-[360px] truncate">{localizedName(s, lang)}</td>
                   <td className="font-mono text-sm">
                     {s.sla_days === 0 ? tr('darhol', 'derhal') : tr(`${s.sla_days} kun`, `${s.sla_days} kún`)}
                   </td>
@@ -167,7 +177,7 @@ export default function ServicesPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm(tr(`«${s.name_ru}» xizmatini o'chirasizmi?`, `«${s.name_ru}» xızmetin óshirewdi qálaysız ba?`))) {
+                        if (confirm(tr(`«${localizedName(s, lang)}» xizmatini o'chirasizmi?`, `«${localizedName(s, lang)}» xızmetin óshirewdi qálaysız ba?`))) {
                           deleteMut.mutate(s.id);
                         }
                       }}

@@ -25,10 +25,10 @@ export function HourlyLoadChart({ data }: Props) {
         </div>
       </div>
 
-      <div className="flex h-44 items-end gap-2">
+      <div className="flex h-44 gap-2">
         {data.map((d) => (
           <div key={d.hour} className="flex flex-1 flex-col items-center gap-2">
-            <div className="flex h-full w-full items-end gap-[3px]">
+            <div className="flex w-full flex-1 items-end gap-[3px] min-h-0">
               <div
                 className="w-1/2 rounded-t bg-coral/80"
                 style={{ height: `${(d.issued / max) * 100}%` }}

@@ -48,6 +48,12 @@ export default function LoginPage() {
         className="w-full max-w-md space-y-7 rounded-2xl border border-hair bg-card/50 p-10 shadow-soft"
       >
         <div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/nmpi-logo.png"
+            alt="NMPI"
+            className="mb-5 h-16 w-16 rounded-full bg-white object-contain p-1 ring-1 ring-hair"
+          />
           <span className="eyebrow text-coral">NDPI · Admin</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">
             {tr('Panelga kirish', 'Panelge kiriw')}

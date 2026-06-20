@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
 import { useTr } from '@/lib/i18n';
+import { useTableControls, Th, FilterRow, type ColumnDef } from '@/lib/table-controls';
 
 interface AuditEntry {
   id: number;
@@ -32,19 +33,50 @@ const ACTION_LABEL: Record<string, { uz: string; kaa: string }> = Object.fromEnt
   ACTIONS.filter((a) => a.value).map((a) => [a.value, { uz: a.uz, kaa: a.kaa }]),
 );
 
-async function fetchAudit(action: string): Promise<AuditEntry[]> {
-  const res = await fetch(`/api/audit${action ? `?action=${action}` : ''}`);
+async function fetchAudit(): Promise<AuditEntry[]> {
+  const res = await fetch('/api/audit');
   if (!res.ok) throw new Error('failed');
   return res.json();
 }
 
 export default function AuditPage() {
   const tr = useTr();
-  const [action, setAction] = useState('');
   const { data = [], isLoading } = useQuery({
-    queryKey: ['audit', action],
-    queryFn: () => fetchAudit(action),
+    queryKey: ['audit'],
+    queryFn: fetchAudit,
   });
+
+  const columns = useMemo<ColumnDef<AuditEntry>[]>(
+    () => [
+      {
+        key: 'time',
+        accessor: (e) => new Date(e.created_at).getTime(),
+        filter: 'text',
+        filterValue: (e) =>
+          new Date(e.created_at).toLocaleString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+      },
+      {
+        key: 'action',
+        accessor: (e) => e.action,
+        filter: 'select',
+        options: ACTIONS.filter((a) => a.value).map((a) => ({
+          value: a.value,
+          label: tr(a.uz, a.kaa),
+        })),
+      },
+      { key: 'target', accessor: (e) => e.target, filter: 'text' },
+      { key: 'actor', accessor: (e) => e.actor_label, filter: 'text' },
+      { key: 'meta' },
+    ],
+    [tr],
+  );
+
+  const ctl = useTableControls(data, columns);
 
   return (
     <div className="space-y-6">
@@ -52,19 +84,8 @@ export default function AuditPage() {
         <div>
           <span className="eyebrow text-coral">{tr('Jurnal', 'Jurnal')}</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Amallar auditi', 'Ámeller auditi')}</h1>
-          <p className="mt-1 text-sm text-coal-3">{data.length} {tr('ta yozuv', 'jazıw')}</p>
+          <p className="mt-1 text-sm text-coal-3">{ctl.view.length} {tr('ta yozuv', 'jazıw')}</p>
         </div>
-        <select
-          value={action}
-          onChange={(e) => setAction(e.target.value)}
-          className="rounded-lg border border-hair-2 bg-card px-3 py-2 text-sm text-coal"
-        >
-          {ACTIONS.map((a) => (
-            <option key={a.value} value={a.value}>
-              {tr(a.uz, a.kaa)}
-            </option>
-          ))}
-        </select>
       </div>
 
       <section className="rounded-2xl border border-hair bg-card/40 p-6">
@@ -76,15 +97,16 @@ export default function AuditPage() {
           <table className="admin-table w-full">
             <thead>
               <tr>
-                <th>{tr('Vaqt', 'Waqıt')}</th>
-                <th>{tr('Amal', 'Ámel')}</th>
-                <th>{tr('Obyekt', 'Obyekt')}</th>
-                <th>{tr('Kim', 'Kim')}</th>
-                <th>{tr('Tafsilotlar', 'Tápsilatlar')}</th>
+                <Th ctl={ctl} col="time">{tr('Vaqt', 'Waqıt')}</Th>
+                <Th ctl={ctl} col="action">{tr('Amal', 'Ámel')}</Th>
+                <Th ctl={ctl} col="target">{tr('Obyekt', 'Obyekt')}</Th>
+                <Th ctl={ctl} col="actor">{tr('Kim', 'Kim')}</Th>
+                <Th ctl={ctl} col="meta">{tr('Tafsilotlar', 'Tápsilatlar')}</Th>
               </tr>
+              <FilterRow ctl={ctl} />
             </thead>
             <tbody>
-              {data.map((e) => (
+              {ctl.view.map((e) => (
                 <tr key={e.id}>
                   <td className="whitespace-nowrap font-mono text-xs text-coal-3">
                     {new Date(e.created_at).toLocaleString('ru-RU', {

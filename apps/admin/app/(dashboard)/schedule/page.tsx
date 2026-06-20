@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil } from 'lucide-react';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScheduleEditSheet } from '@/components/ScheduleEditSheet';
 import { useTr } from '@/lib/i18n';
+import { useTableControls, Th, FilterRow, type ColumnDef } from '@/lib/table-controls';
 
 async function fetchSchedule(): Promise<WorkSchedule[]> {
   const res = await fetch('/api/schedule');
@@ -72,6 +73,88 @@ export default function SchedulePage() {
       .sort((a, b) => a.start_time.localeCompare(b.start_time)),
   );
 
+  const columns = useMemo<ColumnDef<WorkSchedule>[]>(
+    () => [
+      {
+        key: 'day',
+        accessor: (s) => s.weekday,
+        filter: 'select',
+        options: WEEKDAYS.map((w, i) => ({ value: String(i), label: tr(w.uz, w.kaa) })),
+      },
+      { key: 'operator', accessor: (s) => s.user_name, filter: 'text' },
+      { key: 'counter', accessor: (s) => s.counter_number, filter: 'text' },
+      {
+        key: 'time',
+        accessor: (s) => s.start_time,
+        filter: 'text',
+        filterValue: (s) => s.start_time.slice(0, 5),
+      },
+      {
+        key: 'status',
+        accessor: (s) => (s.is_active ? 'active' : 'inactive'),
+        filter: 'select',
+        options: [
+          { value: 'active', label: tr('faol', 'belsendi') },
+          { value: 'inactive', label: tr("o'chiq", 'óshik') },
+        ],
+      },
+      { key: 'actions' },
+    ],
+    [tr],
+  );
+  const ctl = useTableControls(shifts, columns);
+
+  // One row, reused by both the grouped (default) and flat (filtered/sorted) views.
+  // showDay hides the weekday on non-first rows of a group for a cleaner look.
+  function renderRow(s: WorkSchedule, showDay: boolean) {
+    const day = WEEKDAYS[s.weekday];
+    return (
+      <tr key={s.id}>
+        <td className="text-coal-2">
+          {showDay && day ? tr(day.uz, day.kaa) : ''}
+        </td>
+        <td>{s.user_name}</td>
+        <td className="font-mono text-sm">№{s.counter_number}</td>
+        <td className="font-mono text-sm">
+          {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
+        </td>
+        <td>
+          {s.is_active ? (
+            <Badge variant="outline" className="border-hair-2 text-coal">
+              {tr('faol', 'belsendi')}
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="border-hair text-coal-3">
+              {tr("o'chiq", 'óshik')}
+            </Badge>
+          )}
+        </td>
+        <td>
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditing(s)}
+              className="gap-1.5 border-hair-2"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                if (confirm(tr(`${s.user_name} smenasini o'chirasizmi?`, `${s.user_name} smenasın óshirewdi qálaysız ba?`))) deleteMut.mutate(s.id);
+              }}
+              className="gap-1.5 border-hair-2 text-red-400 hover:text-red-300"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </td>
+      </tr>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-end justify-between">
@@ -114,65 +197,26 @@ export default function SchedulePage() {
         <table className="admin-table w-full">
           <thead>
             <tr>
-              <th className="w-40">{tr('Kun', 'Kún')}</th>
-              <th>{tr('Operator', 'Operator')}</th>
-              <th className="w-24">{tr('Oyna', 'Áyne')}</th>
-              <th className="w-40">{tr('Vaqt', 'Waqıt')}</th>
-              <th className="w-28">{tr('Holat', 'Halat')}</th>
+              <Th ctl={ctl} col="day" className="w-40">{tr('Kun', 'Kún')}</Th>
+              <Th ctl={ctl} col="operator">{tr('Operator', 'Operator')}</Th>
+              <Th ctl={ctl} col="counter" className="w-24">{tr('Oyna', 'Áyne')}</Th>
+              <Th ctl={ctl} col="time" className="w-40">{tr('Vaqt', 'Waqıt')}</Th>
+              <Th ctl={ctl} col="status" className="w-28">{tr('Holat', 'Halat')}</Th>
               <th className="w-32"></th>
             </tr>
+            <FilterRow ctl={ctl} />
           </thead>
           <tbody>
-            {byDay.flatMap((dayShifts, wd) =>
-              dayShifts.map((s, i) => (
-                <tr key={s.id}>
-                  {/* show the day name only on the first row of each group */}
-                  <td className="text-coal-2">{i === 0 && WEEKDAYS[wd] ? tr(WEEKDAYS[wd].uz, WEEKDAYS[wd].kaa) : ''}</td>
-                  <td>{s.user_name}</td>
-                  <td className="font-mono text-sm">№{s.counter_number}</td>
-                  <td className="font-mono text-sm">
-                    {s.start_time.slice(0, 5)}–{s.end_time.slice(0, 5)}
-                  </td>
-                  <td>
-                    {s.is_active ? (
-                      <Badge variant="outline" className="border-hair-2 text-coal">
-                        {tr('faol', 'belsendi')}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="border-hair text-coal-3">
-                        {tr("o'chiq", 'óshik')}
-                      </Badge>
-                    )}
-                  </td>
-                  <td>
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditing(s)}
-                        className="gap-1.5 border-hair-2"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          if (confirm(tr(`${s.user_name} smenasini o'chirasizmi?`, `${s.user_name} smenasın óshirewdi qálaysız ba?`))) deleteMut.mutate(s.id);
-                        }}
-                        className="gap-1.5 border-hair-2 text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              )),
-            )}
-            {shifts.length === 0 && (
+            {/* Default: grouped by weekday. With an active filter/sort: flat result list. */}
+            {ctl.active
+              ? ctl.view.map((s) => renderRow(s, true))
+              : byDay.flatMap((dayShifts) => dayShifts.map((s, i) => renderRow(s, i === 0)))}
+            {ctl.view.length === 0 && (
               <tr>
                 <td colSpan={6} className="py-10 text-center text-sm text-coal-3">
-                  {tr("Hozircha smenalar yo'q. Birinchisini qo'shing.", 'Házirshe smenalar joq. Birinshisin qosıń.')}
+                  {shifts.length === 0
+                    ? tr("Hozircha smenalar yo'q. Birinchisini qo'shing.", 'Házirshe smenalar joq. Birinshisin qosıń.')
+                    : tr('Mos keladigan smena topilmadi.', 'Sáykes smena tabılmadı.')}
                 </td>
               </tr>
             )}
