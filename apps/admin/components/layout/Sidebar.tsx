@@ -16,6 +16,9 @@ import {
 import { cn } from '@/lib/utils';
 import { useTr } from '@/lib/i18n';
 import { useAuthStore } from '@/store/auth-store';
+// Static import → Next resolves the URL with basePath (/admin) baked in,
+// so the logo loads both in dev (no basePath) and prod (/admin).
+import logo from '@/public/nmpi-logo.png';
 
 const items = [
   { href: '/dashboard',  uz: 'Boshqaruv paneli', kaa: 'Basqarıw paneli', Icon: LayoutDashboard },
@@ -43,7 +46,7 @@ export function Sidebar() {
       <div className="flex items-center gap-3 border-b border-hair px-6 py-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/nmpi-logo.png"
+          src={logo.src}
           alt="NMPI"
           className="h-10 w-10 shrink-0 rounded-full bg-white object-contain p-0.5 ring-1 ring-hair"
         />

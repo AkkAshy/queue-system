@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { useAuthStore } from '@/store/auth-store';
 import { useTr } from '@/lib/i18n';
 import type { LoginResponse } from '@queue/types';
+// Static import → URL carries basePath (/admin) in prod, plain in dev.
+import logo from '@/public/nmpi-logo.png';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -50,7 +52,7 @@ export default function LoginPage() {
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/nmpi-logo.png"
+            src={logo.src}
             alt="NMPI"
             className="mb-5 h-16 w-16 rounded-full bg-white object-contain p-1 ring-1 ring-hair"
           />
