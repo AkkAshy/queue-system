@@ -23,7 +23,18 @@ import { getAudioCtx } from './audio';
 const BASE = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/voice/uz`;
 const LEAD_MS = 550; // let the chime finish before the voice starts
 
-const DIGITS_UZ = ['nol', 'bir', 'ikki', 'uch', "to'rt", 'besh', 'olti', 'yetti', 'sakkiz', "to'qqiz"];
+// Узбекские количественные числительные 0–100 — число целым словом
+// («qirq ikki» = 42), а не по цифрам. Для TTS-фоллбэка когда клипа нет.
+const ONES_UZ = ['nol', 'bir', 'ikki', 'uch', "to'rt", 'besh', 'olti', 'yetti', 'sakkiz', "to'qqiz"];
+const TENS_UZ = ['', "o'n", 'yigirma', "o'ttiz", 'qirq', 'ellik', 'oltmish', 'yetmish', 'sakson', "to'qson"];
+function cardinalUz(n: number): string {
+  if (n < 10) return ONES_UZ[n] ?? String(n);
+  if (n === 100) return 'yuz';
+  const t = Math.floor(n / 10);
+  const o = n % 10;
+  return (TENS_UZ[t] ?? '') + (o === 0 ? '' : ' ' + ONES_UZ[o]);
+}
+// Порядковые для окон («beshinchi oynaga keling»).
 const ORD_UZ = ['', 'birinchi', 'ikkinchi', 'uchinchi', "to'rtinchi", 'beshinchi', 'oltinchi', 'yettinchi', 'sakkizinchi', "to'qqizinchi", "o'ninchi", "o'n birinchi", "o'n ikkinchi", "o'n uchinchi", "o'n to'rtinchi", "o'n beshinchi", "o'n oltinchi", "o'n yettinchi", "o'n sakkizinchi", "o'n to'qqizinchi", 'yigirmanchi', 'yigirma birinchi', 'yigirma ikkinchi', 'yigirma uchinchi'];
 
 interface Phrase {
@@ -39,24 +50,27 @@ function buildPhrase(number: string, counterNumber: string): Phrase {
   const digits = m?.[2];
   if (prefix && digits) {
     const letter = prefix.charAt(0).toUpperCase();
+    const num = parseInt(digits, 10); // «042» → 42 — число читаем целиком
     clips.push(`${BASE}/letter_${letter}.mp3`);
     tts.push(letter);
-    for (const d of digits) {
-      clips.push(`${BASE}/digit_${d}.mp3`);
-      tts.push(DIGITS_UZ[Number(d)] ?? d);
+    if (num >= 0 && num <= 100) {
+      clips.push(`${BASE}/num_${num}.mp3`); // «qirq ikki», а не «to'rt ikki»
+    } else {
+      clips.length = 0; // вне набора 0–100 → всю фразу читает TTS-фоллбэк
     }
+    tts.push(cardinalUz(num));
   } else {
     tts.push(number);
   }
 
   const w = String(counterNumber).trim();
-  if (/^([1-9]|1[0-9]|2[0-3])$/.test(w)) {
-    clips.push(`${BASE}/window_${w}.mp3`);
-    tts.push(`${ORD_UZ[Number(w)]} oynaga o'ting`);
+  if (clips.length > 0 && /^([1-9]|1[0-9]|2[0-3])$/.test(w)) {
+    clips.push(`${BASE}/window_${w}.mp3`); // «beshinchi oynaga keling» (lola)
+    tts.push(`${ORD_UZ[Number(w)]} oynaga keling`);
   } else {
     // unusual window label → no clip; the TTS fallback reads the whole phrase
     clips.length = 0;
-    tts.push(`${w}-oynaga o'ting`);
+    tts.push(`${ORD_UZ[Number(w)] ?? w} oynaga keling`);
   }
 
   return { clips, tts: tts.join(' ') };
