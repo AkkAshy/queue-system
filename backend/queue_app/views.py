@@ -300,6 +300,13 @@ class StatsExportView(APIView):
     ]
     OP_WIDTHS = [30, 22, 18, 22, 22]
 
+    # 3-varaq: xizmatlar bo'yicha (eng ko'p so'ralgan xizmatlar yuqorida).
+    SVC_HEADERS = [
+        "Xizmat", "Kategoriya", "So'ralgan (marta)", "Xizmat ko'rsatilgan",
+        "O'rtacha (daq)",
+    ]
+    SVC_WIDTHS = [42, 12, 18, 20, 14]
+
     def get(self, request):
         from collections import defaultdict
         from io import BytesIO
@@ -351,6 +358,11 @@ class StatsExportView(APIView):
 
         # operatorlar bo'yicha jamlanma (2-varaq uchun yig'amiz)
         agg = defaultdict(lambda: {"served": 0, "service_min": 0, "skipped": 0})
+        # xizmatlar bo'yicha jamlanma (3-varaq uchun)
+        svc_agg = defaultdict(
+            lambda: {"category": "", "requested": 0, "served": 0,
+                     "service_sum": 0, "served_timed": 0}
+        )
 
         for t in qs:
             operator = ""
@@ -390,6 +402,16 @@ class StatsExportView(APIView):
                 elif t.status == "skipped":
                     agg[operator]["skipped"] += 1
 
+            if t.service_id:
+                s = svc_agg[uz(t.service)]
+                s["category"] = t.category.code if t.category_id else ""
+                s["requested"] += 1
+                if t.status == "served":
+                    s["served"] += 1
+                    if service_min:
+                        s["service_sum"] += service_min
+                        s["served_timed"] += 1
+
         finalize(ws, self.HEADERS, self.WIDTHS)
 
         # ── 2-varaq: operatorlar bo'yicha jamlanma ──
@@ -400,6 +422,18 @@ class StatsExportView(APIView):
             avg = round(a["service_min"] / a["served"]) if a["served"] else None
             ws2.append([op, a["served"], a["service_min"], avg, a["skipped"]])
         finalize(ws2, self.OP_HEADERS, self.OP_WIDTHS)
+
+        # ── 3-varaq: xizmatlar (eng ko'p so'ralgani yuqorida) ──
+        ws3 = wb.create_sheet("Xizmatlar")
+        ws3.append(self.SVC_HEADERS)
+        for sname in sorted(svc_agg, key=lambda n: -svc_agg[n]["requested"]):
+            s = svc_agg[sname]
+            avg = (
+                round(s["service_sum"] / s["served_timed"])
+                if s["served_timed"] else None
+            )
+            ws3.append([sname, s["category"], s["requested"], s["served"], avg])
+        finalize(ws3, self.SVC_HEADERS, self.SVC_WIDTHS)
 
         buf = BytesIO()
         wb.save(buf)

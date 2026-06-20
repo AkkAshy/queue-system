@@ -259,8 +259,8 @@ def test_stats_and_export(seeded, client):
     from openpyxl import load_workbook
 
     wb = load_workbook(BytesIO(r.content))
-    # два листа: талоны + сводка по операторам
-    assert wb.sheetnames == ["Talonlar", "Operatorlar"]
+    # три листа: талоны + сводка по операторам + услуги
+    assert wb.sheetnames == ["Talonlar", "Operatorlar", "Xizmatlar"]
     ws = wb["Talonlar"]
     headers = [c.value for c in ws[1]]
     assert headers[:8] == [
@@ -273,6 +273,12 @@ def test_stats_and_export(seeded, client):
         "Operator", "Qabul qilingan (kishi)", "Jami xizmat (daq)",
     ]
     assert ws2.auto_filter.ref
+    # лист «Xizmatlar» — популярность услуг
+    ws3 = wb["Xizmatlar"]
+    assert [c.value for c in ws3[1]][:3] == [
+        "Xizmat", "Kategoriya", "So'ralgan (marta)",
+    ]
+    assert ws3.auto_filter.ref
 
 
 def test_sync_catalog_snapshot(seeded, client):
