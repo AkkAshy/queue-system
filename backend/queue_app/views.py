@@ -272,33 +272,82 @@ class StatsView(APIView):
 
 
 class StatsExportView(APIView):
-    """CSV export of per-ticket records for the range (opens in Excel)."""
+    """CSV-eksport: talonlar ro'yxati (Excel'da ochiladi). Ustun nomlari va
+    qiymatlar — o'zbek tilida, sana/vaqt o'qiladigan formatda, kutish va
+    xizmat vaqti daqiqalarda hisoblanadi."""
+
+    # Talon holati — o'zbekcha (admin paneldagi bilan bir xil).
+    STATUS_UZ = {
+        "waiting": "Kutilmoqda",
+        "called": "Chaqirilgan",
+        "serving": "Xizmat ko'rsatilmoqda",
+        "served": "Xizmat ko'rsatilgan",
+        "skipped": "O'tkazib yuborilgan",
+        "cancelled": "Bekor qilingan",
+    }
 
     def get(self, request):
         import csv
 
         from django.http import HttpResponse
+        from django.utils.timezone import localtime
 
-        qs = _stats_qs(request).select_related(
-            "hall", "category", "counter", "operator"
-        ).order_by("created_at")
+        qs = (
+            _stats_qs(request)
+            .select_related("hall", "category", "service", "counter", "operator")
+            .order_by("created_at")
+        )
+
         resp = HttpResponse(content_type="text/csv; charset=utf-8")
-        resp["Content-Disposition"] = 'attachment; filename="stats.csv"'
-        resp.write("﻿")  # BOM so Excel reads UTF-8 (Cyrillic)
+        resp["Content-Disposition"] = 'attachment; filename="navbat-statistika.csv"'
+        resp.write("﻿")  # BOM — Excel UTF-8 ni to'g'ri o'qishi uchun
         w = csv.writer(resp)
-        w.writerow(["number", "hall", "category", "status", "counter",
-                    "operator", "created_at", "called_at", "finished_at"])
+        w.writerow([
+            "Raqam", "Sana", "Zal", "Kategoriya", "Xizmat", "Oyna",
+            "Operator", "Holat", "Berilgan", "Chaqirilgan", "Yakunlangan",
+            "Kutish (daq)", "Xizmat vaqti (daq)",
+        ])
+
+        def fdate(dt):  # sana: kk.oo.yyyy (mahalliy vaqt)
+            return localtime(dt).strftime("%d.%m.%Y") if dt else ""
+
+        def ftime(dt):  # vaqt: ss:dd (mahalliy vaqt)
+            return localtime(dt).strftime("%H:%M") if dt else ""
+
+        def fmins(a, b):  # ikki vaqt orasidagi farq, daqiqada
+            return round((b - a).total_seconds() / 60) if a and b else ""
+
+        def uz(obj):  # o'zbekcha nom, bo'lmasa — ruscha
+            return (obj.name_uz or obj.name_ru or "") if obj else ""
+
         for t in qs:
+            operator = ""
+            if t.operator_id:
+                operator = (
+                    t.operator.name
+                    or t.operator.get_full_name()
+                    or t.operator.username
+                )
+            category = ""
+            if t.category_id:
+                cat_name = uz(t.category)
+                category = (
+                    f"{t.category.code} · {cat_name}" if cat_name else t.category.code
+                )
             w.writerow([
                 t.number,
-                t.hall.name_ru if t.hall_id else "",
-                t.category.code if t.category_id else "",
-                t.status,
+                fdate(t.created_at),
+                uz(t.hall) if t.hall_id else "",
+                category,
+                uz(t.service) if t.service_id else "",
                 t.counter.number if t.counter_id else "",
-                t.operator.username if t.operator_id else "",
-                t.created_at.isoformat(),
-                t.called_at.isoformat() if t.called_at else "",
-                t.finished_at.isoformat() if t.finished_at else "",
+                operator,
+                self.STATUS_UZ.get(t.status, t.status),
+                ftime(t.created_at),
+                ftime(t.called_at),
+                ftime(t.finished_at),
+                fmins(t.created_at, t.called_at),
+                fmins(t.called_at, t.finished_at),
             ])
         return resp
 

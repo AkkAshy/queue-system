@@ -252,7 +252,12 @@ def test_stats_and_export(seeded, client):
             "avg_service_minutes", "peak_hour", "hourly"} <= set(s)
     r = client.get("/api/stats/export")
     assert r.status_code == 200
-    assert "number" in r.content.decode("utf-8")
+    body = r.content.decode("utf-8")
+    # узбекские заголовки + новые колонки (оператор, услуга)
+    assert "Raqam" in body
+    assert "Operator" in body
+    assert "Xizmat" in body
+    assert "Kutish (daq)" in body
 
 
 def test_sync_catalog_snapshot(seeded, client):
