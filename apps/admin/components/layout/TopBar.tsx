@@ -25,7 +25,7 @@ export function TopBar() {
     <header className="flex items-center justify-between border-b border-hair bg-cream/60 px-8 py-5 backdrop-blur">
       <div className="leading-tight">
         <span className="eyebrow text-coral">
-          Ájiniyaz atındaǵı NDPI · Registrator ofisi
+          Ájiniyaz atındaǵı NMPI · Registrator ofisi
         </span>
       </div>
 

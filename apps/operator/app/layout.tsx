@@ -11,7 +11,7 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: 'NDPI · Operator puldi',
+  title: 'NMPI · Operator puldi',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

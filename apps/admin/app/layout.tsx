@@ -12,7 +12,7 @@ const rubik = Rubik({
 });
 
 export const metadata: Metadata = {
-  title: 'NDPI Queue — Admin',
+  title: 'NMPI Queue — Admin',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

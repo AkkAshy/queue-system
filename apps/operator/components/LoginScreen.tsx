@@ -71,7 +71,7 @@ export function LoginScreen() {
     <main className="flex h-screen w-screen flex-col justify-between p-6">
       <div>
         <div className="flex items-start justify-between">
-          <span className="eyebrow text-coral">NDPI · Pult</span>
+          <span className="eyebrow text-coral">NMPI · Pult</span>
           <div className="flex items-center gap-2">
             <ThemeToggle className="h-9 w-9" />
             <LangSwitcher />

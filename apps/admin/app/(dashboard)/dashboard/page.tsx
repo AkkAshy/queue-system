@@ -102,7 +102,7 @@ export default function DashboardPage() {
       <div>
         <span className="eyebrow text-coral">{tr('Boshqaruv paneli', 'Basqarıw paneli')}</span>
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-          {tr('Bugun registrator ofisida', 'Búgin registrator ofisinde')}
+          {tr('Bugun Registrator ofisida', 'Búgin Registrator ofisinde')}
         </h1>
       </div>
 

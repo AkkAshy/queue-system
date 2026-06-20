@@ -51,7 +51,7 @@ export function Sidebar() {
           className="h-10 w-10 shrink-0 rounded-full bg-white object-contain p-0.5 ring-1 ring-hair"
         />
         <div className="leading-tight">
-          <div className="eyebrow text-coral">NDPI</div>
+          <div className="eyebrow text-coral">NMPI</div>
           <div className="mt-1 text-sm font-medium">Admin Panel</div>
         </div>
       </div>

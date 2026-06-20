@@ -18,7 +18,7 @@ const TICKER_ITEMS = [
   'Talonıńızdı joǵaltpań — nómer ekranda kórsetiledi',
   'Talonni chaqiruvgacha saqlang',
   'Shaqırıw boyınsha kórsetilgen aynaǵa barıń',
-  'NDPI · Registrator ofisi',
+  'NMPI · Registrator ofisi',
 ];
 
 // How long a freshly-called ticket flashes coral before settling to neutral.

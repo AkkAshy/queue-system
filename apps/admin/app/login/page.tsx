@@ -61,7 +61,7 @@ export default function LoginPage() {
             alt="NMPI"
             className="mb-5 h-16 w-16 rounded-full bg-white object-contain p-1 ring-1 ring-hair"
           />
-          <span className="eyebrow text-coral">NDPI · Admin</span>
+          <span className="eyebrow text-coral">NMPI · Admin</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">
             {tr('Panelga kirish', 'Panelge kiriw')}
           </h1>
