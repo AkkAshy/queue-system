@@ -272,9 +272,9 @@ class StatsView(APIView):
 
 
 class StatsExportView(APIView):
-    """CSV-eksport: talonlar ro'yxati (Excel'da ochiladi). Ustun nomlari va
-    qiymatlar — o'zbek tilida, sana/vaqt o'qiladigan formatda, kutish va
-    xizmat vaqti daqiqalarda hisoblanadi."""
+    """Excel (.xlsx) eksport: talonlar ro'yxati. Sarlavhada avtofiltr
+    (saralash/filtrlash tugmalari), ustun nomlari va qiymatlar o'zbek tilida.
+    Saralash foydalanuvchi tomonidan Excel ichida tugmalar orqali qilinadi."""
 
     # Talon holati — o'zbekcha (admin paneldagi bilan bir xil).
     STATUS_UZ = {
@@ -286,44 +286,53 @@ class StatsExportView(APIView):
         "cancelled": "Bekor qilingan",
     }
 
+    HEADERS = [
+        "Raqam", "Sana", "Zal", "Kategoriya", "Xizmat", "Oyna", "Operator",
+        "Holat", "Berilgan", "Chaqirilgan", "Yakunlangan",
+        "Kutish (daq)", "Xizmat vaqti (daq)",
+    ]
+    # Taxminiy ustun kengliklari (belgilarda).
+    WIDTHS = [9, 11, 18, 26, 38, 7, 28, 22, 10, 11, 12, 12, 16]
+
     def get(self, request):
-        import csv
+        from io import BytesIO
 
         from django.http import HttpResponse
         from django.utils.timezone import localtime
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
 
-        # Sort by operator (ФИО), then chronologically — easy to see who served
-        # what. Tickets without an operator (not yet called) sink to the bottom.
         qs = (
             _stats_qs(request)
             .select_related("hall", "category", "service", "counter", "operator")
-            .order_by(
-                F("operator__name").asc(nulls_last=True),
-                "created_at",
-            )
+            .order_by("created_at")  # neytral tartib; saralash — avtofiltr orqali
         )
 
-        resp = HttpResponse(content_type="text/csv; charset=utf-8")
-        resp["Content-Disposition"] = 'attachment; filename="navbat-statistika.csv"'
-        resp.write("﻿")  # BOM — Excel UTF-8 ni to'g'ri o'qishi uchun
-        w = csv.writer(resp)
-        w.writerow([
-            "Raqam", "Sana", "Zal", "Kategoriya", "Xizmat", "Oyna",
-            "Operator", "Holat", "Berilgan", "Chaqirilgan", "Yakunlangan",
-            "Kutish (daq)", "Xizmat vaqti (daq)",
-        ])
-
-        def fdate(dt):  # sana: kk.oo.yyyy (mahalliy vaqt)
+        def fdate(dt):
             return localtime(dt).strftime("%d.%m.%Y") if dt else ""
 
-        def ftime(dt):  # vaqt: ss:dd (mahalliy vaqt)
+        def ftime(dt):
             return localtime(dt).strftime("%H:%M") if dt else ""
 
-        def fmins(a, b):  # ikki vaqt orasidagi farq, daqiqada
-            return round((b - a).total_seconds() / 60) if a and b else ""
+        def fmins(a, b):  # son sifatida (Excel raqamli saralashi uchun)
+            return round((b - a).total_seconds() / 60) if a and b else None
 
-        def uz(obj):  # o'zbekcha nom, bo'lmasa — ruscha
+        def uz(obj):
             return (obj.name_uz or obj.name_ru or "") if obj else ""
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Statistika"
+        ws.append(self.HEADERS)
+
+        # Sarlavha — qalin oq matn, ko'k fon (brend rangi).
+        head_font = Font(bold=True, color="FFFFFF")
+        head_fill = PatternFill("solid", fgColor="2563EB")
+        for cell in ws[1]:
+            cell.font = head_font
+            cell.fill = head_fill
+            cell.alignment = Alignment(vertical="center")
 
         for t in qs:
             operator = ""
@@ -339,7 +348,7 @@ class StatsExportView(APIView):
                 category = (
                     f"{t.category.code} · {cat_name}" if cat_name else t.category.code
                 )
-            w.writerow([
+            ws.append([
                 t.number,
                 fdate(t.created_at),
                 uz(t.hall) if t.hall_id else "",
@@ -354,6 +363,23 @@ class StatsExportView(APIView):
                 fmins(t.created_at, t.called_at),
                 fmins(t.called_at, t.finished_at),
             ])
+
+        # Avtofiltr (har bir ustunda saralash/filtr tugmasi) + muzlatilgan sarlavha.
+        ws.auto_filter.ref = f"A1:{get_column_letter(len(self.HEADERS))}{ws.max_row}"
+        ws.freeze_panes = "A2"
+        for i, width in enumerate(self.WIDTHS, start=1):
+            ws.column_dimensions[get_column_letter(i)].width = width
+
+        buf = BytesIO()
+        wb.save(buf)
+        resp = HttpResponse(
+            buf.getvalue(),
+            content_type=(
+                "application/vnd.openxmlformats-officedocument."
+                "spreadsheetml.sheet"
+            ),
+        )
+        resp["Content-Disposition"] = 'attachment; filename="navbat-statistika.xlsx"'
         return resp
 
 

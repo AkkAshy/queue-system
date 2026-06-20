@@ -252,12 +252,19 @@ def test_stats_and_export(seeded, client):
             "avg_service_minutes", "peak_hour", "hourly"} <= set(s)
     r = client.get("/api/stats/export")
     assert r.status_code == 200
-    body = r.content.decode("utf-8")
-    # узбекские заголовки + новые колонки (оператор, услуга)
-    assert "Raqam" in body
-    assert "Operator" in body
-    assert "Xizmat" in body
-    assert "Kutish (daq)" in body
+    # настоящий .xlsx (а не CSV)
+    assert "spreadsheetml" in r["Content-Type"]
+    from io import BytesIO
+
+    from openpyxl import load_workbook
+
+    wb = load_workbook(BytesIO(r.content))
+    ws = wb.active
+    headers = [c.value for c in ws[1]]
+    assert headers[:8] == [
+        "Raqam", "Sana", "Zal", "Kategoriya", "Xizmat", "Oyna", "Operator", "Holat",
+    ]
+    assert ws.auto_filter.ref  # автофильтр (кнопки сортировки) включён
 
 
 def test_sync_catalog_snapshot(seeded, client):
