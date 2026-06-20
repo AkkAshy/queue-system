@@ -292,10 +292,15 @@ class StatsExportView(APIView):
         from django.http import HttpResponse
         from django.utils.timezone import localtime
 
+        # Sort by operator (ФИО), then chronologically — easy to see who served
+        # what. Tickets without an operator (not yet called) sink to the bottom.
         qs = (
             _stats_qs(request)
             .select_related("hall", "category", "service", "counter", "operator")
-            .order_by("created_at")
+            .order_by(
+                F("operator__name").asc(nulls_last=True),
+                "created_at",
+            )
         )
 
         resp = HttpResponse(content_type="text/csv; charset=utf-8")
