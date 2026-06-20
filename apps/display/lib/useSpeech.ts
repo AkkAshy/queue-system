@@ -111,6 +111,7 @@ let leadTimer: ReturnType<typeof setTimeout> | null = null;
 const GAP_S = 0.16;
 const WINDOW_PAUSE_S = 0.34;
 const LEAD_S = 0.06; // tiny offset so the very first clip's onset isn't clipped
+const SPEECH_RATE = 0.9; // чуть медленнее (×0.9) — разборчивее для посетителей
 
 // Schedule the whole phrase on the AudioContext clock in one go: each clip
 // starts at an absolute time = end-of-previous + gap. Clock-scheduling is
@@ -125,12 +126,14 @@ function scheduleClips(buffers: AudioBuffer[], clips: string[]): Promise<void> {
     buffers.forEach((buf, i) => {
       const src = c.createBufferSource();
       src.buffer = buf;
+      src.playbackRate.value = SPEECH_RATE; // немного замедляем
       src.connect(c.destination);
       try { src.start(t); } catch { /* context closed */ }
       sources.push(src);
       // Pause AFTER this clip: longer if the NEXT clip is the window phrase.
+      // Real playback is stretched by 1/RATE — account for it so gaps stay stable.
       const nextIsWindow = clips[i + 1]?.includes('/window_') ?? false;
-      t += buf.duration + (nextIsWindow ? WINDOW_PAUSE_S : GAP_S);
+      t += buf.duration / SPEECH_RATE + (nextIsWindow ? WINDOW_PAUSE_S : GAP_S);
     });
     currentSources = sources;
     const last = sources[sources.length - 1];
