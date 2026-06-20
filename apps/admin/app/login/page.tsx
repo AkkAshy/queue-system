@@ -24,10 +24,15 @@ export default function LoginPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Нормализация: убираем пробелы по краям (автозаполнение/мобильная
+      // клавиатура часто подставляют лишний пробел — из-за него вход не проходит).
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password.trim(),
+        }),
       });
       if (!res.ok) {
         toast.error(tr("Login yoki parol noto'g'ri", "Login yamasa parol natuwrı"));
@@ -71,10 +76,14 @@ export default function LoginPage() {
             <Input
               id="username"
               value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              // логин не содержит пробелов — вырезаем их сразу при вводе
+              onChange={(e) => setUsername(e.target.value.replace(/\s+/g, ''))}
               required
               autoFocus
               autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
           <div className="space-y-2">
@@ -86,6 +95,9 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
             />
           </div>
         </div>
