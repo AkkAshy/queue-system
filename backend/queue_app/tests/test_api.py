@@ -259,12 +259,20 @@ def test_stats_and_export(seeded, client):
     from openpyxl import load_workbook
 
     wb = load_workbook(BytesIO(r.content))
-    ws = wb.active
+    # два листа: талоны + сводка по операторам
+    assert wb.sheetnames == ["Talonlar", "Operatorlar"]
+    ws = wb["Talonlar"]
     headers = [c.value for c in ws[1]]
     assert headers[:8] == [
         "Raqam", "Sana", "Zal", "Kategoriya", "Xizmat", "Oyna", "Operator", "Holat",
     ]
     assert ws.auto_filter.ref  # автофильтр (кнопки сортировки) включён
+    # лист «Operatorlar» — сводка
+    ws2 = wb["Operatorlar"]
+    assert [c.value for c in ws2[1]][:3] == [
+        "Operator", "Qabul qilingan (kishi)", "Jami xizmat (daq)",
+    ]
+    assert ws2.auto_filter.ref
 
 
 def test_sync_catalog_snapshot(seeded, client):

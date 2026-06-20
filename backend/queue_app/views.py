@@ -272,9 +272,9 @@ class StatsView(APIView):
 
 
 class StatsExportView(APIView):
-    """Excel (.xlsx) eksport: talonlar ro'yxati. Sarlavhada avtofiltr
-    (saralash/filtrlash tugmalari), ustun nomlari va qiymatlar o'zbek tilida.
-    Saralash foydalanuvchi tomonidan Excel ichida tugmalar orqali qilinadi."""
+    """Excel (.xlsx): 1-varaq — talonlar ro'yxati (avtofiltr), 2-varaq —
+    operatorlar bo'yicha jamlanma (kim nechta odam qabul qildi, jami necha
+    daqiqa ishladi, bir odamga o'rtacha necha daqiqa). Saralash — Excel ichida."""
 
     # Talon holati — o'zbekcha (admin paneldagi bilan bir xil).
     STATUS_UZ = {
@@ -291,10 +291,17 @@ class StatsExportView(APIView):
         "Holat", "Berilgan", "Chaqirilgan", "Yakunlangan",
         "Kutish (daq)", "Xizmat vaqti (daq)",
     ]
-    # Taxminiy ustun kengliklari (belgilarda).
     WIDTHS = [9, 11, 18, 26, 38, 7, 28, 22, 10, 11, 12, 12, 16]
 
+    # 2-varaq: operatorlar bo'yicha jamlanma.
+    OP_HEADERS = [
+        "Operator", "Qabul qilingan (kishi)", "Jami xizmat (daq)",
+        "O'rtacha (daq/kishi)", "O'tkazib yuborilgan",
+    ]
+    OP_WIDTHS = [30, 22, 18, 22, 22]
+
     def get(self, request):
+        from collections import defaultdict
         from io import BytesIO
 
         from django.http import HttpResponse
@@ -321,18 +328,29 @@ class StatsExportView(APIView):
         def uz(obj):
             return (obj.name_uz or obj.name_ru or "") if obj else ""
 
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Statistika"
-        ws.append(self.HEADERS)
-
-        # Sarlavha — qalin oq matn, ko'k fon (brend rangi).
         head_font = Font(bold=True, color="FFFFFF")
         head_fill = PatternFill("solid", fgColor="2563EB")
-        for cell in ws[1]:
-            cell.font = head_font
-            cell.fill = head_fill
-            cell.alignment = Alignment(vertical="center")
+
+        def finalize(ws, headers, widths):
+            """Sarlavha stili + avtofiltr + muzlatilgan sarlavha + kengliklar."""
+            for cell in ws[1]:
+                cell.font = head_font
+                cell.fill = head_fill
+                cell.alignment = Alignment(vertical="center")
+            ws.auto_filter.ref = f"A1:{get_column_letter(len(headers))}{ws.max_row}"
+            ws.freeze_panes = "A2"
+            for i, width in enumerate(widths, start=1):
+                ws.column_dimensions[get_column_letter(i)].width = width
+
+        wb = Workbook()
+
+        # ── 1-varaq: talonlar ──
+        ws = wb.active
+        ws.title = "Talonlar"
+        ws.append(self.HEADERS)
+
+        # operatorlar bo'yicha jamlanma (2-varaq uchun yig'amiz)
+        agg = defaultdict(lambda: {"served": 0, "service_min": 0, "skipped": 0})
 
         for t in qs:
             operator = ""
@@ -348,6 +366,7 @@ class StatsExportView(APIView):
                 category = (
                     f"{t.category.code} · {cat_name}" if cat_name else t.category.code
                 )
+            service_min = fmins(t.called_at, t.finished_at)
             ws.append([
                 t.number,
                 fdate(t.created_at),
@@ -361,14 +380,26 @@ class StatsExportView(APIView):
                 ftime(t.called_at),
                 ftime(t.finished_at),
                 fmins(t.created_at, t.called_at),
-                fmins(t.called_at, t.finished_at),
+                service_min,
             ])
+            if operator:
+                if t.status == "served":
+                    agg[operator]["served"] += 1
+                    if service_min:
+                        agg[operator]["service_min"] += service_min
+                elif t.status == "skipped":
+                    agg[operator]["skipped"] += 1
 
-        # Avtofiltr (har bir ustunda saralash/filtr tugmasi) + muzlatilgan sarlavha.
-        ws.auto_filter.ref = f"A1:{get_column_letter(len(self.HEADERS))}{ws.max_row}"
-        ws.freeze_panes = "A2"
-        for i, width in enumerate(self.WIDTHS, start=1):
-            ws.column_dimensions[get_column_letter(i)].width = width
+        finalize(ws, self.HEADERS, self.WIDTHS)
+
+        # ── 2-varaq: operatorlar bo'yicha jamlanma ──
+        ws2 = wb.create_sheet("Operatorlar")
+        ws2.append(self.OP_HEADERS)
+        for op in sorted(agg):
+            a = agg[op]
+            avg = round(a["service_min"] / a["served"]) if a["served"] else None
+            ws2.append([op, a["served"], a["service_min"], avg, a["skipped"]])
+        finalize(ws2, self.OP_HEADERS, self.OP_WIDTHS)
 
         buf = BytesIO()
         wb.save(buf)
