@@ -80,7 +80,7 @@ export default function LoginPage() {
               onChange={(e) => setUsername(e.target.value.replace(/\s+/g, ''))}
               required
               autoFocus
-              autoComplete="username"
+              autoComplete="off"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
@@ -94,7 +94,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              autoComplete="new-password"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
