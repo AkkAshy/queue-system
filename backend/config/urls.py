@@ -43,6 +43,8 @@ from queue_app.views import (
     TicketCreateView,
     TicketRecallView,
     TicketTransferView,
+    VoiceClipDetailView,
+    VoiceClipListCreateView,
 )
 
 urlpatterns = [
@@ -93,6 +95,8 @@ urlpatterns = [
     path("api/display/board", DisplayBoardView.as_view()),
     path("api/display/waiting", DisplayWaitingView.as_view()),
     path("api/display/settings", DisplaySettingsView.as_view()),
+    path("api/display/voice-clips", VoiceClipListCreateView.as_view()),
+    path("api/display/voice-clips/<int:pk>", VoiceClipDetailView.as_view()),
     # OpenAPI
     path("api/schema", SpectacularAPIView.as_view(), name="schema"),
     path("api/docs", SpectacularSwaggerView.as_view(url_name="schema")),
