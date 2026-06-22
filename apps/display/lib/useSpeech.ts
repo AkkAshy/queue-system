@@ -115,7 +115,7 @@ let leadTimer: ReturnType<typeof setTimeout> | null = null;
 const GAP_S = 0.16;
 const WINDOW_PAUSE_S = 0.34;
 const LEAD_S = 0.06; // tiny offset so the very first clip's onset isn't clipped
-const SPEECH_RATE = 0.9; // чуть медленнее (×0.9) — разборчивее для посетителей
+const SPEECH_RATE = 1.0; // обычная скорость
 
 // Schedule the whole phrase on the AudioContext clock in one go: each clip
 // starts at an absolute time = end-of-previous + gap. Clock-scheduling is
