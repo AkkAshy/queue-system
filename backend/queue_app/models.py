@@ -266,3 +266,38 @@ class SyncState(models.Model):
             f"sync@tickets={self.tickets_wm} sessions={self.sessions_wm} "
             f"audit={self.audit_wm_id}"
         )
+
+
+def voice_clip_path(instance, filename):
+    """Детерминированное имя: один файл на слот. Перезагрузка слота
+    перезаписывает файл (см. VoiceClipListCreateView.post), а не плодит дубли."""
+    return f"voice/{instance.kind}_{instance.key}.mp3"
+
+
+class VoiceClip(models.Model):
+    """Загружаемый mp3-клип озвучки ВЫЗОВА для табло. Один клип на слот
+    (kind+key). Переопределяет встроенный lola-клип; нет файла → табло играет
+    встроенный lola; нет ни того, ни другого → слот молчит.
+
+    kind='letter' key='A' · kind='num' key='42' · kind='window' key='5'.
+    """
+
+    KIND_LETTER, KIND_NUM, KIND_WINDOW = "letter", "num", "window"
+    KIND_CHOICES = [
+        (KIND_LETTER, "letter"),
+        (KIND_NUM, "num"),
+        (KIND_WINDOW, "window"),
+    ]
+
+    kind = models.CharField(max_length=8, choices=KIND_CHOICES)
+    key = models.CharField(max_length=8)  # 'A' / '42' / '5' — строкой
+    file = models.FileField(upload_to=voice_clip_path)
+    enabled = models.BooleanField(default=True)  # переключатель: своя запись ⇄ lola
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("kind", "key")
+        ordering = ["kind", "key"]
+
+    def __str__(self) -> str:
+        return f"{self.kind}_{self.key}"
