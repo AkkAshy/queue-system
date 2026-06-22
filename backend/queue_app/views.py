@@ -672,9 +672,10 @@ class AuditListView(generics.ListAPIView):
 
 class AuditExportView(APIView):
     """Excel (.xlsx) audit jurnali. Filtrlar: ?action=&from=&to= (kun bo'yicha).
-    Avtofiltr + o'zbekcha sarlavhalar, lola-stilidagi statistika eksporti kabi."""
+    Avtofiltr + o'zbekcha sarlavhalar, lola-stilidagi statistika eksporti kabi.
 
-    permission_classes = [IsChief]
+    Permission: StatsExportView kabi default (AllowAny) — yuklab olish <a href>
+    orqali bo'lgani uchun brauzer JWT-sarlavha yubormaydi (aks holda 401)."""
 
     HEADERS = ["Sana", "Vaqt", "Amal", "Obyekt", "Kim", "Tafsilotlar"]
     WIDTHS = [12, 9, 26, 22, 30, 48]
