@@ -11,6 +11,7 @@ from .models import (
     DisplaySettings,
     OperatorSession,
     Ticket,
+    VoiceClip,
     WorkSchedule,
 )
 
@@ -112,6 +113,27 @@ class DisplayBoardCounterSerializer(serializers.Serializer):
     counter_number = serializers.CharField(source="number")
     counter_name = serializers.CharField(source="name")
     current = DisplayCallSerializer(allow_null=True)
+
+
+class VoiceClipSerializer(serializers.ModelSerializer):
+    """`file` — только на запись (multipart upload), `url` — на чтение."""
+
+    url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VoiceClip
+        fields = ["id", "kind", "key", "file", "url", "enabled", "updated_at"]
+        extra_kwargs = {"file": {"write_only": True}}
+
+    def get_url(self, obj) -> str:
+        return obj.file.url
+
+    def validate_file(self, f):
+        if f.content_type not in ("audio/mpeg", "audio/mp3"):
+            raise serializers.ValidationError("Faqat mp3")
+        if f.size > 2 * 1024 * 1024:
+            raise serializers.ValidationError("Fayl 2 MB dan katta")
+        return f
 
 
 class WorkScheduleSerializer(serializers.ModelSerializer):

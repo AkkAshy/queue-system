@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { useChime } from '@/lib/useChime';
-import { useSpeech, cancelSpeech } from '@/lib/useSpeech';
+import { useSpeech, cancelSpeech, setCustomClips } from '@/lib/useSpeech';
 import { useRealtime } from '@/lib/useRealtime';
 import { MediaZone } from '@/components/MediaZone';
 import { NowServing } from '@/components/NowServing';
@@ -53,6 +53,7 @@ export default function Page() {
     ['display-active'],
     ['display-waiting'],
     ['display-settings'],
+    ['display-voice'],
   ]);
 
   const active = useQuery({
@@ -72,6 +73,14 @@ export default function Page() {
     queryFn: api.getSettings,
     refetchInterval: 30_000,
   });
+  const voice = useQuery({
+    queryKey: ['display-voice'],
+    queryFn: api.getVoiceClips,
+    refetchInterval: 60_000,
+  });
+  useEffect(() => {
+    if (voice.data) setCustomClips(voice.data);
+  }, [voice.data]);
 
   const calls = active.data ?? [];
 

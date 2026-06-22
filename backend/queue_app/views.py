@@ -2,6 +2,7 @@ from django.db.models import Avg, F
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import generics
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -27,6 +28,7 @@ from .models import (
     OperatorSession,
     Ticket,
     TicketStatus,
+    VoiceClip,
     WorkSchedule,
 )
 from .serializers import (
@@ -39,6 +41,7 @@ from .serializers import (
     DisplayWaitingSerializer,
     OperatorSessionSerializer,
     TicketSerializer,
+    VoiceClipSerializer,
     WorkScheduleSerializer,
 )
 
@@ -783,3 +786,63 @@ class DisplaySettingsView(APIView):
         # tell the board to reload its media zone live
         realtime.broadcast([realtime.DISPLAY], "display.settings")
         return Response(ser.data)
+
+
+class VoiceClipListCreateView(APIView):
+    """Загружаемая озвучка вызовов. GET public (табло + админка читают),
+    POST chief — upsert клипа по (kind, key) с заменой файла."""
+
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_permissions(self):
+        return [AllowAny()] if self.request.method == "GET" else [IsChief()]
+
+    def get(self, request):
+        clips = VoiceClip.objects.all()
+        return Response(VoiceClipSerializer(clips, many=True).data)
+
+    def post(self, request):
+        ser = VoiceClipSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+        kind = ser.validated_data["kind"]
+        key = ser.validated_data["key"]
+        new_file = ser.validated_data["file"]
+        clip = VoiceClip.objects.filter(kind=kind, key=key).first()
+        if clip:
+            clip.file.delete(save=False)  # убрать старый файл → имя переиспользуется
+            clip.file = new_file
+            clip.enabled = True  # загрузка = «использовать свою запись»
+            clip.save()
+        else:
+            clip = VoiceClip.objects.create(kind=kind, key=key, file=new_file)
+        realtime.broadcast([realtime.DISPLAY], "display.voice")
+        return Response(VoiceClipSerializer(clip).data, status=201)
+
+
+class VoiceClipDetailView(APIView):
+    """PATCH — переключить enabled (lola ⇄ своя запись). DELETE — удалить клип
+    (слот возвращается к встроенному lola). Обе операции — chief."""
+
+    permission_classes = [IsChief]
+
+    def patch(self, request, pk):
+        clip = VoiceClip.objects.filter(pk=pk).first()
+        if not clip:
+            return Response({"error": "not found"}, status=404)
+        enabled = request.data.get("enabled")
+        if not isinstance(enabled, bool):
+            # строго bool: bool("false") == True, поэтому строки не принимаем
+            return Response({"error": "enabled must be boolean"}, status=400)
+        clip.enabled = enabled
+        clip.save(update_fields=["enabled", "updated_at"])
+        realtime.broadcast([realtime.DISPLAY], "display.voice")
+        return Response(VoiceClipSerializer(clip).data)
+
+    def delete(self, request, pk):
+        clip = VoiceClip.objects.filter(pk=pk).first()
+        if not clip:
+            return Response({"error": "not found"}, status=404)
+        clip.file.delete(save=False)
+        clip.delete()
+        realtime.broadcast([realtime.DISPLAY], "display.voice")
+        return Response(status=204)

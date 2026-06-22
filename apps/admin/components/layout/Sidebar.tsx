@@ -12,6 +12,7 @@ import {
   CalendarClock,
   Monitor,
   ScrollText,
+  Volume2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTr } from '@/lib/i18n';
@@ -31,6 +32,7 @@ const items = [
   { href: '/halls',      uz: 'Zallar',           kaa: 'Zallar',          Icon: LayoutGrid, chiefOnly: true },
   { href: '/schedule',   uz: 'Jadval',           kaa: 'Keste',           Icon: CalendarClock },
   { href: '/settings',   uz: 'Tablo',            kaa: 'Tablo',           Icon: Monitor, chiefOnly: true },
+  { href: '/voice',      uz: 'Ovoz',             kaa: 'Dawıs',           Icon: Volume2, chiefOnly: true },
   { href: '/audit',      uz: 'Audit',            kaa: 'Audit',           Icon: ScrollText, chiefOnly: true },
 ];
 
