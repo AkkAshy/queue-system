@@ -670,6 +670,86 @@ class AuditListView(generics.ListAPIView):
         return qs[:200]
 
 
+class AuditExportView(APIView):
+    """Excel (.xlsx) audit jurnali. Filtrlar: ?action=&from=&to= (kun bo'yicha).
+    Avtofiltr + o'zbekcha sarlavhalar, lola-stilidagi statistika eksporti kabi."""
+
+    permission_classes = [IsChief]
+
+    HEADERS = ["Sana", "Vaqt", "Amal", "Obyekt", "Kim", "Tafsilotlar"]
+    WIDTHS = [12, 9, 26, 22, 30, 48]
+    ACTION_UZ = {
+        "ticket.called": "Chaqiruv",
+        "ticket.recalled": "Qayta chaqiruv",
+        "ticket.finished": "Yakunlash",
+        "ticket.skipped": "O'tkazib yuborish",
+        "ticket.transferred": "Boshqa oynaga",
+        "counter.created": "Oyna yaratildi",
+        "counter.updated": "Oyna o'zgartirildi",
+        "counter.deleted": "Oyna o'chirildi",
+        "queue.reset": "Navbat tiklandi",
+        "auth.login": "Kirish",
+    }
+
+    def get(self, request):
+        import json as _json
+        from io import BytesIO
+
+        from django.http import HttpResponse
+        from django.utils.timezone import localtime
+        from openpyxl import Workbook
+        from openpyxl.styles import Alignment, Font, PatternFill
+        from openpyxl.utils import get_column_letter
+
+        qs = AuditLog.objects.select_related("actor").all()
+        p = request.query_params
+        if p.get("action"):
+            qs = qs.filter(action=p["action"])
+        if p.get("from"):
+            qs = qs.filter(created_at__gte=p["from"])
+        if p.get("to"):
+            qs = qs.filter(created_at__lte=p["to"])
+        qs = qs.order_by("-created_at")[:5000]
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Audit"
+        ws.append(self.HEADERS)
+        head_font = Font(bold=True, color="FFFFFF")
+        head_fill = PatternFill("solid", fgColor="2563EB")
+        for cell in ws[1]:
+            cell.font = head_font
+            cell.fill = head_fill
+            cell.alignment = Alignment(vertical="center")
+
+        for a in qs:
+            actor = (a.actor.name or a.actor.get_full_name() or a.actor.username) if a.actor_id else a.actor_label
+            ws.append([
+                localtime(a.created_at).strftime("%d.%m.%Y"),
+                localtime(a.created_at).strftime("%H:%M"),
+                self.ACTION_UZ.get(a.action, a.action),
+                a.target or "",
+                actor or "",
+                _json.dumps(a.meta, ensure_ascii=False) if a.meta else "",
+            ])
+
+        ws.auto_filter.ref = f"A1:{get_column_letter(len(self.HEADERS))}{ws.max_row}"
+        ws.freeze_panes = "A2"
+        for i, width in enumerate(self.WIDTHS, start=1):
+            ws.column_dimensions[get_column_letter(i)].width = width
+
+        buf = BytesIO()
+        wb.save(buf)
+        resp = HttpResponse(
+            buf.getvalue(),
+            content_type=(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            ),
+        )
+        resp["Content-Disposition"] = 'attachment; filename="audit.xlsx"'
+        return resp
+
+
 class DisplaySettingsView(APIView):
     """Board config (YouTube URL). GET public (the board reads it), PATCH chief."""
 

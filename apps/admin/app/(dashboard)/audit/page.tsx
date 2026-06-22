@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useTr } from '@/lib/i18n';
 import { useTableControls, Th, FilterRow, type ColumnDef } from '@/lib/table-controls';
@@ -33,18 +34,39 @@ const ACTION_LABEL: Record<string, { uz: string; kaa: string }> = Object.fromEnt
   ACTIONS.filter((a) => a.value).map((a) => [a.value, { uz: a.uz, kaa: a.kaa }]),
 );
 
-async function fetchAudit(): Promise<AuditEntry[]> {
-  const res = await fetch('/api/audit');
+async function fetchAudit(from: string): Promise<AuditEntry[]> {
+  const res = await fetch(`/api/audit${from ? `?from=${encodeURIComponent(from)}` : ''}`);
   if (!res.ok) throw new Error('failed');
   return res.json();
 }
 
+// Период (дни) → ISO-дата начала. 1 = с начала сегодня, N = N суток назад, 0 = всё время.
+const PERIODS: { days: number; uz: string; kaa: string }[] = [
+  { days: 1, uz: 'Bugun', kaa: 'Búgin' },
+  { days: 7, uz: '7 kun', kaa: '7 kún' },
+  { days: 30, uz: '30 kun', kaa: '30 kún' },
+  { days: 0, uz: 'Hammasi', kaa: 'Hámmesi' },
+];
+
+function fromIsoFor(days: number): string {
+  if (!days) return '';
+  if (days === 1) {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d.toISOString();
+  }
+  return new Date(Date.now() - days * 86_400_000).toISOString();
+}
+
 export default function AuditPage() {
   const tr = useTr();
+  const [days, setDays] = useState(7);
+  const fromIso = useMemo(() => fromIsoFor(days), [days]);
   const { data = [], isLoading } = useQuery({
-    queryKey: ['audit'],
-    queryFn: fetchAudit,
+    queryKey: ['audit', days],
+    queryFn: () => fetchAudit(fromIso),
   });
+  const exportHref = `/api/audit/export${fromIso ? `?from=${encodeURIComponent(fromIso)}` : ''}`;
 
   const columns = useMemo<ColumnDef<AuditEntry>[]>(
     () => [
@@ -80,11 +102,31 @@ export default function AuditPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-end justify-between">
+      <div className="flex items-end justify-between gap-3">
         <div>
           <span className="eyebrow text-coral">{tr('Jurnal', 'Jurnal')}</span>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight">{tr('Amallar auditi', 'Ámeller auditi')}</h1>
           <p className="mt-1 text-sm text-coal-3">{ctl.view.length} {tr('ta yozuv', 'jazıw')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            className="rounded-lg border border-hair-2 bg-card px-3 py-1.5 text-sm text-coal"
+          >
+            {PERIODS.map((p) => (
+              <option key={p.days} value={p.days}>
+                {tr(p.uz, p.kaa)}
+              </option>
+            ))}
+          </select>
+          <a
+            href={exportHref}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-coral px-3 py-1.5 text-sm font-semibold text-cream hover:bg-coral-600"
+          >
+            <Download className="h-4 w-4" />
+            Excel
+          </a>
         </div>
       </div>
 

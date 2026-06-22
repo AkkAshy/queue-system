@@ -17,6 +17,7 @@ from catalog.views import (
     ServiceListView,
 )
 from queue_app.views import (
+    AuditExportView,
     AuditListView,
     CallNextView,
     CounterDetailView,
@@ -65,6 +66,7 @@ urlpatterns = [
     # dashboard
     path("api/dashboard", DashboardView.as_view()),
     path("api/audit", AuditListView.as_view()),
+    path("api/audit/export", AuditExportView.as_view()),
     path("api/stats", StatsView.as_view()),
     path("api/stats/export", StatsExportView.as_view()),
     path("api/sync/catalog", SyncCatalogView.as_view()),
