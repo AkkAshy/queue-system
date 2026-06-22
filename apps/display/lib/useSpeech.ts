@@ -27,6 +27,38 @@ const BASE = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/voice/uz`;
 const CV = '?v=lola';
 const LEAD_MS = 550; // let the chime finish before the voice starts
 
+// ---------- shared Web Audio context + buffer cache ----------
+const cache = new Map<string, AudioBuffer | null>(); // url → buffer (null = load failed)
+
+// Загружаемые из админки клипы переопределяют встроенные lola.
+// Ключ — "${kind}_${key}" (num_42, letter_A, window_5); значение — URL с
+// cache-bust по updated_at, чтобы свежезалитый файл подхватился сразу.
+let custom = new Map<string, string>();
+
+export function setCustomClips(
+  list: { kind: string; key: string; url: string; enabled: boolean; updated_at: string }[],
+): void {
+  const next = new Map<string, string>();
+  for (const c of list) {
+    if (!c.enabled) continue; // выключенный кастом → слот уходит на lola
+    const v = Date.parse(c.updated_at) || 0;
+    next.set(`${c.kind}_${c.key}`, `${c.url}?v=${v}`);
+  }
+  // Сбросить декодированные буферы прежних активных URL. Новые URL в next —
+  // другие ключи (новый ?v=), в кэше их ещё не было, отдельно чистить не нужно.
+  for (const [, url] of custom) cache.delete(url);
+  custom = next;
+}
+
+// Резолв одного слота: кастом → встроенный lola (только в дефолтном
+// диапазоне) → null (слот недоступен).
+function clipFor(kind: 'letter' | 'num' | 'window', key: string, inLolaRange: boolean): string | null {
+  const c = custom.get(`${kind}_${key}`);
+  if (c) return c;
+  if (inLolaRange) return `${BASE}/${kind}_${key}.mp3${CV}`;
+  return null;
+}
+
 // Узбекские количественные числительные 0–100 — число целым словом
 // («qirq ikki» = 42), а не по цифрам. Для TTS-фоллбэка когда клипа нет.
 const ONES_UZ = ['nol', 'bir', 'ikki', 'uch', "to'rt", 'besh', 'olti', 'yetti', 'sakkiz', "to'qqiz"];
@@ -54,34 +86,26 @@ function buildPhrase(number: string, counterNumber: string): Phrase {
   const digits = m?.[2];
   if (prefix && digits) {
     const letter = prefix.charAt(0).toUpperCase();
-    const num = parseInt(digits, 10); // «042» → 42 — число читаем целиком
-    clips.push(`${BASE}/letter_${letter}.mp3${CV}`);
-    tts.push(letter);
-    if (num >= 0 && num <= 100) {
-      clips.push(`${BASE}/num_${num}.mp3${CV}`); // «qirq ikki», а не «to'rt ikki»
-    } else {
-      clips.length = 0; // вне набора 0–100 → всю фразу читает TTS-фоллбэк
+    const num = parseInt(digits, 10); // «042» → 42 — число целиком
+    const w = String(counterNumber).trim();
+    tts.push(letter, cardinalUz(num), `${ORD_UZ[Number(w)] ?? w} oynaga keling`);
+
+    // Кастом переопределяет lola; кастомный слот вне lola-диапазона (напр.
+    // num_150, window_24) тоже сыграет, если загружен.
+    const letterClip = clipFor('letter', letter, /^[A-I]$/.test(letter));
+    const numClip = clipFor('num', String(num), num >= 0 && num <= 100);
+    const windowClip = clipFor('window', w, /^([1-9]|1[0-9]|2[0-3])$/.test(w));
+
+    // Нужны все три слота (кастом или lola). Если какого-то нет — молчим
+    // целиком, чтобы не проговорить половину вызова.
+    if (letterClip && numClip && windowClip) {
+      clips.push(letterClip, numClip, windowClip);
     }
-    tts.push(cardinalUz(num));
   } else {
     tts.push(number);
   }
-
-  const w = String(counterNumber).trim();
-  if (clips.length > 0 && /^([1-9]|1[0-9]|2[0-3])$/.test(w)) {
-    clips.push(`${BASE}/window_${w}.mp3${CV}`); // «beshinchi oynaga keling» (lola)
-    tts.push(`${ORD_UZ[Number(w)]} oynaga keling`);
-  } else {
-    // unusual window label → no clip; the TTS fallback reads the whole phrase
-    clips.length = 0;
-    tts.push(`${ORD_UZ[Number(w)] ?? w} oynaga keling`);
-  }
-
   return { clips, tts: tts.join(' ') };
 }
-
-// ---------- shared Web Audio context + buffer cache ----------
-const cache = new Map<string, AudioBuffer | null>(); // url → buffer (null = load failed)
 
 function getCtx(): AudioContext | null {
   return getAudioCtx(); // one context shared with the chime; gesture-unlocked

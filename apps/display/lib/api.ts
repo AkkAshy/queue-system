@@ -11,6 +11,15 @@ async function json<T>(res: Response): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface VoiceClip {
+  id: number;
+  kind: 'letter' | 'num' | 'window';
+  key: string;
+  url: string;
+  enabled: boolean;
+  updated_at: string;
+}
+
 // hall query suffix — scopes the board to one hall when ?hall= is set on the URL.
 const hq = (hallId?: string | null) => (hallId ? `?hall_id=${hallId}` : '');
 
@@ -23,4 +32,5 @@ export const api = {
     fetch(`/api/display/waiting${hq(hallId)}`).then(json<DisplayWaiting[]>),
   getSettings: () => fetch('/api/display/settings').then(json<DisplaySettings>),
   listCounters: () => fetch('/api/counters').then(json<Counter[]>),
+  getVoiceClips: () => fetch('/api/display/voice-clips').then(json<VoiceClip[]>),
 };
