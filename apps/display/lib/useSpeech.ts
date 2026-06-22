@@ -4,16 +4,16 @@ import { useCallback } from 'react';
 import { getAudioCtx } from './audio';
 
 /**
- * Uzbek voice announcement for a call: «A, nol to'rt ikki, uchinchi oynaga o'ting».
+ * Uzbek voice announcement for a call: «A ikki, beshinchi oynaga keling».
  *
- * Plays a library of pre-recorded clips (public/voice/uz/*.mp3) in sequence —
- * letter + digit-by-digit + the window phrase. Works fully OFFLINE and doesn't
- * depend on an OS voice pack (unlike speechSynthesis, which has no Uzbek voice
- * on most machines). Decoded through Web Audio and routed through one
- * AudioContext, so it shares the chime's gesture-unlock (kiosk autoplay).
+ * Plays pre-recorded lola clips (public/voice/uz/*.mp3) in sequence —
+ * letter + whole-number word (num_42 = «qirq ikki») + window phrase. Fully
+ * OFFLINE; decoded through Web Audio and routed through one shared AudioContext
+ * (shares the chime's gesture-unlock for kiosk autoplay).
  *
- * If a clip is missing (e.g. a category code outside A–I, or files not deployed),
- * it falls back to browser speechSynthesis for the whole phrase.
+ * No browser-speechSynthesis fallback: it spoke in a different «second voice»
+ * and often went silent without an OS Uzbek pack. If a clip is missing
+ * (number outside 0–100, or files not deployed) we just stay silent for it.
  *
  * Calls are QUEUED — overlapping calls are spoken one after another.
  */
@@ -21,6 +21,10 @@ import { getAudioCtx } from './audio';
 // Prefix the basePath (e.g. /tablo in prod) so the clips resolve under the
 // app's mount point — without it the fetch 404s and we fall back to browser TTS.
 const BASE = `${process.env.NEXT_PUBLIC_BASE_PATH || ''}/voice/uz`;
+// Версия клипов в URL: браузер табло держит старые mp3 (SardorNeural) в
+// HTTP-кэше под теми же именами — из-за этого «два голоса». Меняя версию,
+// заставляем перезагрузить свежие lola-клипы.
+const CV = '?v=lola';
 const LEAD_MS = 550; // let the chime finish before the voice starts
 
 // Узбекские количественные числительные 0–100 — число целым словом
@@ -51,10 +55,10 @@ function buildPhrase(number: string, counterNumber: string): Phrase {
   if (prefix && digits) {
     const letter = prefix.charAt(0).toUpperCase();
     const num = parseInt(digits, 10); // «042» → 42 — число читаем целиком
-    clips.push(`${BASE}/letter_${letter}.mp3`);
+    clips.push(`${BASE}/letter_${letter}.mp3${CV}`);
     tts.push(letter);
     if (num >= 0 && num <= 100) {
-      clips.push(`${BASE}/num_${num}.mp3`); // «qirq ikki», а не «to'rt ikki»
+      clips.push(`${BASE}/num_${num}.mp3${CV}`); // «qirq ikki», а не «to'rt ikki»
     } else {
       clips.length = 0; // вне набора 0–100 → всю фразу читает TTS-фоллбэк
     }
@@ -65,7 +69,7 @@ function buildPhrase(number: string, counterNumber: string): Phrase {
 
   const w = String(counterNumber).trim();
   if (clips.length > 0 && /^([1-9]|1[0-9]|2[0-3])$/.test(w)) {
-    clips.push(`${BASE}/window_${w}.mp3`); // «beshinchi oynaga keling» (lola)
+    clips.push(`${BASE}/window_${w}.mp3${CV}`); // «beshinchi oynaga keling» (lola)
     tts.push(`${ORD_UZ[Number(w)]} oynaga keling`);
   } else {
     // unusual window label → no clip; the TTS fallback reads the whole phrase
@@ -142,30 +146,21 @@ function scheduleClips(buffers: AudioBuffer[], clips: string[]): Promise<void> {
   });
 }
 
-function ttsSpeak(text: string): Promise<void> {
-  return new Promise((resolve) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) { resolve(); return; }
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'uz-UZ';
-    u.rate = 0.95;
-    const v = window.speechSynthesis.getVoices().find((x) => x.lang.toLowerCase().startsWith('uz'));
-    if (v) u.voice = v;
-    u.onend = () => resolve();
-    u.onerror = () => resolve();
-    window.speechSynthesis.speak(u);
-  });
-}
-
 async function playPhrase(p: Phrase): Promise<void> {
-  // Try the clip path; if any clip is missing, speak the whole phrase instead.
-  if (p.clips.length > 0) {
-    const buffers = await Promise.all(p.clips.map(loadBuffer));
-    if (buffers.every((b): b is AudioBuffer => b != null)) {
-      await scheduleClips(buffers, p.clips);
-      return;
+  if (p.clips.length === 0) return; // номер вне набора 0–100 — молчим (без чужого голоса)
+  const buffers = await Promise.all(p.clips.map(loadBuffer));
+  // Играем ТОЛЬКО реальные lola-клипы. Никакого браузерного speechSynthesis —
+  // он звучал чужим «вторым голосом» и часто молчал без uz-пакета на табло.
+  const ok: AudioBuffer[] = [];
+  const okClips: string[] = [];
+  buffers.forEach((b, i) => {
+    const clip = p.clips[i];
+    if (b != null && clip != null) {
+      ok.push(b);
+      okClips.push(clip);
     }
-  }
-  await ttsSpeak(p.tts);
+  });
+  if (ok.length > 0) await scheduleClips(ok, okClips);
 }
 
 function pump() {
@@ -196,5 +191,4 @@ export function cancelSpeech() {
   if (leadTimer) { clearTimeout(leadTimer); leadTimer = null; }
   for (const s of currentSources) { try { s.stop(); } catch { /* already stopped */ } }
   currentSources = [];
-  if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
 }
