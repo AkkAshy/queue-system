@@ -692,8 +692,22 @@ class AuditExportView(APIView):
         "auth.login": "Kirish",
     }
 
+    @staticmethod
+    def _fmt_meta(meta):
+        """meta-JSON → o'qiladigan matn: {'counter':'9'} → 'Oyna 9'."""
+        if not meta:
+            return ""
+        parts = []
+        for k, v in meta.items():
+            if k == "counter":
+                parts.append(f"Oyna {v}")
+            elif k == "cancelled":
+                parts.append(f"{v} ta bekor qilingan")
+            else:
+                parts.append(f"{k}: {v}")
+        return ", ".join(parts)
+
     def get(self, request):
-        import json as _json
         from io import BytesIO
 
         from django.http import HttpResponse
@@ -731,7 +745,7 @@ class AuditExportView(APIView):
                 self.ACTION_UZ.get(a.action, a.action),
                 a.target or "",
                 actor or "",
-                _json.dumps(a.meta, ensure_ascii=False) if a.meta else "",
+                self._fmt_meta(a.meta),
             ])
 
         ws.auto_filter.ref = f"A1:{get_column_letter(len(self.HEADERS))}{ws.max_row}"

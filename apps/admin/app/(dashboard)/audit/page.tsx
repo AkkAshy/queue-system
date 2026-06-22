@@ -34,6 +34,22 @@ const ACTION_LABEL: Record<string, { uz: string; kaa: string }> = Object.fromEnt
   ACTIONS.filter((a) => a.value).map((a) => [a.value, { uz: a.uz, kaa: a.kaa }]),
 );
 
+// meta-JSON → читаемый текст: {counter:'9'} → «Oyna 9», вместо сырого JSON.
+function fmtMeta(
+  meta: Record<string, unknown> | undefined,
+  tr: (uz: string, kaa: string) => string,
+): string {
+  const entries = Object.entries(meta ?? {});
+  if (!entries.length) return '—';
+  return entries
+    .map(([k, v]) => {
+      if (k === 'counter') return `${tr('Oyna', 'Áyne')} ${v}`;
+      if (k === 'cancelled') return `${v} ${tr('ta bekor qilingan', 'biykarlandı')}`;
+      return `${k}: ${v}`;
+    })
+    .join(', ');
+}
+
 async function fetchAudit(from: string): Promise<AuditEntry[]> {
   const res = await fetch(`/api/audit${from ? `?from=${encodeURIComponent(from)}` : ''}`);
   if (!res.ok) throw new Error('failed');
@@ -169,9 +185,7 @@ export default function AuditPage() {
                   <td className="font-mono font-semibold text-coral-600">{e.target || '—'}</td>
                   <td className="text-coal-2">{e.actor_label || '—'}</td>
                   <td className="max-w-[280px] truncate text-xs text-coal-3">
-                    {Object.keys(e.meta ?? {}).length
-                      ? JSON.stringify(e.meta)
-                      : '—'}
+                    {fmtMeta(e.meta, tr)}
                   </td>
                 </tr>
               ))}
