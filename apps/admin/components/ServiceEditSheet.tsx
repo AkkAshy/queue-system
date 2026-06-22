@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import type { Service, ServiceCategory, DeliveryType } from '@queue/types';
+import { localizedName, type Service, type ServiceCategory, type DeliveryType } from '@queue/types';
 import {
   Sheet,
   SheetContent,
@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useTr } from '@/lib/i18n';
+import { useTr, useLang } from '@/lib/i18n';
 
 const DELIVERY_TYPES: DeliveryType[] = [
   'electron',
@@ -60,6 +60,7 @@ function emptyDraft(categories: ServiceCategory[]): Draft {
 
 export function ServiceEditSheet({ service, categories, open, onOpenChange }: Props) {
   const tr = useTr();
+  const { lang } = useLang();
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(service ?? emptyDraft(categories));
 
@@ -118,7 +119,7 @@ export function ServiceEditSheet({ service, categories, open, onOpenChange }: Pr
                   .sort((a, b) => a.order - b.order)
                   .map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
-                      {c.code} · {c.name_ru}
+                      {c.code} · {localizedName(c, lang)}
                     </SelectItem>
                   ))}
               </SelectContent>

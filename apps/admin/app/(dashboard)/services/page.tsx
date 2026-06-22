@@ -63,7 +63,7 @@ export default function ServicesPage() {
         options: categories
           .slice()
           .sort((a, b) => a.order - b.order)
-          .map((c) => ({ value: c.code, label: `${c.code} · ${c.name_ru}` })),
+          .map((c) => ({ value: c.code, label: `${c.code} · ${localizedName(c, lang)}` })),
       },
       {
         key: 'name',

@@ -4,17 +4,18 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Download, RotateCcw } from 'lucide-react';
-import type {
-  DashboardMetrics,
-  HourlyLoadPoint,
-  Hall,
-  RecentTicket,
+import {
+  localizedName,
+  type DashboardMetrics,
+  type HourlyLoadPoint,
+  type Hall,
+  type RecentTicket,
 } from '@queue/types';
 import { StatCard } from '@/components/StatCard';
 import { HourlyLoadChart } from '@/components/HourlyLoadChart';
 import { Badge } from '@/components/ui/badge';
 import { useRealtime } from '@/lib/useRealtime';
-import { useTr } from '@/lib/i18n';
+import { useTr, useLang } from '@/lib/i18n';
 
 interface DashboardResp {
   metrics: DashboardMetrics;
@@ -60,6 +61,7 @@ const STATUS_LABEL: Record<string, { uz: string; kaa: string }> = {
 
 export default function DashboardPage() {
   const tr = useTr();
+  const { lang } = useLang();
   // Realtime: ticket created/finished pushes a WS event → live metrics refresh.
   useRealtime('/ws/admin', [['dashboard'], ['stats']]);
 
@@ -119,7 +121,7 @@ export default function DashboardPage() {
               <option value="">{tr('Barcha zallar', 'Barlıq zallar')}</option>
               {(halls ?? []).map((h) => (
                 <option key={h.id} value={h.id}>
-                  {h.name_ru}
+                  {localizedName(h, lang)}
                 </option>
               ))}
             </select>
