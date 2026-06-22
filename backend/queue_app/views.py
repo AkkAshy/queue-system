@@ -414,11 +414,22 @@ class StatsExportView(APIView):
 
         finalize(ws, self.HEADERS, self.WIDTHS)
 
-        # ── 2-varaq: operatorlar bo'yicha jamlanma ──
+        # ── 2-varaq: operatorlar bo'yicha jamlanma (ВСЕ операторы, даже без талонов) ──
+        from django.contrib.auth import get_user_model
+
         ws2 = wb.create_sheet("Operatorlar")
         ws2.append(self.OP_HEADERS)
-        for op in sorted(agg):
-            a = agg[op]
+        # Все операторы по справочнику + те, кто реально обслуживал (admin/др. роли).
+        names, seen = [], set()
+        for u in get_user_model().objects.filter(role="operator").order_by("name", "username"):
+            nm = u.name or u.get_full_name() or u.username
+            if nm and nm not in seen:
+                seen.add(nm); names.append(nm)
+        for nm in agg:
+            if nm not in seen:
+                seen.add(nm); names.append(nm)
+        for op in sorted(names):
+            a = agg.get(op, {"served": 0, "service_min": 0, "skipped": 0})
             avg = round(a["service_min"] / a["served"]) if a["served"] else None
             ws2.append([op, a["served"], a["service_min"], avg, a["skipped"]])
         finalize(ws2, self.OP_HEADERS, self.OP_WIDTHS)
