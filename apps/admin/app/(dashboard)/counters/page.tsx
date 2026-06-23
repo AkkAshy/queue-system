@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil } from 'lucide-react';
-import type { Counter, Service } from '@queue/types';
+import type { Counter, Hall, Service } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CounterEditSheet } from '@/components/CounterEditSheet';
@@ -31,6 +31,16 @@ export default function CountersPage() {
     queryKey: ['services'],
     queryFn: fetchServices,
   });
+  const { data: halls = [] } = useQuery<Hall[]>({
+    queryKey: ['halls'],
+    queryFn: async () => (await fetch('/api/halls')).json(),
+  });
+
+  function hallLabel(id: number | null | undefined) {
+    if (!id) return '—';
+    const h = halls.find((x) => x.id === id);
+    return h ? tr(h.name_uz || h.name_ru, h.name_kaa) : '—';
+  }
 
   const [editing, setEditing] = useState<Counter | null>(null);
   const [creating, setCreating] = useState(false);
@@ -40,6 +50,16 @@ export default function CountersPage() {
       { key: 'number', accessor: (c) => c.number, filter: 'text' },
       { key: 'name', accessor: (c) => c.name, filter: 'text' },
       { key: 'services', accessor: (c) => c.service_ids.length },
+      {
+        key: 'hall',
+        accessor: (c) => hallLabel(c.hall_id),
+        filterValue: (c) => (c.hall_id != null ? String(c.hall_id) : ''),
+        filter: 'select',
+        options: halls.map((h) => ({
+          value: String(h.id),
+          label: tr(h.name_uz || h.name_ru, h.name_kaa),
+        })),
+      },
       {
         key: 'status',
         accessor: (c) => (c.is_active ? 'active' : 'inactive'),
@@ -51,7 +71,8 @@ export default function CountersPage() {
       },
       { key: 'actions' },
     ],
-    [tr],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tr, halls],
   );
   const ctl = useTableControls(counters, columns);
 
@@ -91,6 +112,7 @@ export default function CountersPage() {
               <Th ctl={ctl} col="number" className="w-20">№</Th>
               <Th ctl={ctl} col="name">{tr('Nomi', 'Atı')}</Th>
               <Th ctl={ctl} col="services" className="w-32">{tr('Xizmatlar', 'Xızmetler')}</Th>
+              <Th ctl={ctl} col="hall" className="w-28">{tr('Zal', 'Zal')}</Th>
               <Th ctl={ctl} col="status" className="w-28">{tr('Holat', 'Halat')}</Th>
               <th className="w-32"></th>
             </tr>
@@ -106,6 +128,7 @@ export default function CountersPage() {
                 <td className="font-mono text-sm text-coal-2">
                   {c.service_ids.length}
                 </td>
+                <td className="text-coal-2">{hallLabel(c.hall_id)}</td>
                 <td>
                   {c.is_active ? (
                     <Badge variant="outline" className="border-hair-2 text-coal">

@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { localizedName, type Counter, type Service } from '@queue/types';
+import { localizedName, type Counter, type Hall, type Service } from '@queue/types';
 import {
   Sheet,
   SheetContent,
@@ -17,6 +17,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useTr, useLang } from '@/lib/i18n';
 
 interface Props {
@@ -33,6 +40,7 @@ const EMPTY: Draft = {
   name: '',
   service_ids: [],
   is_active: true,
+  hall_id: null,
 };
 
 export function CounterEditSheet({ counter, services, open, onOpenChange }: Props) {
@@ -41,9 +49,22 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
   const qc = useQueryClient();
   const [draft, setDraft] = useState<Draft>(counter ?? EMPTY);
 
+  const { data: halls = [] } = useQuery<Hall[]>({
+    queryKey: ['halls'],
+    queryFn: async () => (await fetch('/api/halls')).json(),
+  });
+
   useEffect(() => {
     setDraft(counter ?? EMPTY);
   }, [counter]);
+
+  // На создании — зал по умолчанию первый доступный.
+  useEffect(() => {
+    const first = halls[0];
+    if (!counter && first) {
+      setDraft((d) => (d.hall_id == null ? { ...d, hall_id: first.id } : d));
+    }
+  }, [counter, halls]);
 
   const mutation = useMutation({
     mutationFn: async (d: Draft) => {
@@ -107,6 +128,25 @@ export function CounterEditSheet({ counter, services, open, onOpenChange }: Prop
                 onChange={(e) => setDraft({ ...draft, name: e.target.value })}
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>{tr('Zal', 'Zal')}</Label>
+            <Select
+              value={draft.hall_id != null ? String(draft.hall_id) : undefined}
+              onValueChange={(v) => setDraft({ ...draft, hall_id: Number(v) })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {halls.map((h) => (
+                  <SelectItem key={h.id} value={String(h.id)}>
+                    {tr(h.name_uz || h.name_ru, h.name_kaa)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-between rounded-xl border border-hair px-4 py-3">

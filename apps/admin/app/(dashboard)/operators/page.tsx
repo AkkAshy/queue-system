@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Trash2, Pencil } from 'lucide-react';
-import type { Counter, User } from '@queue/types';
+import type { Counter, Hall, User } from '@queue/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { OperatorEditSheet } from '@/components/OperatorEditSheet';
@@ -36,6 +36,10 @@ export default function OperatorsPage() {
     queryKey: ['counters'],
     queryFn: fetchCounters,
   });
+  const { data: halls = [] } = useQuery<Hall[]>({
+    queryKey: ['halls'],
+    queryFn: async () => (await fetch('/api/halls')).json(),
+  });
 
   const [editing, setEditing] = useState<User | null>(null);
   const [creating, setCreating] = useState(false);
@@ -58,6 +62,12 @@ export default function OperatorsPage() {
     return c ? `№${c.number}` : '—';
   }
 
+  function hallLabel(id: number | null | undefined) {
+    if (!id) return '—';
+    const h = halls.find((x) => x.id === id);
+    return h ? tr(h.name_uz || h.name_ru, h.name_kaa) : '—';
+  }
+
   const columns = useMemo<ColumnDef<User>[]>(
     () => [
       { key: 'username', accessor: (u) => u.username, filter: 'text' },
@@ -73,6 +83,16 @@ export default function OperatorsPage() {
       },
       { key: 'counter', accessor: (u) => counterLabel(u.counter_id), filter: 'text' },
       {
+        key: 'hall',
+        accessor: (u) => hallLabel(u.hall_id),
+        filterValue: (u) => (u.hall_id != null ? String(u.hall_id) : ''),
+        filter: 'select',
+        options: halls.map((h) => ({
+          value: String(h.id),
+          label: tr(h.name_uz || h.name_ru, h.name_kaa),
+        })),
+      },
+      {
         key: 'status',
         accessor: (u) => (u.is_active ? 'active' : 'inactive'),
         filter: 'select',
@@ -84,7 +104,7 @@ export default function OperatorsPage() {
       { key: 'actions' },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [tr, counters],
+    [tr, counters, halls],
   );
   const ctl = useTableControls(users, columns);
 
@@ -113,6 +133,7 @@ export default function OperatorsPage() {
               <Th ctl={ctl} col="name">{tr('Ism', 'Atı')}</Th>
               <Th ctl={ctl} col="role" className="w-36">{tr('Rol', 'Lawazım')}</Th>
               <Th ctl={ctl} col="counter" className="w-24">{tr('Oyna', 'Áyne')}</Th>
+              <Th ctl={ctl} col="hall" className="w-28">{tr('Zal', 'Zal')}</Th>
               <Th ctl={ctl} col="status" className="w-28">{tr('Holat', 'Halat')}</Th>
               <th className="w-32"></th>
             </tr>
@@ -128,6 +149,7 @@ export default function OperatorsPage() {
                   return lbl ? tr(lbl.uz, lbl.kaa) : u.role;
                 })()}</td>
                 <td className="font-mono text-sm">{counterLabel(u.counter_id)}</td>
+                <td className="text-coal-2">{hallLabel(u.hall_id)}</td>
                 <td>
                   {u.is_active ? (
                     <Badge variant="outline" className="border-hair-2 text-coal">

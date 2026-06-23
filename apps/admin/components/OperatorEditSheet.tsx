@@ -62,6 +62,10 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
 
   useEffect(() => setDraft(user ?? EMPTY), [user]);
 
+  // Зал оператора наследуется от его окна (backend _derive_hall) — показываем read-only.
+  const opCounter = counters.find((c) => c.id === draft.counter_id);
+  const opHall = opCounter ? halls.find((h) => h.id === opCounter.hall_id) : undefined;
+
   const mutation = useMutation({
     mutationFn: async (d: Draft) => {
       const isCreate = !d.id;
@@ -158,6 +162,13 @@ export function OperatorEditSheet({ user, counters, open, onOpenChange }: Props)
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-coal-3">
+                {tr('Zal', 'Zal')}:{' '}
+                <span className="font-medium text-coal">
+                  {opHall ? tr(opHall.name_uz || opHall.name_ru, opHall.name_kaa) : '—'}
+                </span>{' '}
+                {tr('(oynadan avtomatik)', '(áyneden avtomat)')}
+              </p>
             </div>
           )}
           {/* Hall select — for the head of a hall (hall_admin) */}
