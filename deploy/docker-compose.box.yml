@@ -49,6 +49,9 @@ services:
       db: { condition: service_healthy }
       redis: { condition: service_started }
     expose: ["8000"]
+    volumes:
+      # Общий с sync_worker и nginx (/srv/media) — кастом-озвучка табло.
+      - ./media:/app/media
 
   sync_worker:
     <<: *watch
@@ -59,6 +62,9 @@ services:
     depends_on:
       db: { condition: service_healthy }
       backend: { condition: service_started }
+    volumes:
+      # sync_worker пишет сюда mp3 из catalog snapshot → nginx отдаёт /media.
+      - ./media:/app/media
 
   kiosk:
     <<: *watch
