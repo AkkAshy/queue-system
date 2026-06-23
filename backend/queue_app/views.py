@@ -202,7 +202,12 @@ class DashboardView(APIView):
                     "id": str(t.id),
                     "number": t.number,
                     "category_code": t.category.code,
-                    "service_name": t.service.name_ru if t.service_id else "",
+                    "service": {
+                        "name_kaa": t.service.name_kaa,
+                        "name_ru": t.service.name_ru,
+                        "name_uz": t.service.name_uz,
+                        "name_en": t.service.name_en,
+                    } if t.service_id else None,
                     "status": t.status,
                     "counter_number": t.counter.number if t.counter_id else None,
                     "issued_at": t.created_at.isoformat(),

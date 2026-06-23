@@ -152,7 +152,7 @@ export interface RecentTicket {
   id: string;
   number: string;
   category_code: string;
-  service_name: string;
+  service: { name_kaa: string; name_ru: string; name_uz?: string; name_en?: string } | null;
   status: TicketStatus;
   counter_number: string | null;
   issued_at: string;      // ISO
