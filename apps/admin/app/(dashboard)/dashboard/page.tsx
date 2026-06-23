@@ -205,7 +205,7 @@ export default function DashboardPage() {
                   <tr key={t.id}>
                     <td className="font-mono font-semibold text-coral-600">{t.number}</td>
                     <td className="text-coal-2">{t.category_code}</td>
-                    <td className="max-w-[340px] truncate text-coal">{t.service_name}</td>
+                    <td className="max-w-[340px] truncate text-coal">{t.service ? localizedName(t.service, lang) : ''}</td>
                     <td className="font-mono text-coal-2">{t.counter_number ?? '—'}</td>
                     <td>
                       <Badge variant="outline" className="border-hair-2 text-coal-2">
