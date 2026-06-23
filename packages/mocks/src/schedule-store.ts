@@ -36,6 +36,14 @@ export class ScheduleStore {
     return { ...row };
   }
 
+  /** Existing shift for an (operator, counter, weekday) slot — drives the bulk
+   *  upsert so re-saving a day updates it instead of duplicating. */
+  findSlot(user_id: number, counter_id: number, weekday: Weekday): ScheduleRow | undefined {
+    return this.items.find(
+      (r) => r.user_id === user_id && r.counter_id === counter_id && r.weekday === weekday,
+    );
+  }
+
   update(id: number, patch: Partial<Omit<ScheduleRow, 'id'>>): ScheduleRow | undefined {
     const idx = this.items.findIndex((x) => x.id === id);
     if (idx < 0) return undefined;

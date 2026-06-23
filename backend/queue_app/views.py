@@ -1,12 +1,15 @@
+from django.db import transaction
 from django.db.models import Avg, F
 from django.http import JsonResponse
 from django.utils import timezone
 from rest_framework import generics
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from accounts.models import User
 from accounts.permissions import (
     HasSyncToken,
     IsCatalogManager,
@@ -93,7 +96,21 @@ class HallResetView(APIView):
 # ---------- work schedule (shifts) ----------
 class ScheduleListCreateView(AuditCRUDMixin, generics.ListCreateAPIView):
     """Recurring shifts. Chief sees/edits all; a hall_admin is scoped to their
-    own hall (queryset filter + auto hall on create). TZ §4.2 (смены)."""
+    own hall (queryset filter + auto hall on create). TZ §4.2 (смены).
+
+    POST assigns shifts in bulk across the operators × weekdays matrix: the
+    admin picks days, then the operators who work them — each operator's window
+    comes from their profile (``User.counter``), so the form never picks a
+    counter. Shape::
+
+        {"weekdays": [0, 1, 2], "user_ids": [5, 6],
+         "start_time": "09:00", "end_time": "18:00", "is_active": true}
+
+    Upserts per ``(user, counter, weekday)``: an existing day is updated (time/
+    active), a missing one is created — so editing a shift's time never spawns a
+    duplicate. The legacy single-row shape (``user_id``/``weekday``/
+    ``counter_id``) is still accepted. Returns ``{created, updated, no_counter}``
+    where ``no_counter`` lists operators skipped for lacking a window."""
 
     audit_entity = "schedule"
     serializer_class = WorkScheduleSerializer
@@ -108,15 +125,90 @@ class ScheduleListCreateView(AuditCRUDMixin, generics.ListCreateAPIView):
             qs = qs.filter(weekday=weekday)
         return scope_to_hall(qs, self.request)
 
-    def perform_create(self, serializer):
-        # A hall_admin may only schedule onto counters in their own hall.
-        u = self.request.user
-        counter = serializer.validated_data["counter"]
-        if getattr(u, "is_hall_admin", False) and u.hall_id and counter.hall_id != u.hall_id:
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Окно вне вашего зала")
-        obj = serializer.save()
-        audit.log(self.request, "schedule.created", target=obj.id)
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        # Accept both the bulk shape and the legacy single-row shape.
+        weekdays = data.get("weekdays")
+        if weekdays is None and data.get("weekday") is not None:
+            weekdays = [data["weekday"]]
+        user_ids = data.get("user_ids")
+        if user_ids is None and data.get("user_id") is not None:
+            user_ids = [data["user_id"]]
+        start_time = data.get("start_time")
+        end_time = data.get("end_time")
+        is_active = data.get("is_active", True)
+        override_counter_id = data.get("counter_id")  # legacy explicit window
+
+        errors = {}
+        if not weekdays:
+            errors["weekdays"] = ["Выберите хотя бы один день"]
+        if not user_ids:
+            errors["user_ids"] = ["Выберите хотя бы одного оператора"]
+        if not start_time or not end_time:
+            errors["start_time"] = ["Укажите время начала и конца"]
+        elif str(start_time) >= str(end_time):
+            errors["end_time"] = ["Конец смены должен быть позже начала"]
+        if errors:
+            raise ValidationError(errors)
+
+        try:
+            weekdays = sorted({int(w) for w in weekdays})
+        except (TypeError, ValueError):
+            raise ValidationError({"weekdays": ["Некорректные дни недели"]})
+        if any(wd < 0 or wd > 6 for wd in weekdays):
+            raise ValidationError({"weekdays": ["День недели вне диапазона 0–6"]})
+
+        requester = request.user
+        users = list(User.objects.filter(id__in=user_ids).select_related("counter"))
+        created, updated, no_counter = [], 0, []
+        with transaction.atomic():
+            for user in users:
+                counter = (
+                    Counter.objects.filter(id=override_counter_id).first()
+                    if override_counter_id
+                    else user.counter
+                )
+                if counter is None:
+                    no_counter.append(user.id)
+                    continue
+                # A hall_admin may only schedule onto counters in their own hall.
+                if (
+                    getattr(requester, "is_hall_admin", False)
+                    and requester.hall_id
+                    and counter.hall_id != requester.hall_id
+                ):
+                    raise PermissionDenied("Окно вне вашего зала")
+                for wd in weekdays:
+                    obj = WorkSchedule.objects.filter(
+                        user=user, counter=counter, weekday=wd
+                    ).first()
+                    if obj is not None:
+                        obj.start_time = start_time
+                        obj.end_time = end_time
+                        obj.is_active = is_active
+                        obj.save(update_fields=["start_time", "end_time", "is_active", "updated_at"])
+                        updated += 1
+                        audit.log(request, "schedule.updated", target=obj.id)
+                    else:
+                        obj = WorkSchedule.objects.create(
+                            user=user,
+                            counter=counter,
+                            weekday=wd,
+                            start_time=start_time,
+                            end_time=end_time,
+                            is_active=is_active,
+                        )
+                        created.append(obj)
+                        audit.log(request, "schedule.created", target=obj.id)
+
+        return Response(
+            {
+                "created": WorkScheduleSerializer(created, many=True).data,
+                "updated": updated,
+                "no_counter": no_counter,
+            },
+            status=201,
+        )
 
 
 class ScheduleDetailView(AuditCRUDMixin, generics.RetrieveUpdateDestroyAPIView):

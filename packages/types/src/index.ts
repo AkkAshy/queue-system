@@ -135,6 +135,24 @@ export interface WorkSchedule {
   is_active: boolean;
 }
 
+/** Bulk shift assignment: operators × weekdays in one call. Each operator's
+ *  window is taken from their profile (User.counter), so no counter is sent. */
+export interface ScheduleBulkInput {
+  weekdays: Weekday[];
+  user_ids: number[];
+  start_time: string;         // "HH:MM"
+  end_time: string;           // "HH:MM"
+  is_active: boolean;
+}
+
+/** Result of a bulk assignment: rows created, rows updated (existing day's
+ *  time/active changed), and operators skipped for having no window. */
+export interface ScheduleBulkResult {
+  created: WorkSchedule[];
+  updated: number;
+  no_counter: number[];       // operator ids skipped (no counter on profile)
+}
+
 export interface DashboardMetrics {
   ticketsToday: number;
   avgWaitMinutes: number;

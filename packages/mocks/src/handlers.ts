@@ -315,17 +315,65 @@ export const handlers = [
   }),
 
   http.post('/api/schedule', async ({ request }) => {
-    const body = (await request.json()) as Omit<ScheduleRow, 'id' | 'is_active'> & {
+    const body = (await request.json()) as {
+      weekdays?: number[];
+      user_ids?: number[];
+      weekday?: number; // legacy single-row shape
+      user_id?: number;
+      counter_id?: number; // optional explicit window (legacy)
+      start_time: string;
+      end_time: string;
       is_active?: boolean;
     };
-    if (body.start_time >= body.end_time) {
-      return HttpResponse.json(
-        { end_time: ['Конец смены должен быть позже начала'] },
-        { status: 400 },
-      );
+    const weekdays = body.weekdays ?? (body.weekday != null ? [body.weekday] : []);
+    const userIds = body.user_ids ?? (body.user_id != null ? [body.user_id] : []);
+    const { start_time, end_time } = body;
+    const is_active = body.is_active ?? true;
+
+    if (!weekdays.length)
+      return HttpResponse.json({ weekdays: ['Выберите хотя бы один день'] }, { status: 400 });
+    if (!userIds.length)
+      return HttpResponse.json({ user_ids: ['Выберите хотя бы одного оператора'] }, { status: 400 });
+    if (!start_time || !end_time)
+      return HttpResponse.json({ start_time: ['Укажите время начала и конца'] }, { status: 400 });
+    if (start_time >= end_time)
+      return HttpResponse.json({ end_time: ['Конец смены должен быть позже начала'] }, { status: 400 });
+
+    // Upsert the operators × weekdays matrix; each operator's window comes from
+    // their profile unless an explicit counter_id is given (legacy path).
+    const created: ScheduleRow[] = [];
+    let updated = 0;
+    const no_counter: number[] = [];
+    for (const uid of userIds) {
+      const u = users.list().find((x) => x.id === uid);
+      const counterId = body.counter_id ?? u?.counter_id ?? null;
+      if (!counterId) {
+        no_counter.push(uid);
+        continue;
+      }
+      for (const wd of weekdays) {
+        const existing = schedules.findSlot(uid, counterId, wd as ScheduleRow['weekday']);
+        if (existing) {
+          schedules.update(existing.id, { start_time, end_time, is_active });
+          updated += 1;
+        } else {
+          created.push(
+            schedules.create({
+              user_id: uid,
+              counter_id: counterId,
+              weekday: wd as ScheduleRow['weekday'],
+              start_time,
+              end_time,
+              is_active,
+            }),
+          );
+        }
+      }
     }
-    const created = schedules.create({ is_active: true, ...body });
-    return HttpResponse.json(enrichSchedule(created), { status: 201 });
+    return HttpResponse.json(
+      { created: created.map(enrichSchedule), updated, no_counter },
+      { status: 201 },
+    );
   }),
 
   http.patch('/api/schedule/:id', async ({ params, request }) => {

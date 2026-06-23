@@ -456,9 +456,10 @@ def test_schedule_crud_and_validation(auth_client):
         "start_time": "08:00", "end_time": "12:00",
     }, format="json")
     assert r.status_code == 201, r.content
-    sid = r.json()["id"]
-    assert r.json()["hall_id"] == 1  # mirrored from counter's hall
-    assert r.json()["weekday_label"] == "Понедельник"
+    row = r.json()["created"][0]
+    sid = row["id"]
+    assert row["hall_id"] == 1  # mirrored from counter's hall
+    assert row["weekday_label"] == "Понедельник"
     # end before start is rejected
     bad = client.post("/api/schedule", {
         "user_id": uid, "counter_id": 1, "weekday": 1,
@@ -507,3 +508,52 @@ def test_schedule_hall_admin_scoped(seeded, client):
     }, format="json")
     assert r.status_code == 403
     assert client.get("/api/schedule").json() == []
+
+
+def test_schedule_bulk_matrix(auth_client):
+    """POST assigns the operators × weekdays matrix; each window comes from the
+    operator's profile, operators without one are skipped, and re-saving the
+    same slot updates instead of duplicating."""
+    from accounts.models import User
+    client = auth_client
+    op1 = User.objects.create(username="bop1", role="operator", counter_id=1, is_active=True)
+    op2 = User.objects.create(username="bop2", role="operator", counter_id=2, is_active=True)
+    nop = User.objects.create(username="bnop", role="operator", is_active=True)  # no window
+
+    r = client.post("/api/schedule", {
+        "weekdays": [0, 1, 2],
+        "user_ids": [op1.id, op2.id, nop.id],
+        "start_time": "09:00", "end_time": "18:00",
+    }, format="json")
+    assert r.status_code == 201, r.content
+    body = r.json()
+    assert len(body["created"]) == 6          # 2 operators with windows × 3 days
+    assert body["updated"] == 0
+    assert body["no_counter"] == [nop.id]     # skipped — no counter on profile
+    assert {row["counter_id"] for row in body["created"]} == {1, 2}  # from profile
+
+    # Re-saving the same slots with a new time updates them, never duplicates.
+    r2 = client.post("/api/schedule", {
+        "weekdays": [0, 1, 2],
+        "user_ids": [op1.id, op2.id],
+        "start_time": "10:00", "end_time": "17:00",
+    }, format="json")
+    assert r2.status_code == 201
+    assert r2.json()["created"] == []
+    assert r2.json()["updated"] == 6
+    rows = client.get("/api/schedule").json()
+    assert len(rows) == 6                      # still 6 — upsert, not insert
+    assert all(row["start_time"] == "10:00:00" for row in rows)
+
+
+def test_schedule_bulk_requires_days_and_operators(auth_client):
+    client = auth_client
+    uid = _admin_id()
+    assert client.post("/api/schedule", {
+        "user_ids": [uid], "weekdays": [],
+        "start_time": "09:00", "end_time": "18:00",
+    }, format="json").status_code == 400
+    assert client.post("/api/schedule", {
+        "user_ids": [], "weekdays": [0],
+        "start_time": "09:00", "end_time": "18:00",
+    }, format="json").status_code == 400
