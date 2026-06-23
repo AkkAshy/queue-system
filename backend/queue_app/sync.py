@@ -14,8 +14,9 @@ would need a (node_id, local_id) composite — noted for later.
 from __future__ import annotations
 
 import base64
+import os
 
-from django.core.files.base import ContentFile
+from django.conf import settings
 
 from accounts.models import User
 from catalog.models import Hall, Service, ServiceCategory
@@ -231,11 +232,19 @@ def apply_catalog(snapshot: dict) -> dict:
         )
         content = v.get("content") or ""
         if content:
-            clip.file.save(
-                f"{v['kind']}_{v['key']}.mp3",
-                ContentFile(base64.b64decode(content)),
-                save=True,
-            )
+            # Детерминированный путь с перезаписью. storage.save() добавлял бы
+            # _random-суффикс на каждый sync-tick (имя «занято») и плодил дубли,
+            # а url клипа скакал бы. Пишем напрямую и только при изменении.
+            rel = f"voice/{v['kind']}_{v['key']}.mp3"
+            abspath = os.path.join(settings.MEDIA_ROOT, rel)
+            data = base64.b64decode(content)
+            if not os.path.exists(abspath) or os.path.getsize(abspath) != len(data):
+                os.makedirs(os.path.dirname(abspath), exist_ok=True)
+                with open(abspath, "wb") as fh:
+                    fh.write(data)
+            if clip.file.name != rel:
+                clip.file.name = rel
+                clip.save(update_fields=["file"])
         counts["voice_clips"] += 1
 
     settings_data = snapshot.get("settings")
