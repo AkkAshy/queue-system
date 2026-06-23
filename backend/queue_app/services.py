@@ -75,7 +75,7 @@ def _mark_called(ticket: Ticket, counter: Counter, operator_id) -> Ticket:
     ticket.counter = counter
     ticket.operator_id = operator_id
     ticket.called_at = timezone.now()
-    ticket.save(update_fields=["status", "counter", "operator", "called_at"])
+    ticket.save(update_fields=["status", "counter", "operator", "called_at", "updated_at"])
     return ticket
 
 
@@ -105,20 +105,20 @@ def recall(ticket: Ticket) -> Ticket:
     """Re-announce a current call: bump called_at so it resurfaces on the board
     (the display re-flashes + re-speaks). Status/counter unchanged."""
     ticket.called_at = timezone.now()
-    ticket.save(update_fields=["called_at"])
+    ticket.save(update_fields=["called_at", "updated_at"])
     return ticket
 
 
 def finish(ticket: Ticket) -> Ticket:
     ticket.status = TicketStatus.SERVED
     ticket.finished_at = timezone.now()
-    ticket.save(update_fields=["status", "finished_at"])
+    ticket.save(update_fields=["status", "finished_at", "updated_at"])
     return ticket
 
 
 def skip(ticket: Ticket) -> Ticket:
     ticket.status = TicketStatus.SKIPPED
-    ticket.save(update_fields=["status"])
+    ticket.save(update_fields=["status", "updated_at"])
     return ticket
 
 
@@ -128,7 +128,7 @@ def transfer(ticket: Ticket, new_counter: Counter) -> Ticket:
     ticket.counter = new_counter
     ticket.operator = None
     ticket.called_at = None
-    ticket.save(update_fields=["status", "counter", "operator", "called_at"])
+    ticket.save(update_fields=["status", "counter", "operator", "called_at", "updated_at"])
     return ticket
 
 
@@ -150,7 +150,7 @@ def reset_queue(hall_id) -> int:
     Served/finished tickets are kept (for stats)."""
     today = timezone.localdate()
     n = Ticket.objects.filter(hall_id=hall_id, status=TicketStatus.WAITING).update(
-        status=TicketStatus.CANCELLED
+        status=TicketStatus.CANCELLED, updated_at=timezone.now()
     )
     DailyCounter.objects.filter(hall_id=hall_id, date=today).delete()
     return n
@@ -173,5 +173,5 @@ def set_session_status(session: OperatorSession, status: str) -> OperatorSession
     session.status = status
     if status == OperatorSession.Status.ENDED:
         session.ended_at = timezone.now()
-    session.save(update_fields=["status", "ended_at"])
+    session.save(update_fields=["status", "ended_at", "updated_at"])
     return session

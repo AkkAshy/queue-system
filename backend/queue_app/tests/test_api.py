@@ -130,6 +130,28 @@ def test_operator_flow_call_finish(seeded, client):
     assert client.get("/api/tickets/current?counter_id=1").json() is None
 
 
+def test_status_change_bumps_updated_at(seeded, client):
+    """Регресс: call/finish/skip ДОЛЖНЫ двигать updated_at (auto_now). Иначе
+    local→cloud sync (watermark по updated_at) не видит смену статуса и
+    обслуженные талоны застревают как 'waiting' в облаке."""
+    from queue_app.models import Ticket
+
+    tid = client.post(
+        "/api/tickets",
+        {"category_id": 1, "service_id": 1, "idempotency_key": "upd-bump"},
+        format="json",
+    ).json()["id"]
+    u_created = Ticket.objects.get(id=tid).updated_at
+
+    client.post("/api/tickets/call-next", {"counter_id": 1, "operator_id": 2}, format="json")
+    u_called = Ticket.objects.get(id=tid).updated_at
+    assert u_called > u_created, "call-next должен обновлять updated_at"
+
+    client.post(f"/api/tickets/{tid}/finish")
+    u_finished = Ticket.objects.get(id=tid).updated_at
+    assert u_finished > u_called, "finish должен обновлять updated_at"
+
+
 def test_display_active_after_call(seeded, client):
     client.post("/api/tickets", {"category_id": 1, "service_id": 1, "idempotency_key": "k1"}, format="json")
     client.post("/api/tickets/call-next", {"counter_id": 1, "operator_id": 2}, format="json")
