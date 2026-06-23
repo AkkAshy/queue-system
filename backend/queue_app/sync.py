@@ -13,6 +13,10 @@ would need a (node_id, local_id) composite — noted for later.
 
 from __future__ import annotations
 
+import base64
+
+from django.core.files.base import ContentFile
+
 from accounts.models import User
 from catalog.models import Hall, Service, ServiceCategory
 from catalog.serializers import HallSerializer, ServiceCategorySerializer, ServiceSerializer
@@ -24,6 +28,7 @@ from .models import (
     OperatorSession,
     SyncState,
     Ticket,
+    VoiceClip,
     WorkSchedule,
 )
 from .serializers import CounterSerializer, DisplaySettingsSerializer
@@ -50,6 +55,24 @@ def _user_snapshot() -> list[dict]:
     ]
 
 
+def _voice_clips_snapshot() -> list[dict]:
+    """Кастом-озвучка вызовов (cloud→local). Сам mp3 едет base64, чтобы бокс
+    играл его офлайн, не обращаясь к облаку. Клипов немного и они мелкие."""
+    out = []
+    for v in VoiceClip.objects.all():
+        try:
+            v.file.open("rb")
+            content = base64.b64encode(v.file.read()).decode()
+            v.file.close()
+        except (FileNotFoundError, ValueError):
+            content = ""  # файл пропал на диске — пропускаем содержимое
+        out.append({
+            "kind": v.kind, "key": v.key, "enabled": v.enabled,
+            "updated_at": v.updated_at.isoformat(), "content": content,
+        })
+    return out
+
+
 def catalog_snapshot() -> dict:
     """Everything the local box mirrors from the cloud (cloud is authoritative)."""
     return {
@@ -59,6 +82,7 @@ def catalog_snapshot() -> dict:
         "counters": CounterSerializer(Counter.objects.all(), many=True).data,
         "users": _user_snapshot(),
         "schedules": _schedule_snapshot(),
+        "voice_clips": _voice_clips_snapshot(),
         "settings": DisplaySettingsSerializer(DisplaySettings.load()).data,
     }
 
@@ -140,7 +164,8 @@ def apply_catalog(snapshot: dict) -> dict:
     """Upsert a cloud catalog snapshot into the local DB (cloud is authoritative).
     FK order matters: halls → categories → services → counters → users → settings."""
     counts = {k: 0 for k in (
-        "halls", "categories", "services", "counters", "users", "schedules", "settings",
+        "halls", "categories", "services", "counters", "users", "schedules",
+        "voice_clips", "settings",
     )}
 
     for h in snapshot.get("halls", []):
@@ -198,6 +223,20 @@ def apply_catalog(snapshot: dict) -> dict:
             "is_active": sc["is_active"],
         })
         counts["schedules"] += 1
+
+    for v in snapshot.get("voice_clips", []):
+        clip, _ = VoiceClip.objects.update_or_create(
+            kind=v["kind"], key=v["key"],
+            defaults={"enabled": v.get("enabled", True)},
+        )
+        content = v.get("content") or ""
+        if content:
+            clip.file.save(
+                f"{v['kind']}_{v['key']}.mp3",
+                ContentFile(base64.b64decode(content)),
+                save=True,
+            )
+        counts["voice_clips"] += 1
 
     settings_data = snapshot.get("settings")
     if settings_data:

@@ -108,3 +108,26 @@ def test_voice_clip_delete(settings, tmp_path, auth_client):
     cid = r.json()["id"]
     assert auth_client.delete(f"/api/display/voice-clips/{cid}").status_code == 204
     assert auth_client.get("/api/display/voice-clips").json() == []
+
+
+def test_voice_clip_syncs_to_box(settings, tmp_path, db):
+    """Кастом-клип едет в catalog snapshot (base64) и восстанавливается через
+    apply_catalog — так озвучка доезжает до бокса и играет офлайн (local-first)."""
+    from queue_app import sync
+
+    settings.MEDIA_ROOT = tmp_path
+    VoiceClip.objects.create(kind="letter", key="H", file=_mp3("h.mp3", b"ID3-H-audio-bytes"))
+
+    snap = sync.catalog_snapshot()
+    vc = [v for v in snap["voice_clips"] if v["kind"] == "letter" and v["key"] == "H"]
+    assert vc and vc[0]["content"], "клип должен попасть в снапшот с base64-содержимым"
+
+    # эмулируем бокс: чистим локальное и применяем снапшот
+    VoiceClip.objects.all().delete()
+    counts = sync.apply_catalog(snap)
+    assert counts["voice_clips"] == 1
+
+    restored = VoiceClip.objects.get(kind="letter", key="H")
+    restored.file.open("rb")
+    assert restored.file.read() == b"ID3-H-audio-bytes"
+    restored.file.close()
