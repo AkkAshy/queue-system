@@ -36,11 +36,9 @@ class CategoryListView(generics.ListCreateAPIView):
     permission_classes = [IsCatalogManager]
 
     def get_queryset(self):
-        qs = ServiceCategory.objects.all()
-        hall_id = self.request.query_params.get("hall_id")
-        if hall_id:
-            qs = qs.filter(hall_id=hall_id)
-        return scope_to_hall(qs, self.request)  # hall_admin → only their hall
+        # Каталог общий для всех залов: без hall-фильтра. Маршрут талона — по
+        # услугам окна (queue_for_counter), а не по залу.
+        return ServiceCategory.objects.all()
 
     def perform_create(self, serializer):
         u = self.request.user
@@ -57,9 +55,7 @@ class CategoryDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsCatalogManager]
 
     def get_queryset(self):
-        # Scoping the queryset means a hall_admin gets 404 (not 403) for another
-        # hall's object — effective per-object protection for free.
-        return scope_to_hall(ServiceCategory.objects.all(), self.request)
+        return ServiceCategory.objects.all()
 
     def perform_update(self, serializer):
         obj = serializer.save()
@@ -81,7 +77,7 @@ class ServiceListView(generics.ListCreateAPIView):
         category_id = self.request.query_params.get("category_id")
         if category_id:
             qs = qs.filter(category_id=category_id)
-        return scope_to_hall(qs, self.request, field="category__hall_id")
+        return qs  # каталог общий для всех залов (без hall-фильтра)
 
     def perform_create(self, serializer):
         u = self.request.user
@@ -98,7 +94,7 @@ class ServiceDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsCatalogManager]
 
     def get_queryset(self):
-        return scope_to_hall(Service.objects.all(), self.request, field="category__hall_id")
+        return Service.objects.all()
 
     def perform_update(self, serializer):
         obj = serializer.save()

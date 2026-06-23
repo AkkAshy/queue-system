@@ -219,13 +219,12 @@ def test_halls_endpoint(seeded, client):
     assert {h["code"] for h in halls} == {"1", "2"}
 
 
-def test_categories_filtered_by_hall(seeded, client):
-    # All seeded categories belong to hall 1; hall 2 has none yet.
-    h1 = client.get("/api/categories?hall_id=1").json()
-    h2 = client.get("/api/categories?hall_id=2").json()
-    assert len(h1) == 9
-    assert len(h2) == 0
-    assert all(c["hall_id"] == 1 for c in h1)
+def test_categories_are_global_across_halls(seeded, client):
+    """Каталог общий для всех залов: hall-фильтр чтения убран (маршрут талона —
+    по услугам окна, не по залу). Категории видны независимо от зала."""
+    assert len(client.get("/api/categories").json()) == 9
+    # ?hall_id больше НЕ сужает выборку — каталог одинаков для любого зала
+    assert len(client.get("/api/categories?hall_id=2").json()) == 9
 
 
 def test_display_active_scoped_by_hall(seeded, client):
@@ -333,15 +332,15 @@ def test_hall_admin_scoping(seeded, client):
     u.save()
     tok = client.post("/api/auth/login", {"username": "ha2", "password": "pw"}, format="json").json()["token"]
     client.credentials(HTTP_AUTHORIZATION=f"Bearer {tok}")
-    # hall_admin of hall 2 sees none of hall-1's seeded categories
-    assert len(client.get("/api/categories").json()) == 0
-    # creating a category is forced into their hall
+    # каталог ОБЩИЙ — hall_admin видит все категории (hall-фильтр чтения убран)
+    assert len(client.get("/api/categories").json()) == 9
+    # но создание всё ещё форсится в его зал (perform_create не трогали)
     r = client.post("/api/categories", {
         "code": "X", "name_kaa": "x", "name_ru": "х", "color": "#000000", "order": 1,
     }, format="json")
     assert r.status_code == 201
     assert r.json()["hall_id"] == 2
-    assert len(client.get("/api/categories").json()) == 1
+    assert len(client.get("/api/categories").json()) == 10
 
 
 def test_hall_reset_clears_waiting(auth_client):
