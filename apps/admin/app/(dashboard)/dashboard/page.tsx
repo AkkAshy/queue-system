@@ -43,9 +43,18 @@ async function fetchHalls(): Promise<Hall[]> {
   return res.ok ? res.json() : [];
 }
 
-async function fetchStats(hall: string): Promise<Stats> {
-  const q = hall ? `?hall=${hall}` : '';
-  const res = await fetch(`/api/stats${q}`);
+// Shared query string for stats + Excel export so both honour the same filters.
+function statsParams(hall: string, from: string, to: string): string {
+  const p = new URLSearchParams();
+  if (hall) p.set('hall', hall);
+  if (from) p.set('from', from);
+  if (to) p.set('to', to);
+  const s = p.toString();
+  return s ? `?${s}` : '';
+}
+
+async function fetchStats(hall: string, from: string, to: string): Promise<Stats> {
+  const res = await fetch(`/api/stats${statsParams(hall, from, to)}`);
   if (!res.ok) throw new Error('failed');
   return res.json();
 }
@@ -75,14 +84,26 @@ export default function DashboardPage() {
   });
 
   const [hall, setHall] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
   const { data: halls } = useQuery({ queryKey: ['halls'], queryFn: fetchHalls });
   const { data: stats } = useQuery({
-    queryKey: ['stats', hall],
-    queryFn: () => fetchStats(hall),
+    queryKey: ['stats', hall, from, to],
+    queryFn: () => fetchStats(hall, from, to),
     refetchInterval: 4000,
     refetchIntervalInBackground: true,
   });
-  const exportHref = `/api/stats/export${hall ? `?hall=${hall}` : ''}`;
+  const exportHref = `/api/stats/export${statsParams(hall, from, to)}`;
+
+  // Quick date-range presets (last N days, inclusive). days=0 → today only.
+  function applyPreset(days: number) {
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+    const today = new Date();
+    const start = new Date();
+    start.setDate(today.getDate() - days);
+    setFrom(iso(start));
+    setTo(iso(today));
+  }
 
   const qc = useQueryClient();
   const reset = useMutation({
@@ -112,7 +133,44 @@ export default function DashboardPage() {
       <section className="rounded-2xl border border-hair bg-card/40 p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <span className="eyebrow">{tr('Statistika', 'Statistika')}</span>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {/* Quick date-range presets */}
+            <div className="flex items-center gap-1">
+              <button type="button" onClick={() => applyPreset(0)} className="rounded-md px-2 py-1 text-xs text-coal-2 hover:bg-hair/50 hover:text-coral">{tr('Bugun', 'Búgin')}</button>
+              <button type="button" onClick={() => applyPreset(6)} className="rounded-md px-2 py-1 text-xs text-coal-2 hover:bg-hair/50 hover:text-coral">{tr('Hafta', 'Hápte')}</button>
+              <button type="button" onClick={() => applyPreset(29)} className="rounded-md px-2 py-1 text-xs text-coal-2 hover:bg-hair/50 hover:text-coral">{tr('Oy', 'Ay')}</button>
+            </div>
+            {/* Date-range filter (from–to) */}
+            <div className="flex items-center gap-1.5">
+              <input
+                type="date"
+                value={from}
+                max={to || undefined}
+                onChange={(e) => setFrom(e.target.value)}
+                className="rounded-lg border border-hair-2 bg-card px-2 py-1.5 text-sm text-coal"
+                aria-label={tr('Sanadan', 'Sanadan')}
+              />
+              <span className="text-coal-3">–</span>
+              <input
+                type="date"
+                value={to}
+                min={from || undefined}
+                onChange={(e) => setTo(e.target.value)}
+                className="rounded-lg border border-hair-2 bg-card px-2 py-1.5 text-sm text-coal"
+                aria-label={tr('Sanagacha', 'Sanaǵa shekem')}
+              />
+              {(from || to) && (
+                <button
+                  type="button"
+                  onClick={() => { setFrom(''); setTo(''); }}
+                  className="px-1 text-lg leading-none text-coal-3 hover:text-coral"
+                  title={tr('Tozalash', 'Tazalaw')}
+                  aria-label={tr('Tozalash', 'Tazalaw')}
+                >
+                  ×
+                </button>
+              )}
+            </div>
             <select
               value={hall}
               onChange={(e) => setHall(e.target.value)}
