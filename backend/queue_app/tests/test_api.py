@@ -302,6 +302,36 @@ def test_stats_and_export(seeded, client):
     assert ws3.auto_filter.ref
 
 
+def test_stats_export_operators_scoped_for_hall_admin(auth_client, client):
+    """chief экспортирует операторов всех залов; hall_admin — только своего."""
+    from io import BytesIO
+
+    from accounts.models import User
+    from openpyxl import load_workbook
+
+    User.objects.create(username="exp_op_h1", name="ExpOpHall1", role="operator", hall_id=1, is_active=True)
+    User.objects.create(username="exp_op_h2", name="ExpOpHall2", role="operator", hall_id=2, is_active=True)
+
+    def operators_in_export(c):
+        r = c.get("/api/stats/export")
+        assert r.status_code == 200
+        wb = load_workbook(BytesIO(r.content))
+        return {row[0].value for row in wb["Operatorlar"].iter_rows(min_row=2)}
+
+    # chief (admin/admin) sees operators from both halls
+    chief_ops = operators_in_export(auth_client)
+    assert {"ExpOpHall1", "ExpOpHall2"} <= chief_ops
+
+    # a hall-2 admin sees only their own hall's operators
+    ha = User.objects.create(username="exp_ha2", role="hall_admin", hall_id=2, is_active=True)
+    ha.set_password("pw"); ha.save()
+    tok = client.post("/api/auth/login", {"username": "exp_ha2", "password": "pw"}, format="json").json()["token"]
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {tok}")
+    ha_ops = operators_in_export(client)
+    assert "ExpOpHall2" in ha_ops
+    assert "ExpOpHall1" not in ha_ops
+
+
 def test_sync_catalog_snapshot(seeded, client):
     snap = client.get("/api/sync/catalog").json()
     assert {"halls", "categories", "services", "counters", "users", "settings"} <= set(snap)

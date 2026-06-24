@@ -520,8 +520,13 @@ class StatsExportView(APIView):
         ws2 = wb.create_sheet("Operatorlar")
         ws2.append(self.OP_HEADERS)
         # Все операторы по справочнику + те, кто реально обслуживал (admin/др. роли).
+        # scope_to_hall: chief видит всех, hall_admin — только операторов своего зала
+        # (talonlar/xizmatlar листы уже скоуплены через qs).
+        op_qs = scope_to_hall(
+            get_user_model().objects.filter(role="operator"), request
+        )
         names, seen = [], set()
-        for u in get_user_model().objects.filter(role="operator").order_by("name", "username"):
+        for u in op_qs.order_by("name", "username"):
             nm = u.name or u.get_full_name() or u.username
             if nm and nm not in seen:
                 seen.add(nm); names.append(nm)
