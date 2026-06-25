@@ -288,18 +288,23 @@ def test_stats_and_export(seeded, client):
         "Raqam", "Sana", "Zal", "Kategoriya", "Xizmat", "Oyna", "Operator", "Holat",
     ]
     assert ws.auto_filter.ref  # автофильтр (кнопки сортировки) включён
-    # лист «Operatorlar» — сводка
+    # лист «Operatorlar» — сводка (1-й столбец «Sana» = период отчёта)
     ws2 = wb["Operatorlar"]
-    assert [c.value for c in ws2[1]][:3] == [
-        "Operator", "Qabul qilingan (kishi)", "Jami xizmat (daq)",
+    assert [c.value for c in ws2[1]][:4] == [
+        "Sana", "Operator", "Qabul qilingan (kishi)", "Jami xizmat (daq)",
     ]
     assert ws2.auto_filter.ref
-    # лист «Xizmatlar» — популярность услуг
+    # лист «Xizmatlar» — популярность услуг (1-й столбец «Sana» = период отчёта)
     ws3 = wb["Xizmatlar"]
     assert [c.value for c in ws3[1]][:3] == [
-        "Xizmat", "Kategoriya", "So'ralgan (marta)",
+        "Sana", "Xizmat", "Kategoriya",
     ]
     assert ws3.auto_filter.ref
+    # без фильтра дат период = «Hammasi»; с фильтром — диапазон DD.MM.YYYY
+    assert ws2["A2"].value == "Hammasi"
+    assert ws3["A2"].value == "Hammasi"
+    wb2 = load_workbook(BytesIO(client.get("/api/stats/export?from=2026-06-01&to=2026-06-30").content))
+    assert wb2["Operatorlar"]["A2"].value == "01.06.2026–30.06.2026"
 
 
 def test_stats_export_operators_scoped_for_hall_admin(auth_client, client):
@@ -316,7 +321,8 @@ def test_stats_export_operators_scoped_for_hall_admin(auth_client, client):
         r = c.get("/api/stats/export")
         assert r.status_code == 200
         wb = load_workbook(BytesIO(r.content))
-        return {row[0].value for row in wb["Operatorlar"].iter_rows(min_row=2)}
+        # столбец 0 — Sana (период), оператор — столбец 1
+        return {row[1].value for row in wb["Operatorlar"].iter_rows(min_row=2)}
 
     # chief (admin/admin) sees operators from both halls
     chief_ops = operators_in_export(auth_client)

@@ -393,19 +393,19 @@ class StatsExportView(APIView):
     ]
     WIDTHS = [9, 11, 18, 26, 38, 7, 28, 22, 10, 11, 12, 12, 16]
 
-    # 2-varaq: operatorlar bo'yicha jamlanma.
+    # 2-varaq: operatorlar bo'yicha jamlanma. 1-ustun — hisobot davri (Sana).
     OP_HEADERS = [
-        "Operator", "Qabul qilingan (kishi)", "Jami xizmat (daq)",
+        "Sana", "Operator", "Qabul qilingan (kishi)", "Jami xizmat (daq)",
         "O'rtacha (daq/kishi)", "O'tkazib yuborilgan",
     ]
-    OP_WIDTHS = [30, 22, 18, 22, 22]
+    OP_WIDTHS = [20, 30, 22, 18, 22, 22]
 
     # 3-varaq: xizmatlar bo'yicha (eng ko'p so'ralgan xizmatlar yuqorida).
     SVC_HEADERS = [
-        "Xizmat", "Kategoriya", "So'ralgan (marta)", "Xizmat ko'rsatilgan",
+        "Sana", "Xizmat", "Kategoriya", "So'ralgan (marta)", "Xizmat ko'rsatilgan",
         "O'rtacha (daq)",
     ]
-    SVC_WIDTHS = [42, 12, 18, 20, 14]
+    SVC_WIDTHS = [20, 42, 12, 18, 20, 14]
 
     def get(self, request):
         from collections import defaultdict
@@ -434,6 +434,25 @@ class StatsExportView(APIView):
 
         def uz(obj):
             return (obj.name_uz or obj.name_ru or "") if obj else ""
+
+        # Hisobot davri — agregat varaqlardagi (Operatorlar/Xizmatlar) "Sana"
+        # ustuni: tanlangan davr yoki butun tarix.
+        def fday(s):  # "YYYY-MM-DD" → "DD.MM.YYYY"
+            try:
+                y, m, d = s.split("-")
+                return f"{d}.{m}.{y}"
+            except (ValueError, AttributeError):
+                return s or ""
+        _df = request.query_params.get("from")
+        _dt = request.query_params.get("to")
+        if _df and _dt:
+            period = f"{fday(_df)}–{fday(_dt)}"
+        elif _df:
+            period = f"{fday(_df)}–…"
+        elif _dt:
+            period = f"…–{fday(_dt)}"
+        else:
+            period = "Hammasi"
 
         head_font = Font(bold=True, color="FFFFFF")
         head_fill = PatternFill("solid", fgColor="2563EB")
@@ -536,7 +555,7 @@ class StatsExportView(APIView):
         for op in sorted(names):
             a = agg.get(op, {"served": 0, "service_min": 0, "skipped": 0})
             avg = round(a["service_min"] / a["served"]) if a["served"] else None
-            ws2.append([op, a["served"], a["service_min"], avg, a["skipped"]])
+            ws2.append([period, op, a["served"], a["service_min"], avg, a["skipped"]])
         finalize(ws2, self.OP_HEADERS, self.OP_WIDTHS)
 
         # ── 3-varaq: xizmatlar (eng ko'p so'ralgani yuqorida) ──
@@ -548,7 +567,7 @@ class StatsExportView(APIView):
                 round(s["service_sum"] / s["served_timed"])
                 if s["served_timed"] else None
             )
-            ws3.append([sname, s["category"], s["requested"], s["served"], avg])
+            ws3.append([period, sname, s["category"], s["requested"], s["served"], avg])
         finalize(ws3, self.SVC_HEADERS, self.SVC_WIDTHS)
 
         buf = BytesIO()
