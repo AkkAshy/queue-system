@@ -23,6 +23,14 @@ const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
 const NUMS = Array.from({ length: 101 }, (_, i) => String(i)); // 0..100
 const WINDOWS = Array.from({ length: 23 }, (_, i) => String(i + 1)); // 1..23
 
+// Slots shipped with a default lola clip (admin/public/voice/uz/<kind>_<key>.mp3).
+// Keys outside these ranges are custom-only (no lola to preview).
+const LOLA_KEYS: Record<Kind, Set<string>> = {
+  letter: new Set(LETTERS),
+  num: new Set(NUMS),
+  window: new Set(WINDOWS),
+};
+
 async function fetchClips(): Promise<VoiceClip[]> {
   const res = await fetch('/api/display/voice-clips');
   return res.json();
@@ -77,9 +85,14 @@ export default function VoicePage() {
     onSuccess: () => invalidate(),
   });
 
-  const play = (url: string, v: string) => {
-    new Audio(`${url}?v=${Date.parse(v) || 0}`).play().catch(() => {});
+  const play = (url: string, v?: string) => {
+    const bust = v ? `?v=${Date.parse(v) || 0}` : '';
+    new Audio(`${url}${bust}`).play().catch(() => {});
   };
+
+  // Default lola clips ship in admin/public; BASE_PATH is '' in dev, '/admin' in prod.
+  const BP = process.env.NEXT_PUBLIC_BASE_PATH || '';
+  const lolaUrl = (kind: Kind, key: string) => `${BP}/voice/uz/${kind}_${key}.mp3`;
 
   // Ключи слота = дефолтные + уже загруженные на сервере (включая добавленные
   // сверх дефолта — иначе после перезагрузки они «теряются» из UI) + только что
@@ -110,35 +123,56 @@ export default function VoicePage() {
       {sections.map((sec) => (
         <div key={sec.kind} className="space-y-3 rounded-xl border border-hair bg-card p-6">
           <h2 className="text-lg font-semibold">{sec.title}</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {sec.keys.map((key) => {
               const clip = bySlot.get(`${sec.kind}_${key}`);
               const usingCustom = !!clip && clip.enabled;   // играет своя запись
               const hasDisabled = !!clip && !clip.enabled;  // запись есть, но lola
               const active = sel?.kind === sec.kind && sel.key === key;
+              const hasLola = LOLA_KEYS[sec.kind].has(key);
               return (
-                <button
-                  key={key}
-                  onClick={() => setSel({ kind: sec.kind, key })}
-                  title={
-                    usingCustom
-                      ? tr('Yuklangan', 'Júklengen')
-                      : hasDisabled
-                        ? tr('Yuklangan · lola yoqilgan', 'Júklengen · lola qosılǵan')
-                        : 'lola'
-                  }
-                  className={
-                    'flex h-10 min-w-[2.5rem] items-center justify-center rounded-lg border px-2 text-sm font-medium transition-colors ' +
-                    (active ? 'ring-2 ring-coral/40 ' : '') +
-                    (usingCustom
-                      ? 'border-coral bg-coral/10 text-coral-600'
-                      : hasDisabled
-                        ? 'border-coral/50 text-coal-2'
-                        : 'border-hair-2 bg-card text-coal-2')
-                  }
-                >
-                  {key}
-                </button>
+                <div key={key} className="flex flex-col items-center gap-1">
+                  <button
+                    onClick={() => setSel({ kind: sec.kind, key })}
+                    title={
+                      usingCustom
+                        ? tr('Yuklangan', 'Júklengen')
+                        : hasDisabled
+                          ? tr('Yuklangan · lola yoqilgan', 'Júklengen · lola qosılǵan')
+                          : 'lola'
+                    }
+                    className={
+                      'flex h-10 min-w-[2.5rem] items-center justify-center rounded-lg border px-2 text-sm font-medium transition-colors ' +
+                      (active ? 'ring-2 ring-coral/40 ' : '') +
+                      (usingCustom
+                        ? 'border-coral bg-coral/10 text-coral-600'
+                        : hasDisabled
+                          ? 'border-coral/50 text-coal-2'
+                          : 'border-hair-2 bg-card text-coal-2')
+                    }
+                  >
+                    {key}
+                  </button>
+                  {/* Прослушка двух голосов: lola (дефолт) + своя запись */}
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => play(lolaUrl(sec.kind, key))}
+                      disabled={!hasLola}
+                      title={tr('lola ovozini tinglash', 'lola dawısın tıńlaw')}
+                      className="inline-flex h-6 items-center gap-0.5 rounded px-1 text-[10px] text-coal-3 transition-colors hover:bg-hair/50 hover:text-coal disabled:opacity-25"
+                    >
+                      <Play className="h-2.5 w-2.5" /> lola
+                    </button>
+                    <button
+                      onClick={() => clip && play(clip.url, clip.updated_at)}
+                      disabled={!clip}
+                      title={tr("O'z yozuvini tinglash", 'Óz jazıwın tıńlaw')}
+                      className="inline-flex h-6 items-center gap-0.5 rounded px-1 text-[10px] text-coral transition-colors hover:bg-coral/10 disabled:text-coal-3 disabled:opacity-25"
+                    >
+                      <Play className="h-2.5 w-2.5" /> {tr("o'z", 'óz')}
+                    </button>
+                  </div>
+                </div>
               );
             })}
           </div>
