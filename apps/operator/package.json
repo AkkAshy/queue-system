@@ -57,5 +57,12 @@
     "workerDirectory": [
       "public"
     ]
-  }
+  },
+  "browserslist": [
+    "chrome >= 84",
+    "and_chr >= 84",
+    "edge >= 84",
+    "firefox >= 84",
+    "safari >= 14"
+  ]
 }
